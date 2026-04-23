@@ -389,6 +389,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      auto_cancel_low_attendance: {
+        Args: never
+        Returns: {
+          affected_bookings: number
+          cancelled_class_id: string
+        }[]
+      }
       book_class: {
         Args: { p_class_id: string; p_source: string }
         Returns: {
@@ -405,6 +412,14 @@ export type Database = {
         }[]
       }
       is_admin: { Args: never; Returns: boolean }
+      join_waitlist: {
+        Args: { p_class_id: string }
+        Returns: {
+          pos: number
+          waitlist_id: string
+        }[]
+      }
+      promote_waitlist: { Args: { p_class_id: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

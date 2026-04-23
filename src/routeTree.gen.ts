@@ -19,6 +19,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AppReservasRouteImport } from './routes/app.reservas'
 import { Route as AppRecuperacionesRouteImport } from './routes/app.recuperaciones'
 import { Route as AdminClasesRouteImport } from './routes/admin.clases'
+import { Route as ApiPublicHooksAutoCancelClassesRouteImport } from './routes/api/public/hooks/auto-cancel-classes'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -70,6 +71,12 @@ const AdminClasesRoute = AdminClasesRouteImport.update({
   path: '/clases',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicHooksAutoCancelClassesRoute =
+  ApiPublicHooksAutoCancelClassesRouteImport.update({
+    id: '/api/public/hooks/auto-cancel-classes',
+    path: '/api/public/hooks/auto-cancel-classes',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/app/reservas': typeof AppReservasRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
+  '/api/public/hooks/auto-cancel-classes': typeof ApiPublicHooksAutoCancelClassesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -92,6 +100,7 @@ export interface FileRoutesByTo {
   '/app/reservas': typeof AppReservasRoute
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
+  '/api/public/hooks/auto-cancel-classes': typeof ApiPublicHooksAutoCancelClassesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -105,6 +114,7 @@ export interface FileRoutesById {
   '/app/reservas': typeof AppReservasRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
+  '/api/public/hooks/auto-cancel-classes': typeof ApiPublicHooksAutoCancelClassesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -119,6 +129,7 @@ export interface FileRouteTypes {
     | '/app/reservas'
     | '/admin/'
     | '/app/'
+    | '/api/public/hooks/auto-cancel-classes'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/app/reservas'
     | '/admin'
     | '/app'
+    | '/api/public/hooks/auto-cancel-classes'
   id:
     | '__root__'
     | '/'
@@ -141,6 +153,7 @@ export interface FileRouteTypes {
     | '/app/reservas'
     | '/admin/'
     | '/app/'
+    | '/api/public/hooks/auto-cancel-classes'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -149,6 +162,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
+  ApiPublicHooksAutoCancelClassesRoute: typeof ApiPublicHooksAutoCancelClassesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -223,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminClasesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/hooks/auto-cancel-classes': {
+      id: '/api/public/hooks/auto-cancel-classes'
+      path: '/api/public/hooks/auto-cancel-classes'
+      fullPath: '/api/public/hooks/auto-cancel-classes'
+      preLoaderRoute: typeof ApiPublicHooksAutoCancelClassesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -258,6 +279,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
+  ApiPublicHooksAutoCancelClassesRoute: ApiPublicHooksAutoCancelClassesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

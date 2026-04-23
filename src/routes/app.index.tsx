@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +21,9 @@ import {
 import { useMonthClasses, type ClassWithCount } from "@/hooks/useMonthClasses";
 import { useMyPlan } from "@/hooks/useMyPlan";
 import { bookClass } from "@/lib/booking";
+import { joinWaitlist } from "@/lib/waitlist";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { MonthHeader } from "@/components/calendar/MonthHeader";
 import { MonthGrid } from "@/components/calendar/MonthGrid";
 import { MobileWeekList } from "@/components/calendar/MobileWeekList";
@@ -151,9 +154,53 @@ function ClassDetailsSheet({
   const planMonth = cls ? parseIsoToLocalDate(cls.date) : undefined;
   const { creditsRemaining } = useMyPlan(planMonth);
   const [submitting, setSubmitting] = useState(false);
+  const { user } = useAuth();
+  const [waitlistCount, setWaitlistCount] = useState(0);
+  const [myWaitlistId, setMyWaitlistId] = useState<string | null>(null);
+  const [joiningWl, setJoiningWl] = useState(false);
 
   const isFull = cls ? cls.booked_count >= cls.capacity_max : true;
   const usePlan = (creditsRemaining ?? 0) > 0;
+
+  useEffect(() => {
+    if (!cls) {
+      setWaitlistCount(0);
+      setMyWaitlistId(null);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const { data: rows, error } = await supabase
+        .from("waitlist")
+        .select("id, student_id")
+        .eq("class_id", cls.id);
+      if (cancelled || error) return;
+      setWaitlistCount(rows?.length ?? 0);
+      const mine = user ? rows?.find((r) => r.student_id === user.id) : null;
+      setMyWaitlistId(mine?.id ?? null);
+    })();
+    const ch = supabase
+      .channel(`waitlist-${cls.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "waitlist", filter: `class_id=eq.${cls.id}` },
+        async () => {
+          const { data: rows } = await supabase
+            .from("waitlist")
+            .select("id, student_id")
+            .eq("class_id", cls.id);
+          if (cancelled) return;
+          setWaitlistCount(rows?.length ?? 0);
+          const mine = user ? rows?.find((r) => r.student_id === user.id) : null;
+          setMyWaitlistId(mine?.id ?? null);
+        },
+      )
+      .subscribe();
+    return () => {
+      cancelled = true;
+      void supabase.removeChannel(ch);
+    };
+  }, [cls, user]);
 
   const handleBook = async () => {
     if (!cls) return;
@@ -168,6 +215,23 @@ function ClassDetailsSheet({
       });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleJoinWaitlist = async () => {
+    if (!cls) return;
+    setJoiningWl(true);
+    try {
+      const res = await joinWaitlist(cls.id);
+      toast.success("Te has unido a la lista de espera", {
+        description: `Posición ${res.pos}. Te avisaremos si se libera un sitio.`,
+      });
+    } catch (err) {
+      toast.error("No se pudo unir a la lista de espera", {
+        description: err instanceof Error ? err.message : undefined,
+      });
+    } finally {
+      setJoiningWl(false);
     }
   };
 
@@ -187,6 +251,9 @@ function ClassDetailsSheet({
             <div className="flex items-center gap-2">
               <span className={["h-2.5 w-2.5 rounded-full", capacityDotClass(level)].join(" ")} />
               <Badge variant="secondary">{capacityLabel(level)}</Badge>
+              {isFull && waitlistCount > 0 ? (
+                <Badge variant="outline">{waitlistCount} en lista de espera</Badge>
+              ) : null}
             </div>
             <dl className="grid grid-cols-2 gap-4 text-sm">
               <div>
@@ -206,20 +273,29 @@ function ClassDetailsSheet({
                 <dd className="font-medium tabular-nums">{cls.capacity_ideal}</dd>
               </div>
             </dl>
-            <Button
-              className="w-full"
-              size="lg"
-              onClick={handleBook}
-              disabled={submitting || isFull}
-            >
-              {submitting
-                ? "Reservando…"
-                : isFull
-                  ? "Clase completa"
+            {isFull ? (
+              <Button
+                className="w-full"
+                size="lg"
+                variant="secondary"
+                onClick={handleJoinWaitlist}
+                disabled={joiningWl || myWaitlistId !== null}
+              >
+                {myWaitlistId !== null
+                  ? "Ya estás en la lista de espera"
+                  : joiningWl
+                    ? "Uniéndote…"
+                    : "Unirme a la lista de espera"}
+              </Button>
+            ) : (
+              <Button className="w-full" size="lg" onClick={handleBook} disabled={submitting}>
+                {submitting
+                  ? "Reservando…"
                   : usePlan
                     ? `Reservar con mi plan (${creditsRemaining} restantes)`
                     : "Reservar clase suelta"}
-            </Button>
+              </Button>
+            )}
           </div>
         ) : null}
       </SheetContent>
