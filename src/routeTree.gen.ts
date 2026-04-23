@@ -16,6 +16,8 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AppReservasRouteImport } from './routes/app.reservas'
+import { Route as AppRecuperacionesRouteImport } from './routes/app.recuperaciones'
 import { Route as AdminClasesRouteImport } from './routes/admin.clases'
 
 const SignupRoute = SignupRouteImport.update({
@@ -53,6 +55,16 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AppReservasRoute = AppReservasRouteImport.update({
+  id: '/reservas',
+  path: '/reservas',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRecuperacionesRoute = AppRecuperacionesRouteImport.update({
+  id: '/recuperaciones',
+  path: '/recuperaciones',
+  getParentRoute: () => AppRoute,
+} as any)
 const AdminClasesRoute = AdminClasesRouteImport.update({
   id: '/clases',
   path: '/clases',
@@ -66,6 +78,8 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/admin/clases': typeof AdminClasesRoute
+  '/app/recuperaciones': typeof AppRecuperacionesRoute
+  '/app/reservas': typeof AppReservasRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
 }
@@ -74,6 +88,8 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/admin/clases': typeof AdminClasesRoute
+  '/app/recuperaciones': typeof AppRecuperacionesRoute
+  '/app/reservas': typeof AppReservasRoute
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
 }
@@ -85,6 +101,8 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/admin/clases': typeof AdminClasesRoute
+  '/app/recuperaciones': typeof AppRecuperacionesRoute
+  '/app/reservas': typeof AppReservasRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
 }
@@ -97,10 +115,20 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/admin/clases'
+    | '/app/recuperaciones'
+    | '/app/reservas'
     | '/admin/'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/signup' | '/admin/clases' | '/admin' | '/app'
+  to:
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/admin/clases'
+    | '/app/recuperaciones'
+    | '/app/reservas'
+    | '/admin'
+    | '/app'
   id:
     | '__root__'
     | '/'
@@ -109,6 +137,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/admin/clases'
+    | '/app/recuperaciones'
+    | '/app/reservas'
     | '/admin/'
     | '/app/'
   fileRoutesById: FileRoutesById
@@ -172,6 +202,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/app/reservas': {
+      id: '/app/reservas'
+      path: '/reservas'
+      fullPath: '/app/reservas'
+      preLoaderRoute: typeof AppReservasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/recuperaciones': {
+      id: '/app/recuperaciones'
+      path: '/recuperaciones'
+      fullPath: '/app/recuperaciones'
+      preLoaderRoute: typeof AppRecuperacionesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/admin/clases': {
       id: '/admin/clases'
       path: '/clases'
@@ -195,10 +239,14 @@ const AdminRouteChildren: AdminRouteChildren = {
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface AppRouteChildren {
+  AppRecuperacionesRoute: typeof AppRecuperacionesRoute
+  AppReservasRoute: typeof AppReservasRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppRecuperacionesRoute: AppRecuperacionesRoute,
+  AppReservasRoute: AppReservasRoute,
   AppIndexRoute: AppIndexRoute,
 }
 
