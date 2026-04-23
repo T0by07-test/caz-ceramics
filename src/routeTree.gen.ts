@@ -22,8 +22,10 @@ import { Route as AppPlanesRouteImport } from './routes/app.planes'
 import { Route as AppPlanExitosoRouteImport } from './routes/app.plan-exitoso'
 import { Route as AppPerfilRouteImport } from './routes/app.perfil'
 import { Route as AppPagoExitosoRouteImport } from './routes/app.pago-exitoso'
+import { Route as AdminPagosRouteImport } from './routes/admin.pagos'
 import { Route as AdminNotificacionesRouteImport } from './routes/admin.notificaciones'
 import { Route as AdminClasesRouteImport } from './routes/admin.clases'
+import { Route as AdminAlumnasRouteImport } from './routes/admin.alumnas'
 import { Route as ApiPublicHooksAutoCancelClassesRouteImport } from './routes/api/public/hooks/auto-cancel-classes'
 
 const SignupRoute = SignupRouteImport.update({
@@ -91,6 +93,11 @@ const AppPagoExitosoRoute = AppPagoExitosoRouteImport.update({
   path: '/pago-exitoso',
   getParentRoute: () => AppRoute,
 } as any)
+const AdminPagosRoute = AdminPagosRouteImport.update({
+  id: '/pagos',
+  path: '/pagos',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminNotificacionesRoute = AdminNotificacionesRouteImport.update({
   id: '/notificaciones',
   path: '/notificaciones',
@@ -99,6 +106,11 @@ const AdminNotificacionesRoute = AdminNotificacionesRouteImport.update({
 const AdminClasesRoute = AdminClasesRouteImport.update({
   id: '/clases',
   path: '/clases',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAlumnasRoute = AdminAlumnasRouteImport.update({
+  id: '/alumnas',
+  path: '/alumnas',
   getParentRoute: () => AdminRoute,
 } as any)
 const ApiPublicHooksAutoCancelClassesRoute =
@@ -114,8 +126,10 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/admin/alumnas': typeof AdminAlumnasRoute
   '/admin/clases': typeof AdminClasesRoute
   '/admin/notificaciones': typeof AdminNotificacionesRoute
+  '/admin/pagos': typeof AdminPagosRoute
   '/app/pago-exitoso': typeof AppPagoExitosoRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/plan-exitoso': typeof AppPlanExitosoRoute
@@ -130,8 +144,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/admin/alumnas': typeof AdminAlumnasRoute
   '/admin/clases': typeof AdminClasesRoute
   '/admin/notificaciones': typeof AdminNotificacionesRoute
+  '/admin/pagos': typeof AdminPagosRoute
   '/app/pago-exitoso': typeof AppPagoExitosoRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/plan-exitoso': typeof AppPlanExitosoRoute
@@ -149,8 +165,10 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/admin/alumnas': typeof AdminAlumnasRoute
   '/admin/clases': typeof AdminClasesRoute
   '/admin/notificaciones': typeof AdminNotificacionesRoute
+  '/admin/pagos': typeof AdminPagosRoute
   '/app/pago-exitoso': typeof AppPagoExitosoRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/plan-exitoso': typeof AppPlanExitosoRoute
@@ -169,8 +187,10 @@ export interface FileRouteTypes {
     | '/app'
     | '/login'
     | '/signup'
+    | '/admin/alumnas'
     | '/admin/clases'
     | '/admin/notificaciones'
+    | '/admin/pagos'
     | '/app/pago-exitoso'
     | '/app/perfil'
     | '/app/plan-exitoso'
@@ -185,8 +205,10 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
+    | '/admin/alumnas'
     | '/admin/clases'
     | '/admin/notificaciones'
+    | '/admin/pagos'
     | '/app/pago-exitoso'
     | '/app/perfil'
     | '/app/plan-exitoso'
@@ -203,8 +225,10 @@ export interface FileRouteTypes {
     | '/app'
     | '/login'
     | '/signup'
+    | '/admin/alumnas'
     | '/admin/clases'
     | '/admin/notificaciones'
+    | '/admin/pagos'
     | '/app/pago-exitoso'
     | '/app/perfil'
     | '/app/plan-exitoso'
@@ -318,6 +342,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPagoExitosoRouteImport
       parentRoute: typeof AppRoute
     }
+    '/admin/pagos': {
+      id: '/admin/pagos'
+      path: '/pagos'
+      fullPath: '/admin/pagos'
+      preLoaderRoute: typeof AdminPagosRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/notificaciones': {
       id: '/admin/notificaciones'
       path: '/notificaciones'
@@ -332,6 +363,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminClasesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/alumnas': {
+      id: '/admin/alumnas'
+      path: '/alumnas'
+      fullPath: '/admin/alumnas'
+      preLoaderRoute: typeof AdminAlumnasRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/api/public/hooks/auto-cancel-classes': {
       id: '/api/public/hooks/auto-cancel-classes'
       path: '/api/public/hooks/auto-cancel-classes'
@@ -343,14 +381,18 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminAlumnasRoute: typeof AdminAlumnasRoute
   AdminClasesRoute: typeof AdminClasesRoute
   AdminNotificacionesRoute: typeof AdminNotificacionesRoute
+  AdminPagosRoute: typeof AdminPagosRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAlumnasRoute: AdminAlumnasRoute,
   AdminClasesRoute: AdminClasesRoute,
   AdminNotificacionesRoute: AdminNotificacionesRoute,
+  AdminPagosRoute: AdminPagosRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 

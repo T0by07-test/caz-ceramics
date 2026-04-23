@@ -8,8 +8,10 @@ function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Página no encontrada</h2>
+        <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-secondary">
+          <span aria-hidden className="text-5xl">🏺</span>
+        </div>
+        <h1 className="text-h1 text-foreground">Página no encontrada</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           La página que buscas no existe o se ha movido.
         </p>
