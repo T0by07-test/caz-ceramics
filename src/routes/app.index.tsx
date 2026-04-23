@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -8,12 +9,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { addMonths } from "@/lib/calendar";
 import {
@@ -24,6 +19,8 @@ import {
   formatTimeRange,
 } from "@/lib/calendar";
 import { useMonthClasses, type ClassWithCount } from "@/hooks/useMonthClasses";
+import { useMyPlan } from "@/hooks/useMyPlan";
+import { bookClass } from "@/lib/booking";
 import { MonthHeader } from "@/components/calendar/MonthHeader";
 import { MonthGrid } from "@/components/calendar/MonthGrid";
 import { MobileWeekList } from "@/components/calendar/MobileWeekList";
@@ -35,7 +32,7 @@ export const Route = createFileRoute("/app/")({
 function CalendarioPage() {
   const [reference, setReference] = useState(() => new Date());
   const [selected, setSelected] = useState<ClassWithCount | null>(null);
-  const { classes, loading } = useMonthClasses(reference, "student");
+  const { classes, loading, refresh } = useMonthClasses(reference, "student");
 
   return (
     <div className="space-y-6">
@@ -88,6 +85,10 @@ function CalendarioPage() {
       <ClassDetailsSheet
         cls={selected}
         onOpenChange={(open) => !open && setSelected(null)}
+        onBooked={() => {
+          setSelected(null);
+          void refresh();
+        }}
       />
     </div>
   );
@@ -132,13 +133,39 @@ function ListSkeleton() {
 function ClassDetailsSheet({
   cls,
   onOpenChange,
+  onBooked,
 }: {
   cls: ClassWithCount | null;
   onOpenChange: (open: boolean) => void;
+  onBooked: () => void;
 }) {
   const open = cls !== null;
   const level = cls ? capacityLevel(cls.booked_count, cls.capacity_max) : "available";
   const available = cls ? Math.max(cls.capacity_max - cls.booked_count, 0) : 0;
+  // Look up the credits for the class's month (not necessarily the visible month).
+  const planMonth = cls ? new Date(...cls.date.split("-").map(Number).map((n, i) => i === 1 ? n - 1 : n) as [number, number, number]) : undefined;
+  const { creditsRemaining } = useMyPlan(planMonth);
+  const [submitting, setSubmitting] = useState(false);
+
+  const isFull = cls ? cls.booked_count >= cls.capacity_max : true;
+  const usePlan = (creditsRemaining ?? 0) > 0;
+
+  const handleBook = async () => {
+    if (!cls) return;
+    setSubmitting(true);
+    try {
+      await bookClass(cls.id, usePlan ? "plan" : "drop_in");
+      toast.success("Clase reservada");
+      onBooked();
+    } catch (err) {
+      toast.error("No se pudo reservar", {
+        description: err instanceof Error ? err.message : undefined,
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-md">
@@ -174,18 +201,20 @@ function ClassDetailsSheet({
                 <dd className="font-medium tabular-nums">{cls.capacity_ideal}</dd>
               </div>
             </dl>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="block">
-                    <Button className="w-full" disabled>
-                      Reservar
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>Próximamente</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Button
+              className="w-full"
+              size="lg"
+              onClick={handleBook}
+              disabled={submitting || isFull}
+            >
+              {submitting
+                ? "Reservando…"
+                : isFull
+                  ? "Clase completa"
+                  : usePlan
+                    ? `Reservar con mi plan (${creditsRemaining} restantes)`
+                    : "Reservar clase suelta"}
+            </Button>
           </div>
         ) : null}
       </SheetContent>
