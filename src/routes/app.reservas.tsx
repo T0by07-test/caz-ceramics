@@ -349,3 +349,55 @@ function CancelDialog({
     </AlertDialog>
   );
 }
+
+function WaitlistList({
+  rows,
+  loading,
+  onLeave,
+}: {
+  rows: WaitRow[];
+  loading: boolean;
+  onLeave: (id: string) => void | Promise<void>;
+}) {
+  if (loading) {
+    return (
+      <div className="space-y-2">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="h-20 animate-pulse rounded-xl border border-border bg-surface" />
+        ))}
+      </div>
+    );
+  }
+  if (rows.length === 0) {
+    return (
+      <div className="rounded-xl border border-border bg-surface p-6 text-center text-sm text-muted-foreground shadow-card">
+        No estás en ninguna lista de espera.
+      </div>
+    );
+  }
+  return (
+    <ul className="space-y-2">
+      {rows.map((w) => (
+        <li
+          key={w.id}
+          className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 shadow-card sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div className="min-w-0">
+            <div className="text-sm font-semibold capitalize">
+              {w.classes ? formatLongDate(w.classes.date) : "Clase"}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {w.classes ? formatTimeRange(w.classes.start_time, w.classes.end_time) : ""}
+            </div>
+            <div className="mt-2">
+              <Badge variant="outline">Posición {w.position}</Badge>
+            </div>
+          </div>
+          <Button variant="outline" onClick={() => void onLeave(w.id)}>
+            Salir de la lista
+          </Button>
+        </li>
+      ))}
+    </ul>
+  );
+}
