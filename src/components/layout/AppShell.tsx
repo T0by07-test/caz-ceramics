@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { Calendar, BookmarkCheck, RotateCcw, User, LogOut } from "lucide-react";
+import { Calendar, BookmarkCheck, RotateCcw, User, LogOut, CreditCard } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
@@ -121,5 +121,5 @@ export const studentNavItems: NavItem[] = [
   { to: "/app", label: "Calendario", icon: Calendar },
   { to: "/app/reservas", label: "Reservas", icon: BookmarkCheck },
   { to: "/app/recuperaciones", label: "Recuperaciones", icon: RotateCcw },
-  { to: "/app/perfil", label: "Perfil", icon: User },
+  { to: "/app/planes", label: "Planes", icon: CreditCard },
 ];

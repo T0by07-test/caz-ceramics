@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, studentNavItems } from "@/components/layout/AppShell";
 import { RouteGuard } from "@/components/RouteGuard";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 export const Route = createFileRoute("/app")({
   head: () => ({
@@ -12,7 +13,10 @@ export const Route = createFileRoute("/app")({
 function AppLayout() {
   return (
     <RouteGuard requireRole="student">
-      <AppShell brand="Cerámica Studio" items={studentNavItems} />
+      <>
+        <PaymentTestModeBanner />
+        <AppShell brand="Cerámica Studio" items={studentNavItems} />
+      </>
     </RouteGuard>
   );
 }

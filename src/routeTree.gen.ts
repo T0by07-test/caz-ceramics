@@ -18,6 +18,9 @@ import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AppReservasRouteImport } from './routes/app.reservas'
 import { Route as AppRecuperacionesRouteImport } from './routes/app.recuperaciones'
+import { Route as AppPlanesRouteImport } from './routes/app.planes'
+import { Route as AppPlanExitosoRouteImport } from './routes/app.plan-exitoso'
+import { Route as AppPagoExitosoRouteImport } from './routes/app.pago-exitoso'
 import { Route as AdminClasesRouteImport } from './routes/admin.clases'
 import { Route as ApiPublicHooksAutoCancelClassesRouteImport } from './routes/api/public/hooks/auto-cancel-classes'
 
@@ -66,6 +69,21 @@ const AppRecuperacionesRoute = AppRecuperacionesRouteImport.update({
   path: '/recuperaciones',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPlanesRoute = AppPlanesRouteImport.update({
+  id: '/planes',
+  path: '/planes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPlanExitosoRoute = AppPlanExitosoRouteImport.update({
+  id: '/plan-exitoso',
+  path: '/plan-exitoso',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPagoExitosoRoute = AppPagoExitosoRouteImport.update({
+  id: '/pago-exitoso',
+  path: '/pago-exitoso',
+  getParentRoute: () => AppRoute,
+} as any)
 const AdminClasesRoute = AdminClasesRouteImport.update({
   id: '/clases',
   path: '/clases',
@@ -85,6 +103,9 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/admin/clases': typeof AdminClasesRoute
+  '/app/pago-exitoso': typeof AppPagoExitosoRoute
+  '/app/plan-exitoso': typeof AppPlanExitosoRoute
+  '/app/planes': typeof AppPlanesRoute
   '/app/recuperaciones': typeof AppRecuperacionesRoute
   '/app/reservas': typeof AppReservasRoute
   '/admin/': typeof AdminIndexRoute
@@ -96,6 +117,9 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/admin/clases': typeof AdminClasesRoute
+  '/app/pago-exitoso': typeof AppPagoExitosoRoute
+  '/app/plan-exitoso': typeof AppPlanExitosoRoute
+  '/app/planes': typeof AppPlanesRoute
   '/app/recuperaciones': typeof AppRecuperacionesRoute
   '/app/reservas': typeof AppReservasRoute
   '/admin': typeof AdminIndexRoute
@@ -110,6 +134,9 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/admin/clases': typeof AdminClasesRoute
+  '/app/pago-exitoso': typeof AppPagoExitosoRoute
+  '/app/plan-exitoso': typeof AppPlanExitosoRoute
+  '/app/planes': typeof AppPlanesRoute
   '/app/recuperaciones': typeof AppRecuperacionesRoute
   '/app/reservas': typeof AppReservasRoute
   '/admin/': typeof AdminIndexRoute
@@ -125,6 +152,9 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/admin/clases'
+    | '/app/pago-exitoso'
+    | '/app/plan-exitoso'
+    | '/app/planes'
     | '/app/recuperaciones'
     | '/app/reservas'
     | '/admin/'
@@ -136,6 +166,9 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/admin/clases'
+    | '/app/pago-exitoso'
+    | '/app/plan-exitoso'
+    | '/app/planes'
     | '/app/recuperaciones'
     | '/app/reservas'
     | '/admin'
@@ -149,6 +182,9 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/admin/clases'
+    | '/app/pago-exitoso'
+    | '/app/plan-exitoso'
+    | '/app/planes'
     | '/app/recuperaciones'
     | '/app/reservas'
     | '/admin/'
@@ -230,6 +266,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRecuperacionesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/planes': {
+      id: '/app/planes'
+      path: '/planes'
+      fullPath: '/app/planes'
+      preLoaderRoute: typeof AppPlanesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/plan-exitoso': {
+      id: '/app/plan-exitoso'
+      path: '/plan-exitoso'
+      fullPath: '/app/plan-exitoso'
+      preLoaderRoute: typeof AppPlanExitosoRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/pago-exitoso': {
+      id: '/app/pago-exitoso'
+      path: '/pago-exitoso'
+      fullPath: '/app/pago-exitoso'
+      preLoaderRoute: typeof AppPagoExitosoRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/admin/clases': {
       id: '/admin/clases'
       path: '/clases'
@@ -260,12 +317,18 @@ const AdminRouteChildren: AdminRouteChildren = {
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface AppRouteChildren {
+  AppPagoExitosoRoute: typeof AppPagoExitosoRoute
+  AppPlanExitosoRoute: typeof AppPlanExitosoRoute
+  AppPlanesRoute: typeof AppPlanesRoute
   AppRecuperacionesRoute: typeof AppRecuperacionesRoute
   AppReservasRoute: typeof AppReservasRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppPagoExitosoRoute: AppPagoExitosoRoute,
+  AppPlanExitosoRoute: AppPlanExitosoRoute,
+  AppPlanesRoute: AppPlanesRoute,
   AppRecuperacionesRoute: AppRecuperacionesRoute,
   AppReservasRoute: AppReservasRoute,
   AppIndexRoute: AppIndexRoute,
