@@ -389,6 +389,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      book_class: {
+        Args: { p_class_id: string; p_source: string }
+        Returns: {
+          booking_id: string
+          status: string
+        }[]
+      }
+      cancel_booking: {
+        Args: { p_booking_id: string }
+        Returns: {
+          booking_id: string
+          makeup_id: string
+          status: string
+        }[]
+      }
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
