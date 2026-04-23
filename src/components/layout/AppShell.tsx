@@ -92,7 +92,7 @@ export function AppShell({ brand, items }: Props) {
 
       {/* Mobile bottom nav */}
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface lg:hidden">
-        <ul className="mx-auto grid max-w-md grid-cols-4">
+          <ul className={`mx-auto grid max-w-md grid-cols-${items.length}`} style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
           {items.map((item) => {
             const active =
               pathname === item.to || (item.to !== "/" && pathname.startsWith(item.to));
@@ -122,4 +122,5 @@ export const studentNavItems: NavItem[] = [
   { to: "/app/reservas", label: "Reservas", icon: BookmarkCheck },
   { to: "/app/recuperaciones", label: "Recuperaciones", icon: RotateCcw },
   { to: "/app/planes", label: "Planes", icon: CreditCard },
+  { to: "/app/perfil", label: "Perfil", icon: User },
 ];
