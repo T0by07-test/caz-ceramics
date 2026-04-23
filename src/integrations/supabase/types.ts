@@ -145,8 +145,12 @@ export type Database = {
         Row: {
           channel: string
           created_at: string
+          dedup_key: string | null
           id: string
+          last_error: string | null
+          next_attempt_at: string
           payload: Json
+          retry_count: number
           sent_at: string | null
           status: string
           student_id: string
@@ -155,8 +159,12 @@ export type Database = {
         Insert: {
           channel: string
           created_at?: string
+          dedup_key?: string | null
           id?: string
+          last_error?: string | null
+          next_attempt_at?: string
           payload?: Json
+          retry_count?: number
           sent_at?: string | null
           status?: string
           student_id: string
@@ -165,8 +173,12 @@ export type Database = {
         Update: {
           channel?: string
           created_at?: string
+          dedup_key?: string | null
           id?: string
+          last_error?: string | null
+          next_attempt_at?: string
           payload?: Json
+          retry_count?: number
           sent_at?: string | null
           status?: string
           student_id?: string
@@ -411,8 +423,30 @@ export type Database = {
           status: string
         }[]
       }
+      claim_notifications: {
+        Args: { p_limit: number }
+        Returns: {
+          channel: string
+          id: string
+          payload: Json
+          retry_count: number
+          student_id: string
+          type: string
+        }[]
+      }
       confirm_drop_in_booking: {
         Args: { p_session_id: string }
+        Returns: undefined
+      }
+      enqueue_24h_reminders: { Args: never; Returns: number }
+      enqueue_monthly_summary: { Args: never; Returns: number }
+      enqueue_notification: {
+        Args: {
+          p_dedup_suffix: string
+          p_payload: Json
+          p_student_id: string
+          p_type: string
+        }
         Returns: undefined
       }
       expire_pending_drop_ins: { Args: never; Returns: number }
@@ -429,6 +463,11 @@ export type Database = {
           waitlist_id: string
         }[]
       }
+      mark_notification_failed: {
+        Args: { p_error: string; p_id: string }
+        Returns: undefined
+      }
+      mark_notification_sent: { Args: { p_id: string }; Returns: undefined }
       promote_waitlist: { Args: { p_class_id: string }; Returns: undefined }
     }
     Enums: {
