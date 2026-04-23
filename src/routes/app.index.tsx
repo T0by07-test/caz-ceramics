@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +21,9 @@ import {
 import { useMonthClasses, type ClassWithCount } from "@/hooks/useMonthClasses";
 import { useMyPlan } from "@/hooks/useMyPlan";
 import { bookClass } from "@/lib/booking";
+import { joinWaitlist } from "@/lib/waitlist";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { MonthHeader } from "@/components/calendar/MonthHeader";
 import { MonthGrid } from "@/components/calendar/MonthGrid";
 import { MobileWeekList } from "@/components/calendar/MobileWeekList";
