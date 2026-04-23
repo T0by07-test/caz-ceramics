@@ -22,6 +22,8 @@ import { useMonthClasses, type ClassWithCount } from "@/hooks/useMonthClasses";
 import { useMyPlan } from "@/hooks/useMyPlan";
 import { bookClass } from "@/lib/booking";
 import { joinWaitlist } from "@/lib/waitlist";
+import { createDropInCheckout } from "@/lib/checkout";
+import { StripeCheckoutDialog } from "@/components/StripeCheckoutDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { MonthHeader } from "@/components/calendar/MonthHeader";
@@ -158,6 +160,8 @@ function ClassDetailsSheet({
   const [waitlistCount, setWaitlistCount] = useState(0);
   const [myWaitlistId, setMyWaitlistId] = useState<string | null>(null);
   const [joiningWl, setJoiningWl] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [pendingBookingId, setPendingBookingId] = useState<string | null>(null);
 
   const isFull = cls ? cls.booked_count >= cls.capacity_max : true;
   const usePlan = (creditsRemaining ?? 0) > 0;
@@ -206,9 +210,15 @@ function ClassDetailsSheet({
     if (!cls) return;
     setSubmitting(true);
     try {
-      await bookClass(cls.id, usePlan ? "plan" : "drop_in");
-      toast.success("Clase reservada");
-      onBooked();
+      const res = await bookClass(cls.id, usePlan ? "plan" : "drop_in");
+      if (usePlan) {
+        toast.success("Clase reservada");
+        onBooked();
+      } else {
+        // Drop-in: open Stripe checkout for this booking
+        setPendingBookingId(res.booking_id);
+        setCheckoutOpen(true);
+      }
     } catch (err) {
       toast.error("No se pudo reservar", {
         description: err instanceof Error ? err.message : undefined,
@@ -236,6 +246,7 @@ function ClassDetailsSheet({
   };
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-md">
         <SheetHeader>
@@ -300,5 +311,26 @@ function ClassDetailsSheet({
         ) : null}
       </SheetContent>
     </Sheet>
+      <StripeCheckoutDialog
+        open={checkoutOpen}
+        onOpenChange={(o) => {
+          setCheckoutOpen(o);
+          if (!o) {
+            setPendingBookingId(null);
+            onBooked();
+          }
+        }}
+        title="Pagar clase suelta"
+        fetchClientSecret={async () => {
+          if (!pendingBookingId) throw new Error("No booking");
+          const returnUrl = `${window.location.origin}/app/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`;
+          const { clientSecret } = await createDropInCheckout({
+            bookingId: pendingBookingId,
+            returnUrl,
+          });
+          return clientSecret;
+        }}
+      />
+    </>
   );
 }
