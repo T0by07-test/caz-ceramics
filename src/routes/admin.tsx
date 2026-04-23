@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell";
 import { LayoutDashboard, CalendarDays, Users, Settings } from "lucide-react";
+import { RouteGuard } from "@/components/RouteGuard";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -11,14 +12,16 @@ export const Route = createFileRoute("/admin")({
 
 function AdminLayout() {
   return (
-    <AppShell
-      brand="Cerámica Studio · Admin"
-      items={[
-        { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
-        { to: "/admin/clases", label: "Clases", icon: CalendarDays },
-        { to: "/admin/alumnas", label: "Alumnas", icon: Users },
-        { to: "/admin/ajustes", label: "Ajustes", icon: Settings },
-      ]}
-    />
+    <RouteGuard requireRole="admin">
+      <AppShell
+        brand="Cerámica Studio · Admin"
+        items={[
+          { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
+          { to: "/admin/clases", label: "Clases", icon: CalendarDays },
+          { to: "/admin/alumnas", label: "Alumnas", icon: Users },
+          { to: "/admin/ajustes", label: "Ajustes", icon: Settings },
+        ]}
+      />
+    </RouteGuard>
   );
 }

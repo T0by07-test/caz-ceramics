@@ -1,6 +1,7 @@
-import { Link, Outlet, useLocation } from "@tanstack/react-router";
+import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { Calendar, BookmarkCheck, RotateCcw, User, LogOut } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useAuth } from "@/lib/auth";
 
 type NavItem = {
   to: string;
@@ -16,6 +17,13 @@ type Props = {
 export function AppShell({ brand, items }: Props) {
   const location = useLocation();
   const pathname = location.pathname;
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate({ to: "/login" });
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -28,9 +36,11 @@ export function AppShell({ brand, items }: Props) {
           </div>
           <button
             type="button"
+            onClick={handleSignOut}
             className="inline-flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
-            <span className="hidden sm:inline">Mi cuenta</span>
+            <LogOut className="h-4 w-4" />
+            <span className="hidden sm:inline">Salir</span>
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
               <User className="h-4 w-4" />
             </span>
@@ -63,13 +73,14 @@ export function AppShell({ brand, items }: Props) {
             })}
           </nav>
           <div className="mt-auto pt-6">
-            <Link
-              to="/"
-              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               <LogOut className="h-4 w-4" />
               Salir
-            </Link>
+            </button>
           </div>
         </aside>
 
