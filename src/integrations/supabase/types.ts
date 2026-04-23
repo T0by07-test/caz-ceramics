@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_actions: {
+        Row: {
+          action_type: string
+          admin_id: string
+          created_at: string
+          id: string
+          metadata: Json
+          reason: string | null
+          student_id: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          reason?: string | null
+          student_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          reason?: string | null
+          student_id?: string | null
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           cancelled_at: string | null
@@ -401,6 +431,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_grant_makeup: {
+        Args: { p_reason: string; p_student_id: string }
+        Returns: string
+      }
+      admin_move_booking: {
+        Args: {
+          p_booking_id: string
+          p_reason: string
+          p_target_class_id: string
+        }
+        Returns: undefined
+      }
       auto_cancel_low_attendance: {
         Args: never
         Returns: {
