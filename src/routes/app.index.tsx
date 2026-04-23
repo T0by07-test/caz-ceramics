@@ -25,6 +25,11 @@ import { MonthHeader } from "@/components/calendar/MonthHeader";
 import { MonthGrid } from "@/components/calendar/MonthGrid";
 import { MobileWeekList } from "@/components/calendar/MobileWeekList";
 
+function parseIsoToLocalDate(iso: string): Date {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
 export const Route = createFileRoute("/app/")({
   component: CalendarioPage,
 });
@@ -142,8 +147,8 @@ function ClassDetailsSheet({
   const open = cls !== null;
   const level = cls ? capacityLevel(cls.booked_count, cls.capacity_max) : "available";
   const available = cls ? Math.max(cls.capacity_max - cls.booked_count, 0) : 0;
-  // Look up the credits for the class's month (not necessarily the visible month).
-  const planMonth = cls ? new Date(...cls.date.split("-").map(Number).map((n, i) => i === 1 ? n - 1 : n) as [number, number, number]) : undefined;
+  // Look up the credits for the class's month (not necessarily the visible one).
+  const planMonth = cls ? parseIsoToLocalDate(cls.date) : undefined;
   const { creditsRemaining } = useMyPlan(planMonth);
   const [submitting, setSubmitting] = useState(false);
 
