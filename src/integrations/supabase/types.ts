@@ -14,13 +14,382 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          cancelled_at: string | null
+          class_id: string
+          created_at: string
+          id: string
+          source: string
+          status: string
+          student_id: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          class_id: string
+          created_at?: string
+          id?: string
+          source: string
+          status?: string
+          student_id: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          class_id?: string
+          created_at?: string
+          id?: string
+          source?: string
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classes: {
+        Row: {
+          capacity_ideal: number
+          capacity_max: number
+          created_at: string
+          date: string
+          end_time: string
+          id: string
+          start_time: string
+          status: string
+        }
+        Insert: {
+          capacity_ideal?: number
+          capacity_max?: number
+          created_at?: string
+          date: string
+          end_time: string
+          id?: string
+          start_time: string
+          status?: string
+        }
+        Update: {
+          capacity_ideal?: number
+          capacity_max?: number
+          created_at?: string
+          date?: string
+          end_time?: string
+          id?: string
+          start_time?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      makeups: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          source_booking_id: string
+          student_id: string
+          used_booking_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          source_booking_id: string
+          student_id: string
+          used_booking_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          source_booking_id?: string
+          student_id?: string
+          used_booking_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "makeups_source_booking_id_fkey"
+            columns: ["source_booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "makeups_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "makeups_used_booking_id_fkey"
+            columns: ["used_booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          channel: string
+          created_at: string
+          id: string
+          payload: Json
+          sent_at: string | null
+          status: string
+          student_id: string
+          type: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          id?: string
+          payload?: Json
+          sent_at?: string | null
+          status?: string
+          student_id: string
+          type: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          id?: string
+          payload?: Json
+          sent_at?: string | null
+          status?: string
+          student_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount_cents: number
+          booking_id: string | null
+          created_at: string
+          id: string
+          status: string
+          stripe_session_id: string | null
+          student_id: string
+          subscription_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          status?: string
+          stripe_session_id?: string | null
+          student_id: string
+          subscription_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          status?: string
+          stripe_session_id?: string | null
+          student_id?: string
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plans: {
+        Row: {
+          active: boolean
+          classes_per_month: number
+          created_at: string
+          id: string
+          name: string
+          price_cents: number
+          stripe_price_id: string
+        }
+        Insert: {
+          active?: boolean
+          classes_per_month: number
+          created_at?: string
+          id?: string
+          name: string
+          price_cents?: number
+          stripe_price_id?: string
+        }
+        Update: {
+          active?: boolean
+          classes_per_month?: number
+          created_at?: string
+          id?: string
+          name?: string
+          price_cents?: number
+          stripe_price_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string | null
+          notification_preference: string
+          role: string
+          surname: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id: string
+          name?: string | null
+          notification_preference?: string
+          role?: string
+          surname?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          notification_preference?: string
+          role?: string
+          surname?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          credits_remaining: number
+          credits_total: number
+          id: string
+          month: string
+          plan_id: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_remaining: number
+          credits_total: number
+          id?: string
+          month: string
+          plan_id: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_remaining?: number
+          credits_total?: number
+          id?: string
+          month?: string
+          plan_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      waitlist: {
+        Row: {
+          class_id: string
+          created_at: string
+          id: string
+          position: number
+          student_id: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          id?: string
+          position: number
+          student_id: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          id?: string
+          position?: number
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waitlist_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waitlist_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
