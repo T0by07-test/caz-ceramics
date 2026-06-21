@@ -8,6 +8,7 @@ import {
   Wallet,
   Inbox,
   MessageCircle,
+  NotebookPen,
 } from "lucide-react";
 import { RouteGuard } from "@/components/RouteGuard";
 
@@ -30,6 +31,7 @@ function AdminLayout() {
           { to: "/admin/alumnas", label: "Alumnas", icon: Users },
           { to: "/admin/mensajes", label: "Mensajes", icon: MessageCircle },
           { to: "/admin/pagos", label: "Pagos", icon: Wallet },
+          { to: "/admin/registro", label: "Registro", icon: NotebookPen },
           { to: "/admin/notificaciones", label: "Notificaciones", icon: Bell },
         ]}
       />

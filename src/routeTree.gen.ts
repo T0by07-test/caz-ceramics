@@ -25,6 +25,7 @@ import { Route as AppPlanExitosoRouteImport } from './routes/app.plan-exitoso'
 import { Route as AppPerfilRouteImport } from './routes/app.perfil'
 import { Route as AppPagoExitosoRouteImport } from './routes/app.pago-exitoso'
 import { Route as AdminSolicitudesRouteImport } from './routes/admin.solicitudes'
+import { Route as AdminRegistroRouteImport } from './routes/admin.registro'
 import { Route as AdminPagosRouteImport } from './routes/admin.pagos'
 import { Route as AdminNotificacionesRouteImport } from './routes/admin.notificaciones'
 import { Route as AdminMensajesRouteImport } from './routes/admin.mensajes'
@@ -112,6 +113,11 @@ const AdminSolicitudesRoute = AdminSolicitudesRouteImport.update({
   path: '/solicitudes',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminRegistroRoute = AdminRegistroRouteImport.update({
+  id: '/registro',
+  path: '/registro',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPagosRoute = AdminPagosRouteImport.update({
   id: '/pagos',
   path: '/pagos',
@@ -156,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/admin/mensajes': typeof AdminMensajesRoute
   '/admin/notificaciones': typeof AdminNotificacionesRoute
   '/admin/pagos': typeof AdminPagosRoute
+  '/admin/registro': typeof AdminRegistroRoute
   '/admin/solicitudes': typeof AdminSolicitudesRoute
   '/app/pago-exitoso': typeof AppPagoExitosoRoute
   '/app/perfil': typeof AppPerfilRoute
@@ -178,6 +185,7 @@ export interface FileRoutesByTo {
   '/admin/mensajes': typeof AdminMensajesRoute
   '/admin/notificaciones': typeof AdminNotificacionesRoute
   '/admin/pagos': typeof AdminPagosRoute
+  '/admin/registro': typeof AdminRegistroRoute
   '/admin/solicitudes': typeof AdminSolicitudesRoute
   '/app/pago-exitoso': typeof AppPagoExitosoRoute
   '/app/perfil': typeof AppPerfilRoute
@@ -203,6 +211,7 @@ export interface FileRoutesById {
   '/admin/mensajes': typeof AdminMensajesRoute
   '/admin/notificaciones': typeof AdminNotificacionesRoute
   '/admin/pagos': typeof AdminPagosRoute
+  '/admin/registro': typeof AdminRegistroRoute
   '/admin/solicitudes': typeof AdminSolicitudesRoute
   '/app/pago-exitoso': typeof AppPagoExitosoRoute
   '/app/perfil': typeof AppPerfilRoute
@@ -229,6 +238,7 @@ export interface FileRouteTypes {
     | '/admin/mensajes'
     | '/admin/notificaciones'
     | '/admin/pagos'
+    | '/admin/registro'
     | '/admin/solicitudes'
     | '/app/pago-exitoso'
     | '/app/perfil'
@@ -251,6 +261,7 @@ export interface FileRouteTypes {
     | '/admin/mensajes'
     | '/admin/notificaciones'
     | '/admin/pagos'
+    | '/admin/registro'
     | '/admin/solicitudes'
     | '/app/pago-exitoso'
     | '/app/perfil'
@@ -275,6 +286,7 @@ export interface FileRouteTypes {
     | '/admin/mensajes'
     | '/admin/notificaciones'
     | '/admin/pagos'
+    | '/admin/registro'
     | '/admin/solicitudes'
     | '/app/pago-exitoso'
     | '/app/perfil'
@@ -413,6 +425,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSolicitudesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/registro': {
+      id: '/admin/registro'
+      path: '/registro'
+      fullPath: '/admin/registro'
+      preLoaderRoute: typeof AdminRegistroRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/pagos': {
       id: '/admin/pagos'
       path: '/pagos'
@@ -464,6 +483,7 @@ interface AdminRouteChildren {
   AdminMensajesRoute: typeof AdminMensajesRoute
   AdminNotificacionesRoute: typeof AdminNotificacionesRoute
   AdminPagosRoute: typeof AdminPagosRoute
+  AdminRegistroRoute: typeof AdminRegistroRoute
   AdminSolicitudesRoute: typeof AdminSolicitudesRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -474,6 +494,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminMensajesRoute: AdminMensajesRoute,
   AdminNotificacionesRoute: AdminNotificacionesRoute,
   AdminPagosRoute: AdminPagosRoute,
+  AdminRegistroRoute: AdminRegistroRoute,
   AdminSolicitudesRoute: AdminSolicitudesRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
