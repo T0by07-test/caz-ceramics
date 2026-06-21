@@ -1,63 +1,66 @@
 -- Block A · A2.2 — Scheduler cron jobs
 --
--- Registers the recurring jobs for Block A. Each job is guarded by a
--- cron.unschedule() inside a DO/EXCEPTION block (matching the existing
--- 'expire-pending-drop-ins' job) so re-running this migration is idempotent.
+-- Registers the recurring jobs for Block A IF pg_cron is available.
 --
--- The existing 'expire-pending-drop-ins' job (every 5 min) is intentionally
--- left untouched.
+-- LOVABLE CLOUD NOTE: pg_cron is not the supported scheduling path on Lovable
+-- Cloud (no direct DB/service access). Each job below is wrapped in an
+-- exception-tolerant DO block, so if the `cron` schema does not exist this
+-- migration NO-OPS instead of bricking the batch. In that case, schedule these
+-- externally (e.g. cron-job.org / Crontap / Inngest):
+--   * POST .../functions/v1/process-notifications  every minute   (header x-cron-secret: <CRON_SECRET>)
+--   * POST .../api/public/hooks/auto-cancel-classes daily          (header x-cron-secret: <CRON_SECRET>)
+--   * enqueue_24h_reminders() / enqueue_monthly_summary() are SQL RPCs — trigger
+--     them via a small wrapper Edge Function hit by the external scheduler.
 --
--- TIME ZONES: pg_cron evaluates schedules in UTC. The studio operates in
--- Europe/Madrid (UTC+1 in winter, UTC+2 in summer / DST). The wall-clock times
--- below are therefore approximate during the half of the year with the "wrong"
--- offset; confirm exact desired local times with the owner (Cande). The two
--- daily/monthly jobs below are pinned to 07:00 UTC (= 08:00 Madrid in winter,
--- 09:00 Madrid in summer).
---
--- process-notifications is the only HTTP job: it POSTs to the Edge Function and
--- forwards the CRON_SECRET via the 'x-cron-secret' header (shared contract #1).
--- The secret is read from Vault (vault.decrypted_secrets, name='CRON_SECRET').
--- If the secret is not yet stored in Vault the header value is NULL and the
--- Edge Function — per the progressive-hardening contract — still accepts the
--- call as long as CRON_SECRET is unset in its own env.
+-- TIME ZONES: pg_cron evaluates in UTC; the studio is Europe/Madrid (DST). The
+-- daily/monthly jobs are pinned to 07:00 UTC; confirm exact local times.
+-- The existing 'expire-pending-drop-ins' job is intentionally left untouched.
 
 -- 1) process-notifications — every minute (drains the notification queue)
-DO $$ BEGIN PERFORM cron.unschedule('process-notifications'); EXCEPTION WHEN others THEN NULL; END $$;
-SELECT cron.schedule(
-  'process-notifications',
-  '* * * * *',
-  $cron$
-  SELECT net.http_post(
-    url := 'https://gqucwldwbfjfxrqwvpqj.supabase.co/functions/v1/process-notifications',
-    headers := jsonb_build_object(
-      'Content-Type', 'application/json',
-      'x-cron-secret', (SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'CRON_SECRET')
-    ),
-    body := '{}'::jsonb
+DO $do$
+BEGIN
+  BEGIN PERFORM cron.unschedule('process-notifications'); EXCEPTION WHEN OTHERS THEN NULL; END;
+  PERFORM cron.schedule(
+    'process-notifications',
+    '* * * * *',
+    $cron$
+    SELECT net.http_post(
+      url := 'https://gqucwldwbfjfxrqwvpqj.supabase.co/functions/v1/process-notifications',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'x-cron-secret', (SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'CRON_SECRET')
+      ),
+      body := '{}'::jsonb
+    );
+    $cron$
   );
-  $cron$
-);
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'process-notifications cron not scheduled (%) — schedule externally', SQLERRM;
+END $do$;
 
--- 2) enqueue-24h-reminders — hourly (queues reminders for classes 24-25h out)
-DO $$ BEGIN PERFORM cron.unschedule('enqueue-24h-reminders'); EXCEPTION WHEN others THEN NULL; END $$;
-SELECT cron.schedule(
-  'enqueue-24h-reminders',
-  '0 * * * *',
-  $cron$ SELECT public.enqueue_24h_reminders(); $cron$
-);
+-- 2) enqueue-24h-reminders — hourly
+DO $do$
+BEGIN
+  BEGIN PERFORM cron.unschedule('enqueue-24h-reminders'); EXCEPTION WHEN OTHERS THEN NULL; END;
+  PERFORM cron.schedule('enqueue-24h-reminders', '0 * * * *', $cron$ SELECT public.enqueue_24h_reminders(); $cron$);
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'enqueue-24h-reminders cron not scheduled (%) — schedule externally', SQLERRM;
+END $do$;
 
--- 3) enqueue-monthly-summary — 1st of month at 07:00 UTC (~08:00/09:00 Madrid)
-DO $$ BEGIN PERFORM cron.unschedule('enqueue-monthly-summary'); EXCEPTION WHEN others THEN NULL; END $$;
-SELECT cron.schedule(
-  'enqueue-monthly-summary',
-  '0 7 1 * *',
-  $cron$ SELECT public.enqueue_monthly_summary(); $cron$
-);
+-- 3) enqueue-monthly-summary — 1st of month at 07:00 UTC
+DO $do$
+BEGIN
+  BEGIN PERFORM cron.unschedule('enqueue-monthly-summary'); EXCEPTION WHEN OTHERS THEN NULL; END;
+  PERFORM cron.schedule('enqueue-monthly-summary', '0 7 1 * *', $cron$ SELECT public.enqueue_monthly_summary(); $cron$);
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'enqueue-monthly-summary cron not scheduled (%) — schedule externally', SQLERRM;
+END $do$;
 
--- 4) auto-cancel-classes — daily at 07:00 UTC (~08:00/09:00 Madrid; confirm with owner)
-DO $$ BEGIN PERFORM cron.unschedule('auto-cancel-classes'); EXCEPTION WHEN others THEN NULL; END $$;
-SELECT cron.schedule(
-  'auto-cancel-classes',
-  '0 7 * * *',
-  $cron$ SELECT public.auto_cancel_low_attendance(); $cron$
-);
+-- 4) auto-cancel-classes — daily at 07:00 UTC
+DO $do$
+BEGIN
+  BEGIN PERFORM cron.unschedule('auto-cancel-classes'); EXCEPTION WHEN OTHERS THEN NULL; END;
+  PERFORM cron.schedule('auto-cancel-classes', '0 7 * * *', $cron$ SELECT public.auto_cancel_low_attendance(); $cron$);
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'auto-cancel-classes cron not scheduled (%) — schedule externally', SQLERRM;
+END $do$;

@@ -1,12 +1,25 @@
 -- Block A · A2.1 — Scheduler extensions (pg_cron + pg_net)
 --
--- pg_cron drives the in-database schedule; pg_net lets cron jobs invoke our
--- Supabase Edge Functions over HTTP. On Supabase, pg_cron lives in the `cron`
--- schema and pg_net in the `extensions` schema by convention.
+-- pg_cron drives an in-database schedule; pg_net lets cron jobs call Edge
+-- Functions over HTTP.
 --
--- These may already be enabled via Dashboard → Database → Extensions (see the
--- deployment runbook §7.1). CREATE EXTENSION IF NOT EXISTS is idempotent, so
--- running this is safe either way.
+-- LOVABLE CLOUD NOTE: the managed database may not permit enabling these
+-- extensions (no direct DB/service access). We therefore wrap each CREATE
+-- EXTENSION in an exception-tolerant block so a missing/forbidden extension
+-- does NOT abort the whole migration batch — the rest of Block A/B/C must still
+-- apply. If these no-op, scheduling is done by an EXTERNAL HTTP scheduler
+-- hitting the CRON_SECRET-protected endpoints instead of pg_cron.
 
-CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA cron;
-CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions;
+DO $$
+BEGIN
+  EXECUTE 'CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA cron';
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'pg_cron not enabled (%) — use an external scheduler', SQLERRM;
+END $$;
+
+DO $$
+BEGIN
+  EXECUTE 'CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions';
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'pg_net not enabled (%) — use an external scheduler', SQLERRM;
+END $$;
