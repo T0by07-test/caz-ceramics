@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,14 +12,21 @@ import {
 } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { addMonths, formatLongDate, formatTimeRange } from "@/lib/calendar";
-import { useMonthClasses, type ClassWithCount } from "@/hooks/useMonthClasses";
-import { MonthHeader } from "@/components/calendar/MonthHeader";
-import { MonthGrid } from "@/components/calendar/MonthGrid";
-import { MobileWeekList } from "@/components/calendar/MobileWeekList";
+import { formatLongDate, formatTimeRange, toIsoDate } from "@/lib/calendar";
+import { useClassesInRange, type ClassWithCount } from "@/hooks/useClassesInRange";
+import {
+  calendarSearchSchema,
+  parseReference,
+  rangeForView,
+  shiftReference,
+  type CalendarView,
+} from "@/lib/calendar-view";
+import { CalendarHeader } from "@/components/calendar/CalendarHeader";
+import { CalendarBoard } from "@/components/calendar/CalendarBoard";
 import { bookClass } from "@/lib/booking";
 
 export const Route = createFileRoute("/app/recuperaciones")({
+  validateSearch: (search) => calendarSearchSchema.parse(search),
   component: RecuperacionesPage,
 });
 
@@ -35,9 +42,20 @@ function RecuperacionesPage() {
   const [makeups, setMakeups] = useState<Makeup[]>([]);
   const [loading, setLoading] = useState(true);
   const [picking, setPicking] = useState(false);
-  const [reference, setReference] = useState(() => new Date());
   const [selected, setSelected] = useState<ClassWithCount | null>(null);
-  const { classes, loading: loadingClasses, refresh } = useMonthClasses(reference, "student");
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const view: CalendarView = search.view ?? "month";
+  const reference = useMemo(() => parseReference(search.date), [search.date]);
+  const range = useMemo(() => rangeForView(view, reference), [view, reference]);
+  const { classes, loading: loadingClasses, refresh } = useClassesInRange(range, "student");
+
+  const setView = (v: CalendarView) =>
+    navigate({ search: (prev) => ({ ...prev, view: v }) });
+  const shift = (dir: -1 | 1) =>
+    navigate({ search: (prev) => ({ ...prev, date: toIsoDate(shiftReference(view, reference, dir)) }) });
+  const goToday = () =>
+    navigate({ search: (prev) => ({ ...prev, date: toIsoDate(new Date()) }) });
   const [bookedClassIds, setBookedClassIds] = useState<Set<string>>(new Set());
 
   const fetchMakeups = useCallback(async () => {
@@ -165,31 +183,22 @@ function RecuperacionesPage() {
           </p>
         </div>
 
-        <MonthHeader
+        <CalendarHeader
+          view={view}
           reference={reference}
-          onPrev={() => setReference((d) => addMonths(d, -1))}
-          onNext={() => setReference((d) => addMonths(d, 1))}
-          onToday={() => setReference(new Date())}
+          onPrev={() => shift(-1)}
+          onNext={() => shift(1)}
+          onToday={goToday}
+          onViewChange={setView}
         />
 
-        <div className="lg:hidden">
-          <MobileWeekList
-            reference={reference}
-            classes={eligible}
-            onSelectClass={setSelected}
-          />
-        </div>
-        <div className="hidden lg:block">
-          {loadingClasses ? (
-            <div className="grid grid-cols-7 gap-px rounded-xl border border-border bg-border p-px shadow-card">
-              {Array.from({ length: 42 }).map((_, i) => (
-                <div key={i} className="h-[110px] animate-pulse bg-surface" />
-              ))}
-            </div>
-          ) : (
-            <MonthGrid reference={reference} classes={eligible} onSelectClass={setSelected} />
-          )}
-        </div>
+        <CalendarBoard
+          view={view}
+          reference={reference}
+          classes={eligible}
+          loading={loadingClasses}
+          onSelectClass={setSelected}
+        />
       </div>
 
       <Sheet open={selected !== null} onOpenChange={(open) => !open && setSelected(null)}>
