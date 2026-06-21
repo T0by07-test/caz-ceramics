@@ -29,6 +29,8 @@ import { Route as AdminRegistroRouteImport } from './routes/admin.registro'
 import { Route as AdminPagosRouteImport } from './routes/admin.pagos'
 import { Route as AdminNotificacionesRouteImport } from './routes/admin.notificaciones'
 import { Route as AdminMensajesRouteImport } from './routes/admin.mensajes'
+import { Route as AdminGastosRouteImport } from './routes/admin.gastos'
+import { Route as AdminFinanzasRouteImport } from './routes/admin.finanzas'
 import { Route as AdminClasesRouteImport } from './routes/admin.clases'
 import { Route as AdminAlumnasRouteImport } from './routes/admin.alumnas'
 import { Route as ApiPublicHooksAutoCancelClassesRouteImport } from './routes/api/public/hooks/auto-cancel-classes'
@@ -133,6 +135,16 @@ const AdminMensajesRoute = AdminMensajesRouteImport.update({
   path: '/mensajes',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminGastosRoute = AdminGastosRouteImport.update({
+  id: '/gastos',
+  path: '/gastos',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFinanzasRoute = AdminFinanzasRouteImport.update({
+  id: '/finanzas',
+  path: '/finanzas',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminClasesRoute = AdminClasesRouteImport.update({
   id: '/clases',
   path: '/clases',
@@ -159,6 +171,8 @@ export interface FileRoutesByFullPath {
   '/solicitar': typeof SolicitarRoute
   '/admin/alumnas': typeof AdminAlumnasRoute
   '/admin/clases': typeof AdminClasesRoute
+  '/admin/finanzas': typeof AdminFinanzasRoute
+  '/admin/gastos': typeof AdminGastosRoute
   '/admin/mensajes': typeof AdminMensajesRoute
   '/admin/notificaciones': typeof AdminNotificacionesRoute
   '/admin/pagos': typeof AdminPagosRoute
@@ -182,6 +196,8 @@ export interface FileRoutesByTo {
   '/solicitar': typeof SolicitarRoute
   '/admin/alumnas': typeof AdminAlumnasRoute
   '/admin/clases': typeof AdminClasesRoute
+  '/admin/finanzas': typeof AdminFinanzasRoute
+  '/admin/gastos': typeof AdminGastosRoute
   '/admin/mensajes': typeof AdminMensajesRoute
   '/admin/notificaciones': typeof AdminNotificacionesRoute
   '/admin/pagos': typeof AdminPagosRoute
@@ -208,6 +224,8 @@ export interface FileRoutesById {
   '/solicitar': typeof SolicitarRoute
   '/admin/alumnas': typeof AdminAlumnasRoute
   '/admin/clases': typeof AdminClasesRoute
+  '/admin/finanzas': typeof AdminFinanzasRoute
+  '/admin/gastos': typeof AdminGastosRoute
   '/admin/mensajes': typeof AdminMensajesRoute
   '/admin/notificaciones': typeof AdminNotificacionesRoute
   '/admin/pagos': typeof AdminPagosRoute
@@ -235,6 +253,8 @@ export interface FileRouteTypes {
     | '/solicitar'
     | '/admin/alumnas'
     | '/admin/clases'
+    | '/admin/finanzas'
+    | '/admin/gastos'
     | '/admin/mensajes'
     | '/admin/notificaciones'
     | '/admin/pagos'
@@ -258,6 +278,8 @@ export interface FileRouteTypes {
     | '/solicitar'
     | '/admin/alumnas'
     | '/admin/clases'
+    | '/admin/finanzas'
+    | '/admin/gastos'
     | '/admin/mensajes'
     | '/admin/notificaciones'
     | '/admin/pagos'
@@ -283,6 +305,8 @@ export interface FileRouteTypes {
     | '/solicitar'
     | '/admin/alumnas'
     | '/admin/clases'
+    | '/admin/finanzas'
+    | '/admin/gastos'
     | '/admin/mensajes'
     | '/admin/notificaciones'
     | '/admin/pagos'
@@ -453,6 +477,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMensajesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/gastos': {
+      id: '/admin/gastos'
+      path: '/gastos'
+      fullPath: '/admin/gastos'
+      preLoaderRoute: typeof AdminGastosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/finanzas': {
+      id: '/admin/finanzas'
+      path: '/finanzas'
+      fullPath: '/admin/finanzas'
+      preLoaderRoute: typeof AdminFinanzasRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/clases': {
       id: '/admin/clases'
       path: '/clases'
@@ -480,6 +518,8 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminAlumnasRoute: typeof AdminAlumnasRoute
   AdminClasesRoute: typeof AdminClasesRoute
+  AdminFinanzasRoute: typeof AdminFinanzasRoute
+  AdminGastosRoute: typeof AdminGastosRoute
   AdminMensajesRoute: typeof AdminMensajesRoute
   AdminNotificacionesRoute: typeof AdminNotificacionesRoute
   AdminPagosRoute: typeof AdminPagosRoute
@@ -491,6 +531,8 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAlumnasRoute: AdminAlumnasRoute,
   AdminClasesRoute: AdminClasesRoute,
+  AdminFinanzasRoute: AdminFinanzasRoute,
+  AdminGastosRoute: AdminGastosRoute,
   AdminMensajesRoute: AdminMensajesRoute,
   AdminNotificacionesRoute: AdminNotificacionesRoute,
   AdminPagosRoute: AdminPagosRoute,
