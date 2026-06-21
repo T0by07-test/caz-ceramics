@@ -10,13 +10,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
-import { toIsoDate } from "@/lib/calendar";
 import {
   capacityDotClass,
   capacityLabel,
   capacityLevel,
   formatLongDate,
   formatTimeRange,
+  toIsoDate,
 } from "@/lib/calendar";
 import { useClassesInRange, type ClassWithCount } from "@/hooks/useClassesInRange";
 import { useMyPlan } from "@/hooks/useMyPlan";
