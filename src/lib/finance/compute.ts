@@ -29,7 +29,25 @@ export function computeMonth(
   const gastos = sum(E.map((e) => e.amount_cents));
   const iva_soportado = sum(E.map((e) => e.vat_cents));
 
-  // Tax + commission derivations are added in Tasks 3 and 4.
+  const declarado = Math.round(facturado * settings.declared_pct);
+  const efectivo_exento = facturado - declarado;
+
+  const sumByMethod = (mth: string) =>
+    sum(paid.filter((r) => r.method === mth).map((r) => r.amount_cents));
+  const comision_cobro = Math.round(
+    sumByMethod("T") * settings.fee_revolut_pct + sumByMethod("B") * settings.fee_bizum_pct,
+  );
+
+  // Teacher commissions are added in Task 4.
+  const comisiones_por_profesor: Record<string, number> = {};
+  const comisiones_profesores = sum(Object.values(comisiones_por_profesor));
+
+  const iva_a_pagar = Math.round(declarado * settings.iva_rate - iva_soportado);
+  const irpf = Math.round(Math.max(declarado - gastos, 0) * settings.irpf_rate);
+  const beneficio_simple = facturado - gastos;
+  const beneficio_neto =
+    facturado - gastos - comision_cobro - comisiones_profesores - iva_a_pagar - irpf;
+
   return {
     month,
     facturado,
@@ -37,14 +55,14 @@ export function computeMonth(
     n_pagos,
     gastos,
     iva_soportado,
-    declarado: 0,
-    efectivo_exento: 0,
-    comision_cobro: 0,
-    comisiones_profesores: 0,
-    comisiones_por_profesor: {},
-    iva_a_pagar: 0,
-    irpf: 0,
-    beneficio_neto: 0,
-    beneficio_simple: 0,
+    declarado,
+    efectivo_exento,
+    comision_cobro,
+    comisiones_profesores,
+    comisiones_por_profesor,
+    iva_a_pagar,
+    irpf,
+    beneficio_neto,
+    beneficio_simple,
   };
 }
