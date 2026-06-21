@@ -123,3 +123,86 @@ export function capacityLabel(level: CapacityLevel): string {
   if (level === "filling") return "Casi completa";
   return "Disponible";
 }
+
+export function addDays(d: Date, n: number): Date {
+  const r = new Date(d);
+  r.setDate(d.getDate() + n);
+  return r;
+}
+
+export function addWeeks(d: Date, n: number): Date {
+  return addDays(d, n * 7);
+}
+
+/** Monday (00:00 local) of the week containing `reference`. */
+export function startOfWeek(reference: Date): Date {
+  const start = new Date(reference.getFullYear(), reference.getMonth(), reference.getDate());
+  start.setDate(start.getDate() - mondayIndex(reference));
+  return start;
+}
+
+/**
+ * 7 day cells Mon..Sun for the week containing `reference`.
+ * e.g. buildWeekDays(2026-06-21 Sun) → days[0].iso "2026-06-15", days[6].iso "2026-06-21".
+ */
+export function buildWeekDays(reference: Date): DayCell[] {
+  const start = startOfWeek(reference);
+  const today = new Date();
+  const cells: DayCell[] = [];
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(start, i);
+    cells.push({
+      date: d,
+      iso: toIsoDate(d),
+      inMonth: d.getMonth() === reference.getMonth(),
+      isToday: sameDay(d, today),
+    });
+  }
+  return cells;
+}
+
+/** Inclusive ISO range Mon..Sun for the week containing `reference`. */
+export function weekRange(reference: Date): { startIso: string; endIso: string } {
+  const days = buildWeekDays(reference);
+  return { startIso: days[0].iso, endIso: days[6].iso };
+}
+
+/** Inclusive ISO range for a single day. */
+export function dayRange(reference: Date): { startIso: string; endIso: string } {
+  const iso = toIsoDate(reference);
+  return { startIso: iso, endIso: iso };
+}
+
+/**
+ * e.g. same-month "15 – 21 junio 2026"; cross-month "29 jun – 5 jul 2026".
+ */
+export function formatWeekTitle(reference: Date): string {
+  const days = buildWeekDays(reference);
+  const a = days[0].date;
+  const b = days[6].date;
+  if (a.getMonth() === b.getMonth()) {
+    return `${a.getDate()} – ${b.getDate()} ${ES_MONTHS[a.getMonth()]} ${b.getFullYear()}`;
+  }
+  return `${a.getDate()} ${ES_MONTHS[a.getMonth()].slice(0, 3)} – ${b.getDate()} ${ES_MONTHS[b.getMonth()].slice(0, 3)} ${b.getFullYear()}`;
+}
+
+/** e.g. formatDayTitle(2026-06-21) → "domingo 21 de junio". */
+export function formatDayTitle(reference: Date): string {
+  return formatLongDate(toIsoDate(reference));
+}
+
+/**
+ * [minHour, maxHour] (inclusive) spanning the given "HH:MM:SS" times; [9, 22] when empty.
+ * e.g. ["18:30:00","20:00:00"] → [18, 20]; [] → [9, 22].
+ */
+export function dayHourBounds(times: string[]): [number, number] {
+  if (times.length === 0) return [9, 22];
+  let min = 23;
+  let max = 0;
+  for (const t of times) {
+    const h = Number(t.slice(0, 2));
+    if (h < min) min = h;
+    if (h > max) max = h;
+  }
+  return [Math.max(0, min), Math.min(23, max)];
+}
