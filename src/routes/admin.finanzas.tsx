@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Bar,
@@ -13,14 +13,26 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Wallet, TrendingUp, CalendarClock, PiggyBank } from "lucide-react";
+import { Wallet, TrendingUp, CalendarClock, PiggyBank, SlidersHorizontal } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { toast } from "sonner";
 import { useFinanceData } from "@/lib/finance/useFinanceData";
-import { formatEur } from "@/lib/finance/format";
-import type { MonthlyFinance } from "@/lib/finance/types";
+import { tbl, type CommissionRateRow } from "@/lib/finance/db";
+import { formatEur, inputToPct, pctToInput } from "@/lib/finance/format";
+import type { FinanceSettings, MonthlyFinance } from "@/lib/finance/types";
 
 export const Route = createFileRoute("/admin/finanzas")({
   head: () => ({ meta: [{ title: "Finanzas — Admin" }] }),
@@ -48,7 +60,8 @@ const titleCase = (m: string) => m.charAt(0) + m.slice(1).toLowerCase();
 const short = (m: string) => m.slice(0, 3);
 
 function AdminFinanzasPage() {
-  const { loading, error, ledger, monthly, totals } = useFinanceData();
+  const { loading, error, ledger, monthly, totals, settings, rates, reload } = useFinanceData();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const realMonths = useMemo(() => monthly.filter((m) => m.facturado > 0), [monthly]);
   const currentMonth: MonthlyFinance | undefined = realMonths[realMonths.length - 1];
@@ -118,12 +131,17 @@ function AdminFinanzasPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <span className="text-label uppercase">Finanzas</span>
-        <h1 className="text-h1 mt-1">Panel financiero</h1>
-        <p className="text-body mt-2 text-muted-foreground">
-          Ingresos, gastos y beneficio neto real. Impuestos orientativos — validar con el gestor.
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <span className="text-label uppercase">Finanzas</span>
+          <h1 className="text-h1 mt-1">Panel financiero</h1>
+          <p className="text-body mt-2 text-muted-foreground">
+            Ingresos, gastos y beneficio neto real. Impuestos orientativos — validar con el gestor.
+          </p>
+        </div>
+        <Button variant="outline" className="gap-2" onClick={() => setSettingsOpen(true)}>
+          <SlidersHorizontal className="h-4 w-4" /> Ajustes
+        </Button>
       </div>
 
       {error && (
@@ -411,6 +429,14 @@ function AdminFinanzasPage() {
           </Card>
         </>
       )}
+
+      <FinanceSettingsSheet
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        settings={settings}
+        rates={rates}
+        onSaved={reload}
+      />
     </div>
   );
 }
@@ -444,5 +470,137 @@ function KpiCard({
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function PctField({
+  id,
+  label,
+  value,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id}>{label}</Label>
+      <Input id={id} inputMode="decimal" value={value} onChange={(e) => onChange(e.target.value)} />
+    </div>
+  );
+}
+
+function FinanceSettingsSheet({
+  open,
+  onOpenChange,
+  settings,
+  rates,
+  onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  settings: FinanceSettings;
+  rates: CommissionRateRow[];
+  onSaved: () => void;
+}) {
+  const [iva, setIva] = useState("");
+  const [irpf, setIrpf] = useState("");
+  const [declared, setDeclared] = useState("");
+  const [feeRevolut, setFeeRevolut] = useState("");
+  const [feeBizum, setFeeBizum] = useState("");
+  const [teacherPcts, setTeacherPcts] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    setIva(pctToInput(settings.iva_rate));
+    setIrpf(pctToInput(settings.irpf_rate));
+    setDeclared(pctToInput(settings.declared_pct));
+    setFeeRevolut(pctToInput(settings.fee_revolut_pct));
+    setFeeBizum(pctToInput(settings.fee_bizum_pct));
+    setTeacherPcts(Object.fromEntries(rates.map((r) => [r.teacher, pctToInput(r.default_pct)])));
+  }, [open, settings, rates]);
+
+  const save = async () => {
+    setSaving(true);
+    const num = (s: string, fallback: number) => {
+      const v = inputToPct(s);
+      return v == null ? fallback : v;
+    };
+    const stamp = new Date().toISOString();
+    const { error: e1 } = await tbl("finance_settings").upsert({
+      id: 1,
+      iva_rate: num(iva, settings.iva_rate),
+      irpf_rate: num(irpf, settings.irpf_rate),
+      declared_pct: num(declared, settings.declared_pct),
+      fee_revolut_pct: num(feeRevolut, settings.fee_revolut_pct),
+      fee_bizum_pct: num(feeBizum, settings.fee_bizum_pct),
+      updated_at: stamp,
+    });
+    let e2: { message: string } | null = null;
+    if (rates.length) {
+      const payloads = rates.map((r) => ({
+        teacher: r.teacher,
+        default_pct: num(teacherPcts[r.teacher] ?? "", r.default_pct),
+        active: r.active,
+        updated_at: stamp,
+      }));
+      ({ error: e2 } = await tbl("commission_rates").upsert(payloads));
+    }
+    setSaving(false);
+    const err = e1 || e2;
+    if (err) {
+      toast.error("No se pudieron guardar los ajustes", { description: err.message });
+      return;
+    }
+    toast.success("Ajustes guardados");
+    onOpenChange(false);
+    onSaved();
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle>Ajustes financieros</SheetTitle>
+          <SheetDescription>
+            Impuestos y comisiones. Orientativo — validar con el gestor.
+          </SheetDescription>
+        </SheetHeader>
+        <div className="mt-6 space-y-4 px-4 pb-8">
+          <PctField id="iva" label="IVA (%)" value={iva} onChange={setIva} />
+          <PctField id="irpf" label="IRPF (%)" value={irpf} onChange={setIrpf} />
+          <PctField id="declared" label="% declarado (paga IVA/IRPF)" value={declared} onChange={setDeclared} />
+          <PctField id="feeRevolut" label="Comisión sobre método T (%)" value={feeRevolut} onChange={setFeeRevolut} />
+          <PctField id="feeBizum" label="Comisión sobre método B (%)" value={feeBizum} onChange={setFeeBizum} />
+          {rates.length > 0 && (
+            <div className="border-t border-border pt-4">
+              <p className="text-label mb-2 uppercase text-muted-foreground">Comisión por profesora</p>
+              <div className="space-y-3">
+                {rates.map((r) => (
+                  <PctField
+                    key={r.teacher}
+                    id={`t_${r.teacher}`}
+                    label={`${r.teacher} (%)`}
+                    value={teacherPcts[r.teacher] ?? ""}
+                    onChange={(v) => setTeacherPcts((p) => ({ ...p, [r.teacher]: v }))}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={save} disabled={saving}>
+              {saving ? "Guardando…" : "Guardar"}
+            </Button>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
