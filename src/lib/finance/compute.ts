@@ -38,8 +38,21 @@ export function computeMonth(
     sumByMethod("T") * settings.fee_revolut_pct + sumByMethod("B") * settings.fee_bizum_pct,
   );
 
-  // Teacher commissions are added in Task 4.
+  const rateMap = new Map(rates.map((r) => [r.teacher, r.default_pct]));
+  const accPerTeacher: Record<string, number> = {};
+  for (const r of paid) {
+    const teachers = (r.collector ?? []).filter((t) => t && t !== OWNER);
+    if (teachers.length === 0) continue;
+    const share = (r.amount_cents ?? 0) / teachers.length;
+    for (const t of teachers) {
+      const rate = r.commission_pct_override ?? rateMap.get(t) ?? 0;
+      accPerTeacher[t] = (accPerTeacher[t] ?? 0) + share * rate;
+    }
+  }
   const comisiones_por_profesor: Record<string, number> = {};
+  for (const t of Object.keys(accPerTeacher)) {
+    comisiones_por_profesor[t] = Math.round(accPerTeacher[t]);
+  }
   const comisiones_profesores = sum(Object.values(comisiones_por_profesor));
 
   const iva_a_pagar = Math.round(declarado * settings.iva_rate - iva_soportado);

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { computeMonth } from "./compute";
-import type { LedgerRow, ExpenseRow, FinanceSettings } from "./types";
+import type { LedgerRow, ExpenseRow, FinanceSettings, CommissionRate } from "./types";
 
 const SETTINGS: FinanceSettings = {
   iva_rate: 0.21,
@@ -56,5 +56,30 @@ describe("computeMonth — tax derivations", () => {
     // fee = round(10000*0.01 + 0) = 100
     expect(m.comision_cobro).toBe(100);
     expect(m.beneficio_neto).toBe(8660); // 8760 - 100
+  });
+});
+
+const RATES: CommissionRate[] = [
+  { teacher: "Sofi", default_pct: 0.65 },
+  { teacher: "Martu", default_pct: 0.4 },
+];
+const COM_LEDGER: LedgerRow[] = [
+  { month: "COM", category: "Adulto", amount_cents: 8000, method: "E", status: "Pagado", collector: ["Sofi"], commission_pct_override: null },
+  { month: "COM", category: "Taller", amount_cents: 6000, method: "E", status: "Pagado", collector: ["Sofi", "Martu"], commission_pct_override: null },
+  { month: "COM", category: "Adulto", amount_cents: 5000, method: "E", status: "Pagado", collector: ["Sofi"], commission_pct_override: 0.5 },
+  { month: "COM", category: "Adulto", amount_cents: 9000, method: "E", status: "Pagado", collector: ["Cande"], commission_pct_override: null },
+  { month: "COM", category: "Adulto", amount_cents: 4000, method: "E", status: "Pendiente", collector: ["Sofi"], commission_pct_override: null },
+];
+
+describe("computeMonth — teacher commissions", () => {
+  it("computes per-teacher commissions with override and multi-teacher split", () => {
+    const m = computeMonth("COM", COM_LEDGER, [], SETTINGS, RATES);
+    // Sofi: 8000*0.65=5200 + (6000/2)*0.65=1950 + 5000*0.5(override)=2500 = 9650
+    expect(m.comisiones_por_profesor["Sofi"]).toBe(9650);
+    // Martu: (6000/2)*0.4 = 1200
+    expect(m.comisiones_por_profesor["Martu"]).toBe(1200);
+    // Cande-only and Pendiente rows excluded
+    expect(m.comisiones_por_profesor["Cande"]).toBeUndefined();
+    expect(m.comisiones_profesores).toBe(10850);
   });
 });
