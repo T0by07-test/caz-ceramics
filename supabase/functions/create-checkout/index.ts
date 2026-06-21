@@ -37,16 +37,23 @@ Deno.serve(async (req) => {
     const user = userData.user;
 
     const body = await req.json();
-    const { purpose, environment, returnUrl } = body as {
+    const { purpose, environment, returnUrl, paymentMethod } = body as {
       purpose: "drop_in" | "plan";
       environment: StripeEnv;
       returnUrl: string;
+      paymentMethod?: "card" | "bizum";
     };
     if (environment !== "sandbox" && environment !== "live") {
       return jsonResponse({ error: "Invalid environment" }, 400);
     }
     if (typeof returnUrl !== "string" || !returnUrl.startsWith("http")) {
       return jsonResponse({ error: "Invalid returnUrl" }, 400);
+    }
+    // Optional explicit payment method. When absent we keep Stripe's default behavior.
+    // NOTE: Bizum must be enabled in the Stripe account, and inside embedded Checkout it
+    // may behave as a redirect-based method.
+    if (paymentMethod !== undefined && paymentMethod !== "card" && paymentMethod !== "bizum") {
+      return jsonResponse({ error: "Invalid paymentMethod" }, 400);
     }
 
     const stripe = createStripeClient(environment);
@@ -96,14 +103,18 @@ Deno.serve(async (req) => {
     if (!prices.data.length) return jsonResponse({ error: `Price ${priceId} not found in Stripe` }, 500);
     const stripePrice = prices.data[0];
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams: Record<string, unknown> = {
       line_items: [{ price: stripePrice.id, quantity: 1 }],
       mode: "payment",
       ui_mode: "embedded",
       return_url: returnUrl,
       customer_email: user.email ?? undefined,
       metadata,
-    });
+    };
+    if (paymentMethod) {
+      sessionParams.payment_method_types = [paymentMethod];
+    }
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     // Insert pending payment row (idempotency on stripe_session_id)
     const paymentRow: Record<string, unknown> = {
@@ -112,6 +123,7 @@ Deno.serve(async (req) => {
       status: "pending",
       stripe_session_id: session.id,
     };
+    if (paymentMethod) paymentRow.method = paymentMethod;
     if (purpose === "drop_in") paymentRow.booking_id = metadata.bookingId;
     await admin.from("payments").insert(paymentRow);
 

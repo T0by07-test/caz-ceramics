@@ -1,9 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Banknote, CreditCard, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { createPlanCheckout } from "@/lib/checkout";
 import { StripeCheckoutDialog } from "@/components/StripeCheckoutDialog";
@@ -22,9 +30,38 @@ export const Route = createFileRoute("/app/planes")({
 });
 
 function PlanesPage() {
+  const navigate = useNavigate();
   const [plans, setPlans] = useState<Plan[] | null>(null);
   const [activePlan, setActivePlan] = useState<Plan | null>(null);
   const [open, setOpen] = useState(false);
+  const [methodOpen, setMethodOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "bizum">("card");
+  const [cashLoading, setCashLoading] = useState(false);
+  const [cashConfirmOpen, setCashConfirmOpen] = useState(false);
+
+  const startStripe = useCallback((plan: Plan, method: "card" | "bizum") => {
+    setActivePlan(plan);
+    setPaymentMethod(method);
+    setMethodOpen(false);
+    setOpen(true);
+  }, []);
+
+  const handleCash = useCallback(async (plan: Plan) => {
+    setCashLoading(true);
+    const { error } = await (supabase.rpc as unknown as (
+      fn: string,
+      args: Record<string, unknown>,
+    ) => Promise<{ error: { message: string } | null }>)("purchase_plan_cash", {
+      p_plan_id: plan.id,
+    });
+    setCashLoading(false);
+    if (error) {
+      toast.error(error.message ?? "No se pudo reservar tu plaza");
+      return;
+    }
+    setMethodOpen(false);
+    setCashConfirmOpen(true);
+  }, []);
 
   useEffect(() => {
     void (async () => {
@@ -45,9 +82,13 @@ function PlanesPage() {
   const fetchClientSecret = useCallback(async () => {
     if (!activePlan) throw new Error("No plan selected");
     const returnUrl = `${window.location.origin}/app/plan-exitoso?session_id={CHECKOUT_SESSION_ID}`;
-    const { clientSecret } = await createPlanCheckout({ planId: activePlan.id, returnUrl });
+    const { clientSecret } = await createPlanCheckout({
+      planId: activePlan.id,
+      returnUrl,
+      paymentMethod,
+    });
     return clientSecret;
-  }, [activePlan]);
+  }, [activePlan, paymentMethod]);
 
   return (
     <div className="space-y-6">
@@ -89,7 +130,7 @@ function PlanesPage() {
                 size="lg"
                 onClick={() => {
                   setActivePlan(p);
-                  setOpen(true);
+                  setMethodOpen(true);
                 }}
               >
                 Comprar plan
@@ -98,6 +139,93 @@ function PlanesPage() {
           ))}
         </div>
       )}
+
+      <Dialog
+        open={methodOpen}
+        onOpenChange={(o) => {
+          setMethodOpen(o);
+          if (!o && !open && !cashConfirmOpen) setActivePlan(null);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>¿Cómo quieres pagar?</DialogTitle>
+            <DialogDescription>
+              {activePlan ? `Plan ${activePlan.name}` : "Elige tu método de pago"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-auto justify-start gap-3 py-4 text-left"
+              disabled={cashLoading}
+              onClick={() => activePlan && void handleCash(activePlan)}
+            >
+              <Banknote className="h-5 w-5 shrink-0" />
+              <span className="flex flex-col">
+                <span className="font-medium">Efectivo</span>
+                <span className="text-sm text-muted-foreground">
+                  Reserva tu plaza y paga en tu primera clase
+                </span>
+              </span>
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-auto justify-start gap-3 py-4 text-left"
+              disabled={cashLoading}
+              onClick={() => activePlan && startStripe(activePlan, "card")}
+            >
+              <CreditCard className="h-5 w-5 shrink-0" />
+              <span className="flex flex-col">
+                <span className="font-medium">Tarjeta</span>
+                <span className="text-sm text-muted-foreground">Paga ahora con tarjeta</span>
+              </span>
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-auto justify-start gap-3 py-4 text-left"
+              disabled={cashLoading}
+              onClick={() => activePlan && startStripe(activePlan, "bizum")}
+            >
+              <Smartphone className="h-5 w-5 shrink-0" />
+              <span className="flex flex-col">
+                <span className="font-medium">Bizum</span>
+                <span className="text-sm text-muted-foreground">Paga ahora con Bizum</span>
+              </span>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={cashConfirmOpen}
+        onOpenChange={(o) => {
+          setCashConfirmOpen(o);
+          if (!o) setActivePlan(null);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Tu plaza está reservada</DialogTitle>
+            <DialogDescription>
+              Paga el importe en tu primera clase del mes.
+            </DialogDescription>
+          </DialogHeader>
+          <Button
+            size="lg"
+            onClick={() => {
+              setCashConfirmOpen(false);
+              setActivePlan(null);
+              void navigate({ to: "/app" });
+            }}
+          >
+            Ir al calendario
+          </Button>
+        </DialogContent>
+      </Dialog>
 
       <StripeCheckoutDialog
         open={open}
