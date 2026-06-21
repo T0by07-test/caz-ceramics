@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Search, UserPlus, ArrowLeftRight, Gift } from "lucide-react";
+import { Search, UserPlus, ArrowLeftRight, Gift, BellRing } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -33,8 +33,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { formatLongDate, formatTimeRange, toIsoDate } from "@/lib/calendar";
+import { sendPaymentReminder } from "@/lib/admin-tools";
 
 export const Route = createFileRoute("/admin/alumnas")({
   head: () => ({ meta: [{ title: "Alumnas — Admin" }] }),
@@ -52,6 +60,8 @@ type StudentRow = {
   pending_makeups: number;
 };
 
+type PlanOption = { id: string; name: string; price_cents: number };
+
 function fullName(p: { name: string | null; surname: string | null; email: string | null }) {
   return [p.name, p.surname].filter(Boolean).join(" ").trim() || p.email || "—";
 }
@@ -63,6 +73,20 @@ function AdminStudentsPage() {
   const [selected, setSelected] = useState<StudentRow | null>(null);
   const [grantOpen, setGrantOpen] = useState(false);
   const [grantStudent, setGrantStudent] = useState<StudentRow | null>(null);
+  const [plans, setPlans] = useState<PlanOption[]>([]);
+  const [reminderOpen, setReminderOpen] = useState(false);
+  const [reminderStudent, setReminderStudent] = useState<StudentRow | null>(null);
+
+  useEffect(() => {
+    void (async () => {
+      const { data } = await supabase
+        .from("plans")
+        .select("id, name, price_cents")
+        .eq("active", true)
+        .order("classes_per_month", { ascending: true });
+      setPlans((data ?? []) as PlanOption[]);
+    })();
+  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -180,11 +204,7 @@ function AdminStudentsPage() {
               </TableHeader>
               <TableBody>
                 {filtered.map((r) => (
-                  <TableRow
-                    key={r.id}
-                    className="cursor-pointer"
-                    onClick={() => setSelected(r)}
-                  >
+                  <TableRow key={r.id} className="cursor-pointer" onClick={() => setSelected(r)}>
                     <TableCell className="font-medium">{fullName(r)}</TableCell>
                     <TableCell className="hidden truncate text-muted-foreground md:table-cell">
                       {r.email ?? "—"}
@@ -199,9 +219,7 @@ function AdminStudentsPage() {
                         <span className="text-muted-foreground">Sin plan</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-center">
-                      {r.credits_remaining ?? "—"}
-                    </TableCell>
+                    <TableCell className="text-center">{r.credits_remaining ?? "—"}</TableCell>
                     <TableCell className="text-center">
                       {r.pending_makeups > 0 ? (
                         <Badge variant="outline">{r.pending_makeups}</Badge>
@@ -210,18 +228,32 @@ function AdminStudentsPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setGrantStudent(r);
-                          setGrantOpen(true);
-                        }}
-                        aria-label="Conceder recuperación"
-                      >
-                        <Gift className="mr-1 h-4 w-4" /> Recuperación
-                      </Button>
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setReminderStudent(r);
+                            setReminderOpen(true);
+                          }}
+                          aria-label="Enviar recordatorio de pago"
+                        >
+                          <BellRing className="mr-1 h-4 w-4" /> Recordatorio
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setGrantStudent(r);
+                            setGrantOpen(true);
+                          }}
+                          aria-label="Conceder recuperación"
+                        >
+                          <Gift className="mr-1 h-4 w-4" /> Recuperación
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -245,6 +277,16 @@ function AdminStudentsPage() {
         }}
         student={grantStudent}
         onGranted={() => void load()}
+      />
+
+      <PaymentReminderDialog
+        open={reminderOpen}
+        onOpenChange={(o) => {
+          setReminderOpen(o);
+          if (!o) setReminderStudent(null);
+        }}
+        student={reminderStudent}
+        plans={plans}
       />
     </div>
   );
@@ -359,10 +401,8 @@ function StudentDetailSheet({
                             {b.class ? formatLongDate(b.class.date) : "Clase eliminada"}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            {b.class
-                              ? formatTimeRange(b.class.start_time, b.class.end_time)
-                              : ""}{" "}
-                            · {bookingStatusLabel(b.status)}
+                            {b.class ? formatTimeRange(b.class.start_time, b.class.end_time) : ""} ·{" "}
+                            {bookingStatusLabel(b.status)}
                           </div>
                         </div>
                         {["reserved", "confirmed"].includes(b.status) && b.class ? (
@@ -390,7 +430,10 @@ function StudentDetailSheet({
                 ) : (
                   <ul className="divide-y divide-border rounded-lg border border-border">
                     {payments.map((p) => (
-                      <li key={p.id} className="flex items-center justify-between px-3 py-2 text-sm">
+                      <li
+                        key={p.id}
+                        className="flex items-center justify-between px-3 py-2 text-sm"
+                      >
                         <span>
                           {new Date(p.created_at).toLocaleDateString("es-ES")} ·{" "}
                           <span className="text-muted-foreground">{p.status}</span>
@@ -519,8 +562,8 @@ function MoveBookingDialog({
         <DialogHeader>
           <DialogTitle>Mover reserva</DialogTitle>
           <DialogDescription>
-            Elige la clase de destino y deja una nota explicando el motivo. Quedará
-            registrado en la auditoría.
+            Elige la clase de destino y deja una nota explicando el motivo. Quedará registrado en la
+            auditoría.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
@@ -624,6 +667,87 @@ function GrantMakeupDialog({
           </Button>
           <Button onClick={submit} disabled={!reason.trim() || submitting}>
             {submitting ? "Concediendo…" : "Conceder"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PaymentReminderDialog({
+  open,
+  onOpenChange,
+  student,
+  plans,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  student: StudentRow | null;
+  plans: PlanOption[];
+}) {
+  const [planId, setPlanId] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (open) setPlanId("");
+  }, [open]);
+
+  const submit = async () => {
+    if (!student || !planId) return;
+    setSubmitting(true);
+    try {
+      await sendPaymentReminder(student.id, planId);
+      toast.success("Recordatorio de pago enviado.");
+      onOpenChange(false);
+    } catch (e) {
+      toast.error("No se pudo enviar el recordatorio", {
+        description: e instanceof Error ? e.message : undefined,
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Enviar recordatorio de pago</DialogTitle>
+          <DialogDescription>
+            {student ? `Para ${fullName(student)}.` : ""} Elige el plan: se generará un enlace de
+            pago de Stripe y se enviará el recordatorio.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-1.5">
+          <Label htmlFor="reminder-plan">Plan</Label>
+          {plans.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No hay planes activos disponibles.</p>
+          ) : (
+            <Select value={planId} onValueChange={setPlanId}>
+              <SelectTrigger id="reminder-plan">
+                <SelectValue placeholder="Selecciona un plan" />
+              </SelectTrigger>
+              <SelectContent>
+                {plans.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name} ·{" "}
+                    {new Intl.NumberFormat("es-ES", {
+                      style: "currency",
+                      currency: "EUR",
+                      maximumFractionDigits: 0,
+                    }).format(p.price_cents / 100)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button onClick={submit} disabled={!planId || submitting}>
+            {submitting ? "Enviando…" : "Enviar recordatorio"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SolicitarRouteImport } from './routes/solicitar'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/app'
@@ -16,18 +17,26 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as UnirseTokenRouteImport } from './routes/unirse.$token'
 import { Route as AppReservasRouteImport } from './routes/app.reservas'
 import { Route as AppRecuperacionesRouteImport } from './routes/app.recuperaciones'
 import { Route as AppPlanesRouteImport } from './routes/app.planes'
 import { Route as AppPlanExitosoRouteImport } from './routes/app.plan-exitoso'
 import { Route as AppPerfilRouteImport } from './routes/app.perfil'
 import { Route as AppPagoExitosoRouteImport } from './routes/app.pago-exitoso'
+import { Route as AdminSolicitudesRouteImport } from './routes/admin.solicitudes'
 import { Route as AdminPagosRouteImport } from './routes/admin.pagos'
 import { Route as AdminNotificacionesRouteImport } from './routes/admin.notificaciones'
+import { Route as AdminMensajesRouteImport } from './routes/admin.mensajes'
 import { Route as AdminClasesRouteImport } from './routes/admin.clases'
 import { Route as AdminAlumnasRouteImport } from './routes/admin.alumnas'
 import { Route as ApiPublicHooksAutoCancelClassesRouteImport } from './routes/api/public/hooks/auto-cancel-classes'
 
+const SolicitarRoute = SolicitarRouteImport.update({
+  id: '/solicitar',
+  path: '/solicitar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -63,6 +72,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const UnirseTokenRoute = UnirseTokenRouteImport.update({
+  id: '/unirse/$token',
+  path: '/unirse/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppReservasRoute = AppReservasRouteImport.update({
   id: '/reservas',
   path: '/reservas',
@@ -93,6 +107,11 @@ const AppPagoExitosoRoute = AppPagoExitosoRouteImport.update({
   path: '/pago-exitoso',
   getParentRoute: () => AppRoute,
 } as any)
+const AdminSolicitudesRoute = AdminSolicitudesRouteImport.update({
+  id: '/solicitudes',
+  path: '/solicitudes',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPagosRoute = AdminPagosRouteImport.update({
   id: '/pagos',
   path: '/pagos',
@@ -101,6 +120,11 @@ const AdminPagosRoute = AdminPagosRouteImport.update({
 const AdminNotificacionesRoute = AdminNotificacionesRouteImport.update({
   id: '/notificaciones',
   path: '/notificaciones',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMensajesRoute = AdminMensajesRouteImport.update({
+  id: '/mensajes',
+  path: '/mensajes',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminClasesRoute = AdminClasesRouteImport.update({
@@ -126,16 +150,20 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/solicitar': typeof SolicitarRoute
   '/admin/alumnas': typeof AdminAlumnasRoute
   '/admin/clases': typeof AdminClasesRoute
+  '/admin/mensajes': typeof AdminMensajesRoute
   '/admin/notificaciones': typeof AdminNotificacionesRoute
   '/admin/pagos': typeof AdminPagosRoute
+  '/admin/solicitudes': typeof AdminSolicitudesRoute
   '/app/pago-exitoso': typeof AppPagoExitosoRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/plan-exitoso': typeof AppPlanExitosoRoute
   '/app/planes': typeof AppPlanesRoute
   '/app/recuperaciones': typeof AppRecuperacionesRoute
   '/app/reservas': typeof AppReservasRoute
+  '/unirse/$token': typeof UnirseTokenRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/api/public/hooks/auto-cancel-classes': typeof ApiPublicHooksAutoCancelClassesRoute
@@ -144,16 +172,20 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/solicitar': typeof SolicitarRoute
   '/admin/alumnas': typeof AdminAlumnasRoute
   '/admin/clases': typeof AdminClasesRoute
+  '/admin/mensajes': typeof AdminMensajesRoute
   '/admin/notificaciones': typeof AdminNotificacionesRoute
   '/admin/pagos': typeof AdminPagosRoute
+  '/admin/solicitudes': typeof AdminSolicitudesRoute
   '/app/pago-exitoso': typeof AppPagoExitosoRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/plan-exitoso': typeof AppPlanExitosoRoute
   '/app/planes': typeof AppPlanesRoute
   '/app/recuperaciones': typeof AppRecuperacionesRoute
   '/app/reservas': typeof AppReservasRoute
+  '/unirse/$token': typeof UnirseTokenRoute
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
   '/api/public/hooks/auto-cancel-classes': typeof ApiPublicHooksAutoCancelClassesRoute
@@ -165,16 +197,20 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/solicitar': typeof SolicitarRoute
   '/admin/alumnas': typeof AdminAlumnasRoute
   '/admin/clases': typeof AdminClasesRoute
+  '/admin/mensajes': typeof AdminMensajesRoute
   '/admin/notificaciones': typeof AdminNotificacionesRoute
   '/admin/pagos': typeof AdminPagosRoute
+  '/admin/solicitudes': typeof AdminSolicitudesRoute
   '/app/pago-exitoso': typeof AppPagoExitosoRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/plan-exitoso': typeof AppPlanExitosoRoute
   '/app/planes': typeof AppPlanesRoute
   '/app/recuperaciones': typeof AppRecuperacionesRoute
   '/app/reservas': typeof AppReservasRoute
+  '/unirse/$token': typeof UnirseTokenRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/api/public/hooks/auto-cancel-classes': typeof ApiPublicHooksAutoCancelClassesRoute
@@ -187,16 +223,20 @@ export interface FileRouteTypes {
     | '/app'
     | '/login'
     | '/signup'
+    | '/solicitar'
     | '/admin/alumnas'
     | '/admin/clases'
+    | '/admin/mensajes'
     | '/admin/notificaciones'
     | '/admin/pagos'
+    | '/admin/solicitudes'
     | '/app/pago-exitoso'
     | '/app/perfil'
     | '/app/plan-exitoso'
     | '/app/planes'
     | '/app/recuperaciones'
     | '/app/reservas'
+    | '/unirse/$token'
     | '/admin/'
     | '/app/'
     | '/api/public/hooks/auto-cancel-classes'
@@ -205,16 +245,20 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
+    | '/solicitar'
     | '/admin/alumnas'
     | '/admin/clases'
+    | '/admin/mensajes'
     | '/admin/notificaciones'
     | '/admin/pagos'
+    | '/admin/solicitudes'
     | '/app/pago-exitoso'
     | '/app/perfil'
     | '/app/plan-exitoso'
     | '/app/planes'
     | '/app/recuperaciones'
     | '/app/reservas'
+    | '/unirse/$token'
     | '/admin'
     | '/app'
     | '/api/public/hooks/auto-cancel-classes'
@@ -225,16 +269,20 @@ export interface FileRouteTypes {
     | '/app'
     | '/login'
     | '/signup'
+    | '/solicitar'
     | '/admin/alumnas'
     | '/admin/clases'
+    | '/admin/mensajes'
     | '/admin/notificaciones'
     | '/admin/pagos'
+    | '/admin/solicitudes'
     | '/app/pago-exitoso'
     | '/app/perfil'
     | '/app/plan-exitoso'
     | '/app/planes'
     | '/app/recuperaciones'
     | '/app/reservas'
+    | '/unirse/$token'
     | '/admin/'
     | '/app/'
     | '/api/public/hooks/auto-cancel-classes'
@@ -246,11 +294,20 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
+  SolicitarRoute: typeof SolicitarRoute
+  UnirseTokenRoute: typeof UnirseTokenRoute
   ApiPublicHooksAutoCancelClassesRoute: typeof ApiPublicHooksAutoCancelClassesRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/solicitar': {
+      id: '/solicitar'
+      path: '/solicitar'
+      fullPath: '/solicitar'
+      preLoaderRoute: typeof SolicitarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -300,6 +357,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/unirse/$token': {
+      id: '/unirse/$token'
+      path: '/unirse/$token'
+      fullPath: '/unirse/$token'
+      preLoaderRoute: typeof UnirseTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/reservas': {
       id: '/app/reservas'
       path: '/reservas'
@@ -342,6 +406,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPagoExitosoRouteImport
       parentRoute: typeof AppRoute
     }
+    '/admin/solicitudes': {
+      id: '/admin/solicitudes'
+      path: '/solicitudes'
+      fullPath: '/admin/solicitudes'
+      preLoaderRoute: typeof AdminSolicitudesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/pagos': {
       id: '/admin/pagos'
       path: '/pagos'
@@ -354,6 +425,13 @@ declare module '@tanstack/react-router' {
       path: '/notificaciones'
       fullPath: '/admin/notificaciones'
       preLoaderRoute: typeof AdminNotificacionesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/mensajes': {
+      id: '/admin/mensajes'
+      path: '/mensajes'
+      fullPath: '/admin/mensajes'
+      preLoaderRoute: typeof AdminMensajesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/clases': {
@@ -383,16 +461,20 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminAlumnasRoute: typeof AdminAlumnasRoute
   AdminClasesRoute: typeof AdminClasesRoute
+  AdminMensajesRoute: typeof AdminMensajesRoute
   AdminNotificacionesRoute: typeof AdminNotificacionesRoute
   AdminPagosRoute: typeof AdminPagosRoute
+  AdminSolicitudesRoute: typeof AdminSolicitudesRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAlumnasRoute: AdminAlumnasRoute,
   AdminClasesRoute: AdminClasesRoute,
+  AdminMensajesRoute: AdminMensajesRoute,
   AdminNotificacionesRoute: AdminNotificacionesRoute,
   AdminPagosRoute: AdminPagosRoute,
+  AdminSolicitudesRoute: AdminSolicitudesRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
@@ -426,6 +508,8 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
+  SolicitarRoute: SolicitarRoute,
+  UnirseTokenRoute: UnirseTokenRoute,
   ApiPublicHooksAutoCancelClassesRoute: ApiPublicHooksAutoCancelClassesRoute,
 }
 export const routeTree = rootRouteImport
