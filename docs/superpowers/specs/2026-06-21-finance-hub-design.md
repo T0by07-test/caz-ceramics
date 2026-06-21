@@ -33,7 +33,9 @@ App-DB ist die Wahrheit. Wir **portieren das bestehende CoWork-Dashboard** (Char
 
 ## 4. Datenmodell
 
-**Neue** Finanz-Objekte (`expense_entries`, `finance_settings`, RPCs) leben in einem eigenen Postgres-Schema **`finance`** (Isolation; nicht über die öffentliche API exponiert — Zugriff nur via RPC). Die bestehende `ledger_entries` bleibt in `public` (RLS admin-only) — ein Verschieben bräche den Cast in `admin.registro.tsx`. Bestehendes wird aufgegriffen, nicht dupliziert.
+Die neuen Finanz-Tabellen (`expense_entries`, `finance_settings`, `commission_rates`) liegen in **`public`** mit **RLS admin-only** — **konsistent mit dem bestehenden `ledger_entries`** (das die `admin.registro.tsx`-Seite schon heute direkt via PostgREST unter RLS liest). Kein separates Schema / RPC-Gateway: das wäre auf Lovable Cloud Config-Reibung und inkonsistent zum App-Muster — die echte Sicherheitsgrenze ist die RLS. Bestehendes wird aufgegriffen, nicht dupliziert.
+
+**Rechenlogik** (Resumen + Beneficio Neto + Kommissionen) lebt in einem **reinen TypeScript-Modul** `src/lib/finance/compute.ts`, unit-getestet mit **Vitest** gegen die bekannten Excel-Zahlen, das Dashboard und (Phase 3) der Chat gemeinsam nutzen — eine Quelle, voll testbar, passend zur kleinen Datenmenge. Kein Postgres-RPC (in SQL ohne lokale DB nicht TDD-bar).
 
 ### 4.1 `ledger_entries` (existiert — Tab *Pagos*)
 Aktuelle Spalten: `id, entry_date, month, student_name, item, category, amount_cents, method, status, notes, created_at`.
@@ -68,8 +70,8 @@ fee_bizum_pct    numeric default 0.00    -- Kommission auf Método 'B'
 updated_at       timestamptz default now()
 ```
 
-### 4.4 Rechenquelle `finance.finance_monthly(year int)` (RPC, SECURITY DEFINER, is_admin())
-Liefert pro Monat exakt die Excel-Logik (Tabs *Resumen* + *Beneficio Neto*). Felder pro Monat:
+### 4.4 Rechenquelle — `computeFinanceMonthly()` (TS-Modul, unit-getestet)
+Reine Funktion in `src/lib/finance/compute.ts`: nimmt Ledger-Zeilen + Gastos + Settings + Kommissionssätze, liefert pro Monat exakt die Excel-Logik (Tabs *Resumen* + *Beneficio Neto*) plus Kommissionen. Felder pro Monat:
 
 | Feld | Formel (aus der Excel verifiziert) |
 |---|---|
@@ -99,6 +101,7 @@ Wichtig: **„Facturado" = nur `Pagado`** (kassiert), nicht inkl. Pendiente — 
   `comision[T] = Σ` über Einträge `e` mit `e.month=m`, `e.status='Pagado'`, `T = ANY(e.collector)`, `T≠'Cande'`, von `rate(e,T) × anteil(e)` —
   mit `rate(e,T) = COALESCE(e.commission_pct_override, default_pct(T))` und `anteil(e) = e.amount_cents / Anzahl(Nicht-Cande-Lehrerinnen in e.collector)` (gleichmäßige Aufteilung bei mehreren Lehrerinnen; seltener Fall, dokumentiert).
 - Basis = **Pagado** (kassierte Einnahmen). `comisiones_profesores` (Summe über alle Lehrerinnen) fließt als Abzug in `beneficio_neto` (4.4).
+- **Historische Monate (ene–may)** haben keine `collector`-Tags → `comisiones_profesores = 0`; die alten Lump-„Comisión Sofi"-Einnahmezeilen bleiben wie importiert (echtes historisches Geld). Das neue Modell greift **ab den neu getaggten Einträgen**. So bleiben die bekannten Excel-Netto-Zahlen als Verifikations-Baseline gültig.
 - **Kein Doppelzählen:** Kommissionen werden **berechnet**, nicht zusätzlich als `expense_entries` gebucht. Die tatsächliche Auszahlung ist die Liquidación dieser berechneten Schuld (kein neuer Gasto).
 
 ## 5. Subsysteme
@@ -142,7 +145,7 @@ Edge Function **`finance-chat`** (admin-checked, read-only):
 
 Sorge = Datensensibilität/Zugriff. Maßnahmen, alle in einem Projekt:
 1. **RLS admin-only** auf allen Finanztabellen (`is_admin()`, USING + WITH CHECK) — wie schon `ledger_entries`. Nicht-Admins können physisch nichts lesen.
-2. **`finance`-Schema**, neue Tabellen **nicht** über PostgREST exponiert; Zugriff nur über `SECURITY DEFINER`-RPCs mit internem `is_admin()`-Check.
+2. **RLS ist die Sicherheitsgrenze** (nicht Schema-Verstecken): neue Tabellen in `public` mit `is_admin()`-RLS (USING + WITH CHECK), exakt wie `ledger_entries` heute. Direkter PostgREST-Lesezugriff nur für Admins; Rechenlogik im Client/Edge aus diesen RLS-geschützten Zeilen.
 3. **Kein `service_role`-Key im Browser.** Client: Anon-Key + Candes Admin-JWT; RLS entscheidet.
 4. **Edge Functions prüfen zuerst Admin-Rolle** (JWT); Keys nur serverseitig (Lovable Secrets).
 5. **LLM bekommt nur nötige, aggregierte Zahlen** (read-only Chat); keine Exfiltration.
@@ -169,7 +172,10 @@ Gruppe „Finanzas" in `admin.tsx`:
 
 ## 9. Phasen (diese Spec ist der Schirm; jede Phase bekommt einen eigenen Implementierungsplan)
 
-- **Phase 1 — Fundament + Dashboard:** `finance`-Schema, `ledger_entries` um `collector` + `commission_pct_override` erweitern, `expense_entries`, `finance_settings`, **`commission_rates`**, `finance_monthly` RPC (inkl. `comisiones_profesores`), RLS/Hardening, Voll-Import der Excel (Real-Monate), Registro-Formular um collector-Multi-Select + Override erweitern, Dashboard `/admin/finanzas` (inkl. Comisiones-Karte), Gastos-CRUD, Settings-UI (Steuer + Kommissionssätze). → liefert „Sheet drin + Dashboard + echtes Netto + Kommissionen".
+- **Phase 1 — Fundament + Dashboard** (im Plan in **1a Fundament** + **1b Dashboard/UI** geteilt):
+  - **1a:** Migration (Tabellen in `public` + RLS admin-only): `ledger_entries` um `collector text[]` + `commission_pct_override` erweitern, `expense_entries`, `finance_settings`, `commission_rates`. `computeFinanceMonthly()` TS-Modul (Vitest, inkl. `comisiones_profesores`). Voll-Import der Excel (Real-Monate, June reconcile).
+  - **1b:** Dashboard `/admin/finanzas` (KPIs/Charts inkl. Comisiones-Karte), Gastos-CRUD `/admin/gastos`, Settings-UI (Steuer + Kommissionssätze), Registro-Formular um collector-Multi-Select + Override, Nav-Gruppe, Fix doppeltes `R`-Item.
+  - → liefert „Sheet drin + Dashboard + echtes Netto + Kommissionen".
 - **Phase 2 — Sprach-Eingabe:** `finance-voice` + Aufnahme-UI + Bestätigungskarte.
 - **Phase 3 — AI-Finanz-Chat:** `finance-chat` + Chat-UI mit Geschäftskontext.
 
