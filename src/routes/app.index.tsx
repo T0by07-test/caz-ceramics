@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +10,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
-import { addMonths } from "@/lib/calendar";
+import { toIsoDate } from "@/lib/calendar";
 import {
   capacityDotClass,
   capacityLabel,
@@ -18,7 +18,7 @@ import {
   formatLongDate,
   formatTimeRange,
 } from "@/lib/calendar";
-import { useMonthClasses, type ClassWithCount } from "@/hooks/useMonthClasses";
+import { useClassesInRange, type ClassWithCount } from "@/hooks/useClassesInRange";
 import { useMyPlan } from "@/hooks/useMyPlan";
 import { bookClass } from "@/lib/booking";
 import { joinWaitlist } from "@/lib/waitlist";
@@ -26,9 +26,15 @@ import { createDropInCheckout } from "@/lib/checkout";
 import { StripeCheckoutDialog } from "@/components/StripeCheckoutDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { MonthHeader } from "@/components/calendar/MonthHeader";
-import { MonthGrid } from "@/components/calendar/MonthGrid";
-import { MobileWeekList } from "@/components/calendar/MobileWeekList";
+import {
+  calendarSearchSchema,
+  parseReference,
+  rangeForView,
+  shiftReference,
+  type CalendarView,
+} from "@/lib/calendar-view";
+import { CalendarHeader } from "@/components/calendar/CalendarHeader";
+import { CalendarBoard } from "@/components/calendar/CalendarBoard";
 
 function parseIsoToLocalDate(iso: string): Date {
   const [y, m, d] = iso.split("-").map(Number);
@@ -36,13 +42,26 @@ function parseIsoToLocalDate(iso: string): Date {
 }
 
 export const Route = createFileRoute("/app/")({
+  validateSearch: (search) => calendarSearchSchema.parse(search),
   component: CalendarioPage,
 });
 
 function CalendarioPage() {
-  const [reference, setReference] = useState(() => new Date());
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const view: CalendarView = search.view ?? "month";
+  const reference = useMemo(() => parseReference(search.date), [search.date]);
+  const range = useMemo(() => rangeForView(view, reference), [view, reference]);
+
   const [selected, setSelected] = useState<ClassWithCount | null>(null);
-  const { classes, loading, refresh } = useMonthClasses(reference, "student");
+  const { classes, loading, refresh } = useClassesInRange(range, "student");
+
+  const setView = (v: CalendarView) =>
+    navigate({ search: (prev) => ({ ...prev, view: v }) });
+  const shift = (dir: -1 | 1) =>
+    navigate({ search: (prev) => ({ ...prev, date: toIsoDate(shiftReference(view, reference, dir)) }) });
+  const goToday = () =>
+    navigate({ search: (prev) => ({ ...prev, date: toIsoDate(new Date()) }) });
 
   return (
     <div className="space-y-6">
@@ -50,15 +69,17 @@ function CalendarioPage() {
         <span className="text-label uppercase">Tu mes</span>
         <h1 className="text-h1 mt-1">Calendario</h1>
         <p className="text-body mt-2 text-muted-foreground">
-          Clases del mes — toca una clase para ver los detalles.
+          Clases — toca una clase para ver los detalles.
         </p>
       </div>
 
-      <MonthHeader
+      <CalendarHeader
+        view={view}
         reference={reference}
-        onPrev={() => setReference((d) => addMonths(d, -1))}
-        onNext={() => setReference((d) => addMonths(d, 1))}
-        onToday={() => setReference(new Date())}
+        onPrev={() => shift(-1)}
+        onNext={() => shift(1)}
+        onToday={goToday}
+        onViewChange={setView}
         rightSlot={
           <div className="hidden items-center gap-3 text-xs text-muted-foreground sm:flex">
             <Legend />
@@ -66,27 +87,13 @@ function CalendarioPage() {
         }
       />
 
-      {/* Mobile: weekly/monthly list */}
-      <div className="lg:hidden">
-        {loading ? (
-          <ListSkeleton />
-        ) : (
-          <MobileWeekList
-            reference={reference}
-            classes={classes}
-            onSelectClass={setSelected}
-          />
-        )}
-      </div>
-
-      {/* Desktop: month grid */}
-      <div className="hidden lg:block">
-        {loading ? (
-          <GridSkeleton />
-        ) : (
-          <MonthGrid reference={reference} classes={classes} onSelectClass={setSelected} />
-        )}
-      </div>
+      <CalendarBoard
+        view={view}
+        reference={reference}
+        classes={classes}
+        loading={loading}
+        onSelectClass={setSelected}
+      />
 
       <div className="flex items-center gap-3 text-xs text-muted-foreground sm:hidden">
         <Legend />
@@ -117,26 +124,6 @@ function Legend() {
         <span className="h-2 w-2 rounded-full bg-destructive" /> Completa
       </span>
     </>
-  );
-}
-
-function GridSkeleton() {
-  return (
-    <div className="grid grid-cols-7 gap-px rounded-xl border border-border bg-border p-px shadow-card">
-      {Array.from({ length: 42 }).map((_, i) => (
-        <div key={i} className="h-[110px] animate-pulse bg-surface" />
-      ))}
-    </div>
-  );
-}
-
-function ListSkeleton() {
-  return (
-    <div className="space-y-2">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="h-16 animate-pulse rounded-xl border border-border bg-surface" />
-      ))}
-    </div>
   );
 }
 
