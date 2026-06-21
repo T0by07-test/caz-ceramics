@@ -9,6 +9,8 @@ import {
   Inbox,
   MessageCircle,
   NotebookPen,
+  PiggyBank,
+  Receipt,
 } from "lucide-react";
 import { RouteGuard } from "@/components/RouteGuard";
 
@@ -31,7 +33,9 @@ function AdminLayout() {
           { to: "/admin/alumnas", label: "Alumnas", icon: Users },
           { to: "/admin/mensajes", label: "Mensajes", icon: MessageCircle },
           { to: "/admin/pagos", label: "Pagos", icon: Wallet },
-          { to: "/admin/registro", label: "Registro", icon: NotebookPen },
+          { to: "/admin/finanzas", label: "Finanzas", icon: PiggyBank },
+          { to: "/admin/registro", label: "Ingresos", icon: NotebookPen },
+          { to: "/admin/gastos", label: "Gastos", icon: Receipt },
           { to: "/admin/notificaciones", label: "Notificaciones", icon: Bell },
         ]}
       />
