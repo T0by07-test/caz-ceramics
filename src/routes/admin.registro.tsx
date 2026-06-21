@@ -44,6 +44,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { MultiTeacherSelect } from "@/components/finance/MultiTeacherSelect";
 
 export const Route = createFileRoute("/admin/registro")({
   head: () => ({ meta: [{ title: "Registro — Admin" }] }),
@@ -67,6 +68,8 @@ type LedgerEntry = {
   method: string | null;
   status: string | null;
   notes: string | null;
+  collector: string[] | null;
+  commission_pct_override: number | null;
   created_at: string;
 };
 
@@ -135,7 +138,7 @@ function AdminLedgerPage() {
     setLoading(true);
     const { data, error } = await ledger()
       .select(
-        "id, entry_date, month, student_name, item, category, amount_cents, method, status, notes, created_at",
+        "id, entry_date, month, student_name, item, category, amount_cents, method, status, notes, collector, commission_pct_override, created_at",
       )
       .order("created_at", { ascending: false });
     if (error) {
@@ -511,6 +514,8 @@ function LedgerFormSheet({
   const [method, setMethod] = useState("");
   const [status, setStatus] = useState("Pendiente");
   const [notes, setNotes] = useState("");
+  const [collector, setCollector] = useState<string[]>([]);
+  const [commissionPct, setCommissionPct] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -525,6 +530,10 @@ function LedgerFormSheet({
       setMethod(entry.method ?? "");
       setStatus(entry.status ?? "Pendiente");
       setNotes(entry.notes ?? "");
+      setCollector(entry.collector ?? []);
+      setCommissionPct(
+        entry.commission_pct_override != null ? String(entry.commission_pct_override * 100) : "",
+      );
     } else if (mode === "create") {
       setEntryDate(new Date().toISOString().slice(0, 10));
       setMonth(new Date().toLocaleDateString("es-ES", { month: "long" }).toUpperCase());
@@ -535,6 +544,8 @@ function LedgerFormSheet({
       setMethod("");
       setStatus("Pendiente");
       setNotes("");
+      setCollector([]);
+      setCommissionPct("");
     }
   }, [open, mode, entry]);
 
@@ -554,6 +565,11 @@ function LedgerFormSheet({
       method: method || null,
       status: status || null,
       notes: notes.trim() || null,
+      collector: collector.length ? collector : null,
+      commission_pct_override:
+        commissionPct.trim() === "" || Number.isNaN(Number(commissionPct.replace(",", ".")))
+          ? null
+          : Number(commissionPct.replace(",", ".")) / 100,
     };
     setSubmitting(true);
     if (mode === "create") {
@@ -654,9 +670,24 @@ function LedgerFormSheet({
                   <SelectItem value="E">E · Efectivo</SelectItem>
                   <SelectItem value="B">B · Bizum</SelectItem>
                   <SelectItem value="R">R · Revolut</SelectItem>
-                  <SelectItem value="R">R · ?</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Profesora(s)</Label>
+              <MultiTeacherSelect value={collector} onChange={setCollector} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="commission_pct">Comisión (%)</Label>
+              <Input
+                id="commission_pct"
+                inputMode="decimal"
+                value={commissionPct}
+                onChange={(e) => setCommissionPct(e.target.value)}
+                placeholder="por defecto"
+              />
             </div>
           </div>
           <div className="space-y-1.5">
