@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -81,11 +82,7 @@ function AdminClassesPage() {
         {loading ? (
           <ListSkeleton />
         ) : (
-          <MobileWeekList
-            reference={reference}
-            classes={classes}
-            onSelectClass={setSelected}
-          />
+          <MobileWeekList reference={reference} classes={classes} onSelectClass={setSelected} />
         )}
       </div>
       <div className="hidden lg:block">
@@ -340,38 +337,90 @@ function AdminClassDrawer({
   onBlocked: () => void;
 }) {
   const open = cls !== null;
+  const classId = cls?.id ?? null;
   const [students, setStudents] = useState<BookedStudent[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [blocking, setBlocking] = useState(false);
+  // Bookings currently being toggled, to disable their switch while the RPC runs.
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (!cls) {
+  const loadStudents = useCallback(async () => {
+    if (!classId) {
       setStudents([]);
       return;
     }
-    let cancelled = false;
-    void (async () => {
-      setLoadingStudents(true);
-      const { data, error } = await supabase
-        .from("bookings")
-        .select(
-          "id, status, source, profiles:student_id ( name, surname, email )",
-        )
-        .eq("class_id", cls.id)
-        .in("status", ["reserved", "confirmed", "attended"]);
-      if (cancelled) return;
-      if (error) {
-        toast.error("No se pudieron cargar las alumnas", { description: error.message });
-        setStudents([]);
-      } else {
-        setStudents((data ?? []) as unknown as BookedStudent[]);
-      }
-      setLoadingStudents(false);
-    })();
+    setLoadingStudents(true);
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("id, status, source, profiles:student_id ( name, surname, email )")
+      .eq("class_id", classId)
+      .in("status", ["reserved", "confirmed", "attended"]);
+    if (error) {
+      toast.error("No se pudieron cargar las alumnas", { description: error.message });
+      setStudents([]);
+    } else {
+      setStudents((data ?? []) as unknown as BookedStudent[]);
+    }
+    setLoadingStudents(false);
+  }, [classId]);
+
+  useEffect(() => {
+    if (!classId) {
+      setStudents([]);
+      return;
+    }
+    void loadStudents();
+  }, [classId, loadStudents]);
+
+  // Realtime: keep the attendance list in sync with the rest of the admin views.
+  useEffect(() => {
+    if (!classId) return;
+    const channel = supabase
+      .channel(`admin-class-bookings-${classId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "bookings", filter: `class_id=eq.${classId}` },
+        () => void loadStudents(),
+      )
+      .subscribe();
     return () => {
-      cancelled = true;
+      void supabase.removeChannel(channel);
     };
-  }, [cls]);
+  }, [classId, loadStudents]);
+
+  const handleToggleAttendance = async (booking: BookedStudent, present: boolean) => {
+    setPendingIds((prev) => new Set(prev).add(booking.id));
+    // Optimistic update so the switch reflects intent immediately.
+    setStudents((prev) =>
+      prev.map((s) =>
+        s.id === booking.id ? { ...s, status: present ? "attended" : "confirmed" } : s,
+      ),
+    );
+    // `mark_attendance` is added by a migration that may not yet be reflected in
+    // the generated Supabase types; cast keeps the call shape exact and compiling.
+    const { error } = await (
+      supabase.rpc as unknown as (
+        fn: "mark_attendance",
+        args: { p_booking_id: string; p_status: "attended" | "confirmed" },
+      ) => Promise<{ error: { message: string } | null }>
+    )("mark_attendance", {
+      p_booking_id: booking.id,
+      p_status: present ? "attended" : "confirmed",
+    });
+    setPendingIds((prev) => {
+      const next = new Set(prev);
+      next.delete(booking.id);
+      return next;
+    });
+    if (error) {
+      toast.error("No se pudo actualizar la asistencia", { description: error.message });
+      // Revert by reloading the authoritative state.
+      void loadStudents();
+      return;
+    }
+    toast.success(present ? "Marcada como asistió" : "Asistencia anulada");
+    void loadStudents();
+  };
 
   const handleBlock = async () => {
     if (!cls) return;
@@ -394,9 +443,7 @@ function AdminClassDrawer({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-md">
         <SheetHeader>
-          <SheetTitle className="capitalize">
-            {cls ? formatLongDate(cls.date) : ""}
-          </SheetTitle>
+          <SheetTitle className="capitalize">{cls ? formatLongDate(cls.date) : ""}</SheetTitle>
           <SheetDescription>
             {cls ? formatTimeRange(cls.start_time, cls.end_time) : ""}
           </SheetDescription>
@@ -417,28 +464,43 @@ function AdminClassDrawer({
               {loadingStudents ? (
                 <p className="text-sm text-muted-foreground">Cargando…</p>
               ) : students.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Aún no hay alumnas inscritas.
-                </p>
+                <p className="text-sm text-muted-foreground">Aún no hay alumnas inscritas.</p>
               ) : (
                 <ul className="divide-y divide-border rounded-lg border border-border">
-                  {students.map((s) => (
-                    <li key={s.id} className="flex items-center justify-between gap-3 px-3 py-2">
-                      <div className="min-w-0">
-                        <div className="truncate text-sm font-medium">
-                          {[s.profiles?.name, s.profiles?.surname].filter(Boolean).join(" ") ||
-                            s.profiles?.email ||
-                            "Alumna"}
+                  {students.map((s) => {
+                    const present = s.status === "attended";
+                    const switchId = `attendance-${s.id}`;
+                    return (
+                      <li key={s.id} className="flex items-center justify-between gap-3 px-3 py-2">
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-medium">
+                            {[s.profiles?.name, s.profiles?.surname].filter(Boolean).join(" ") ||
+                              s.profiles?.email ||
+                              "Alumna"}
+                          </div>
+                          <div className="truncate text-xs text-muted-foreground">
+                            {s.profiles?.email}
+                          </div>
                         </div>
-                        <div className="truncate text-xs text-muted-foreground">
-                          {s.profiles?.email}
+                        <div className="flex shrink-0 items-center gap-2">
+                          <Label htmlFor={switchId} className="text-xs text-muted-foreground">
+                            {present ? "Asistió" : "Asistencia"}
+                          </Label>
+                          <Switch
+                            id={switchId}
+                            checked={present}
+                            disabled={pendingIds.has(s.id)}
+                            onCheckedChange={(checked) => void handleToggleAttendance(s, checked)}
+                            aria-label={`Marcar asistencia de ${
+                              [s.profiles?.name, s.profiles?.surname].filter(Boolean).join(" ") ||
+                              s.profiles?.email ||
+                              "alumna"
+                            }`}
+                          />
                         </div>
-                      </div>
-                      <Badge variant="outline" className="shrink-0 text-xs">
-                        {bookingStatusLabel(s.status)}
-                      </Badge>
-                    </li>
-                  ))}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>
@@ -467,19 +529,6 @@ function statusLabel(s: ClassStatus): string {
   if (s === "scheduled") return "Programada";
   if (s === "cancelled_by_admin") return "Bloqueada";
   return "Auto-cancelada";
-}
-
-function bookingStatusLabel(s: string): string {
-  switch (s) {
-    case "reserved":
-      return "Reservada";
-    case "confirmed":
-      return "Confirmada";
-    case "attended":
-      return "Asistió";
-    default:
-      return s;
-  }
 }
 
 function GridSkeleton() {

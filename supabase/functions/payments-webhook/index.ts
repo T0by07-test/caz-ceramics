@@ -33,6 +33,22 @@ async function handleSessionCompleted(session: any, _env: StripeEnv) {
     });
   } else {
     console.warn("Unknown purpose in metadata", { sessionId, purpose });
+    return;
+  }
+
+  // Record the real paid amount on the payment row (the confirming RPCs above
+  // leave amount_cents at 0). amount_total is in cents; guard against null.
+  const amountTotal = session.amount_total as number | null | undefined;
+  if (amountTotal != null) {
+    const { error: amountError } = await admin()
+      .from("payments")
+      .update({ amount_cents: amountTotal })
+      .eq("stripe_session_id", sessionId);
+    if (amountError) {
+      console.error("Failed to record payment amount", { sessionId, amountError });
+    }
+  } else {
+    console.warn("Stripe session has no amount_total to record", { sessionId });
   }
 }
 
@@ -60,13 +76,15 @@ Deno.serve(async (req) => {
   const rawEnv = new URL(req.url).searchParams.get("env");
   if (rawEnv !== "sandbox" && rawEnv !== "live") {
     return new Response(JSON.stringify({ received: true, ignored: "invalid env" }), {
-      status: 200, headers: { "Content-Type": "application/json" },
+      status: 200,
+      headers: { "Content-Type": "application/json" },
     });
   }
   try {
     await handle(req, rawEnv as StripeEnv);
     return new Response(JSON.stringify({ received: true }), {
-      status: 200, headers: { "Content-Type": "application/json" },
+      status: 200,
+      headers: { "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("Webhook error:", e);
