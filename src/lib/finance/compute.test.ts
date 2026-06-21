@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeMonth } from "./compute";
+import { computeMonth, computeFinanceMonthly, sumMonthly } from "./compute";
 import type { LedgerRow, ExpenseRow, FinanceSettings, CommissionRate } from "./types";
 
 const SETTINGS: FinanceSettings = {
@@ -81,5 +81,29 @@ describe("computeMonth — teacher commissions", () => {
     // Cande-only and Pendiente rows excluded
     expect(m.comisiones_por_profesor["Cande"]).toBeUndefined();
     expect(m.comisiones_profesores).toBe(10850);
+  });
+});
+
+describe("computeFinanceMonthly + sumMonthly", () => {
+  it("returns all 12 months in order", () => {
+    const months = computeFinanceMonthly(TAX_LEDGER, TAX_EXPENSES, SETTINGS, []);
+    expect(months).toHaveLength(12);
+    expect(months[0].month).toBe("ENERO");
+    expect(months.find((m) => m.month === "TEST")).toBeUndefined();
+  });
+
+  it("sums only months with real income for YTD totals", () => {
+    const months = computeFinanceMonthly(
+      [
+        { month: "ENERO", category: null, amount_cents: 10000, method: "E", status: "Pagado", collector: null, commission_pct_override: null },
+        { month: "FEBRERO", category: null, amount_cents: 20000, method: "E", status: "Pagado", collector: null, commission_pct_override: null },
+      ],
+      [],
+      SETTINGS,
+      [],
+    );
+    const t = sumMonthly(months);
+    expect(t.facturado).toBe(30000);
+    expect(t.realMonths).toBe(2);
   });
 });

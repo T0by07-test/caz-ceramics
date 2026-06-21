@@ -1,4 +1,5 @@
 import {
+  MONTHS,
   type LedgerRow,
   type ExpenseRow,
   type FinanceSettings,
@@ -77,5 +78,40 @@ export function computeMonth(
     irpf,
     beneficio_neto,
     beneficio_simple,
+  };
+}
+
+export function computeFinanceMonthly(
+  ledger: LedgerRow[],
+  expenses: ExpenseRow[],
+  settings: FinanceSettings,
+  rates: CommissionRate[],
+): MonthlyFinance[] {
+  return MONTHS.map((m) => computeMonth(m, ledger, expenses, settings, rates));
+}
+
+export interface FinanceTotals {
+  facturado: number;
+  pendiente: number;
+  gastos: number;
+  iva_a_pagar: number;
+  irpf: number;
+  comisiones_profesores: number;
+  beneficio_neto: number;
+  realMonths: number; // months with facturado > 0
+}
+
+export function sumMonthly(months: MonthlyFinance[]): FinanceTotals {
+  const real = months.filter((m) => m.facturado > 0);
+  const acc = (pick: (m: MonthlyFinance) => number) => real.reduce((s, m) => s + pick(m), 0);
+  return {
+    facturado: acc((m) => m.facturado),
+    pendiente: acc((m) => m.pendiente),
+    gastos: acc((m) => m.gastos),
+    iva_a_pagar: acc((m) => m.iva_a_pagar),
+    irpf: acc((m) => m.irpf),
+    comisiones_profesores: acc((m) => m.comisiones_profesores),
+    beneficio_neto: acc((m) => m.beneficio_neto),
+    realMonths: real.length,
   };
 }
