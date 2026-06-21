@@ -15,7 +15,7 @@ export type CalendarView = "month" | "week" | "day";
 
 // Bad/missing params fall back to month + undefined date (no throw on navigation).
 export const calendarSearchSchema = z.object({
-  view: z.enum(["month", "week", "day"]).catch("month"),
+  view: z.enum(["month", "week", "day"]).optional().catch(undefined),
   date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
