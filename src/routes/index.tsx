@@ -83,11 +83,11 @@ function Index() {
         <section className="mx-auto max-w-2xl pt-10 text-center sm:pt-16 lg:pt-24">
           <span className="text-label uppercase">Estudio de cerámica</span>
           <h1 className="text-h1 mt-3 text-foreground">
-            Crea, modela y disfruta del barro a tu ritmo&nbsp;
+            Crea, modela y disfruta del barro a tu ritmo.
           </h1>
           <p className="text-body mt-5 text-muted-foreground">
-            En Cazú Ceramics trabajamos con grupos reducidos, atención personalizada y la calma&nbsp;
-            que pide la cerámica. Solicita tu plaza y te escribimos para empezar.
+            En Cazú Ceramics trabajamos con grupos reducidos, atención personalizada y&nbsp;
+            con la calma que pide la cerámica. Solicita tu plaza y te escribimos para empezar.
           </p>
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -99,14 +99,14 @@ function Index() {
             </Button>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
-            El acceso es por invitación. Solicita tu plaza y Cande te escribirá.
+            El acceso es por invitación. Solicita tu plaza y te confirmaremos.
           </p>
         </section>
 
         {/* Cómo funciona */}
         <section className="mt-20 sm:mt-28">
           <div className="text-center">
-            <span className="text-label uppercase">Cómo funciona</span>
+            <span className="text-label uppercase">¿Cómo funciona?</span>
             <h2 className="text-h2 mt-2">De la solicitud a tu primera clase</h2>
           </div>
           <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
