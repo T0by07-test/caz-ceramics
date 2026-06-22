@@ -46,6 +46,7 @@ type UpcomingClass = {
   date: string;
   start_time: string;
   end_time: string;
+  audience: "adults" | "kids";
 };
 
 function SolicitarPage() {
@@ -67,7 +68,7 @@ function SolicitarPage() {
       const todayIso = toIsoDate(new Date());
       const { data, error } = await supabase
         .from("classes")
-        .select("id, date, start_time, end_time")
+        .select("id, date, start_time, end_time, audience")
         .eq("status", "scheduled")
         .gte("date", todayIso)
         .order("date", { ascending: true })
@@ -399,6 +400,11 @@ function CalendarPicker({
                       <span className="tabular-nums">
                         {formatTimeRange(c.start_time, c.end_time)}
                       </span>
+                      {c.audience === "kids" ? (
+                        <span className="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                          Niños
+                        </span>
+                      ) : null}
                     </label>
                   </li>
                 );

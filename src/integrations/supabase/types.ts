@@ -91,6 +91,7 @@ export type Database = {
       }
       classes: {
         Row: {
+          audience: string
           capacity_ideal: number
           capacity_max: number
           created_at: string
@@ -103,6 +104,7 @@ export type Database = {
           title: string | null
         }
         Insert: {
+          audience?: string
           capacity_ideal?: number
           capacity_max?: number
           created_at?: string
@@ -115,6 +117,7 @@ export type Database = {
           title?: string | null
         }
         Update: {
+          audience?: string
           capacity_ideal?: number
           capacity_max?: number
           created_at?: string
