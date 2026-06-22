@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { RouteGuard } from "@/components/RouteGuard";
 import { useAuth } from "@/lib/auth";
+import { VoiceFAB } from "@/components/finance/VoiceFAB";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -41,6 +42,7 @@ function AdminLayout() {
   return (
     <RouteGuard requireStaff>
       <AppShell brand="Cerámica Studio · Admin" items={items} />
+      <VoiceFAB />
     </RouteGuard>
   );
 }
