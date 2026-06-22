@@ -5,14 +5,14 @@ const SHOP_URL = "https://cazuceramics.com";
 
 export const Route = createFileRoute("/")({
   head: () => ({
-    meta: [
-      { title: "Cazu Ceramics — Clases de cerámica en un espacio acogedor" },
-      {
-        name: "description",
-        content:
-          "Solicita tu plaza en Cazu Ceramics. Clases de cerámica en grupos reducidos, atención personalizada y un ambiente cálido y artesanal.",
-      },
-      { property: "og:title", content: "Cazu Ceramics" },
+      meta: [
+        { title: "Cazú Ceramics — Clases de cerámica en un espacio acogedor" },
+        {
+          name: "description",
+          content:
+            "Solicita tu plaza en Cazú Ceramics. Clases de cerámica en grupos reducidos, atención personalizada y un ambiente cálido y artesanal.",
+        },
+        { property: "og:title", content: "Cazú Ceramics" },
       {
         property: "og:description",
         content: "Clases de cerámica en grupos reducidos. Solicita tu plaza.",
@@ -58,7 +58,7 @@ function Index() {
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-full bg-primary" aria-hidden />
-          <span className="text-h3">Cazu Ceramics</span>
+          <span className="text-h3">Cazú Ceramics</span>
         </div>
         <nav className="flex items-center gap-5">
           <a
@@ -86,7 +86,7 @@ function Index() {
             Modela, crea y disfruta del barro a tu ritmo
           </h1>
           <p className="text-body mt-5 text-muted-foreground">
-            En Cazu Ceramics trabajamos en grupos reducidos, con atención personalizada y
+            En Cazú Ceramics trabajamos en grupos reducidos, con atención personalizada y
             la calma que pide la cerámica. Solicita tu plaza y te escribimos para empezar.
           </p>
 
