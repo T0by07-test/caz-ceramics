@@ -318,9 +318,13 @@ function AdminStudentsPage() {
                   <TableHead className="hidden lg:table-cell">Tags</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead className="hidden lg:table-cell">Slot</TableHead>
-                  <TableHead>Plan del mes</TableHead>
-                  <TableHead className="text-center">Créditos</TableHead>
-                  <TableHead className="text-center">Recup.</TableHead>
+                  {viewerRole === "admin" && (
+                    <>
+                      <TableHead>Plan del mes</TableHead>
+                      <TableHead className="text-center">Créditos</TableHead>
+                      <TableHead className="text-center">Recup.</TableHead>
+                    </>
+                  )}
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -355,21 +359,25 @@ function AdminStudentsPage() {
                         ? "—"
                         : r.slots.map((s) => formatSlot(s.weekday, s.start_time)).join(", ")}
                     </TableCell>
-                    <TableCell>
-                      {r.plan_name ? (
-                        <Badge variant="secondary">{r.plan_name}</Badge>
-                      ) : (
-                        <span className="text-muted-foreground">Sin plan</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">{r.credits_remaining ?? "—"}</TableCell>
-                    <TableCell className="text-center">
-                      {r.pending_makeups > 0 ? (
-                        <Badge variant="outline">{r.pending_makeups}</Badge>
-                      ) : (
-                        <span className="text-muted-foreground">0</span>
-                      )}
-                    </TableCell>
+                    {viewerRole === "admin" && (
+                      <>
+                        <TableCell>
+                          {r.plan_name ? (
+                            <Badge variant="secondary">{r.plan_name}</Badge>
+                          ) : (
+                            <span className="text-muted-foreground">Sin plan</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">{r.credits_remaining ?? "—"}</TableCell>
+                        <TableCell className="text-center">
+                          {r.pending_makeups > 0 ? (
+                            <Badge variant="outline">{r.pending_makeups}</Badge>
+                          ) : (
+                            <span className="text-muted-foreground">0</span>
+                          )}
+                        </TableCell>
+                      </>
+                    )}
                     <TableCell className="text-right">
                       {viewerRole === "admin" ? (
                         <div className="flex justify-end gap-1">
@@ -713,54 +721,58 @@ function StudentDetailSheet({
                 )}
               </section>
 
-              <section className="mt-6 space-y-2">
-                <h3 className="text-h3">Pagos</h3>
-                {loading ? (
-                  <Skeleton className="h-16 w-full" />
-                ) : payments.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Sin pagos registrados.</p>
-                ) : (
-                  <ul className="divide-y divide-border rounded-lg border border-border">
-                    {payments.map((p) => (
-                      <li
-                        key={p.id}
-                        className="flex items-center justify-between px-3 py-2 text-sm"
-                      >
-                        <span>
-                          {new Date(p.created_at).toLocaleDateString("es-ES")} ·{" "}
-                          <span className="text-muted-foreground">{p.status}</span>
-                        </span>
-                        <span className="font-medium">
-                          {new Intl.NumberFormat("es-ES", {
-                            style: "currency",
-                            currency: "EUR",
-                          }).format(p.amount_cents / 100)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
+              {!readOnly && (
+                <>
+                  <section className="mt-6 space-y-2">
+                    <h3 className="text-h3">Pagos</h3>
+                    {loading ? (
+                      <Skeleton className="h-16 w-full" />
+                    ) : payments.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Sin pagos registrados.</p>
+                    ) : (
+                      <ul className="divide-y divide-border rounded-lg border border-border">
+                        {payments.map((p) => (
+                          <li
+                            key={p.id}
+                            className="flex items-center justify-between px-3 py-2 text-sm"
+                          >
+                            <span>
+                              {new Date(p.created_at).toLocaleDateString("es-ES")} ·{" "}
+                              <span className="text-muted-foreground">{p.status}</span>
+                            </span>
+                            <span className="font-medium">
+                              {new Intl.NumberFormat("es-ES", {
+                                style: "currency",
+                                currency: "EUR",
+                              }).format(p.amount_cents / 100)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </section>
 
-              <section className="mt-6 space-y-2">
-                <h3 className="text-h3">Notificaciones recientes</h3>
-                {loading ? (
-                  <Skeleton className="h-16 w-full" />
-                ) : notifs.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Sin notificaciones.</p>
-                ) : (
-                  <ul className="divide-y divide-border rounded-lg border border-border text-sm">
-                    {notifs.map((n) => (
-                      <li key={n.id} className="flex items-center justify-between px-3 py-2">
-                        <span className="truncate">{n.type}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {n.channel} · {n.status}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
+                  <section className="mt-6 space-y-2">
+                    <h3 className="text-h3">Notificaciones recientes</h3>
+                    {loading ? (
+                      <Skeleton className="h-16 w-full" />
+                    ) : notifs.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Sin notificaciones.</p>
+                    ) : (
+                      <ul className="divide-y divide-border rounded-lg border border-border text-sm">
+                        {notifs.map((n) => (
+                          <li key={n.id} className="flex items-center justify-between px-3 py-2">
+                            <span className="truncate">{n.type}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {n.channel} · {n.status}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </section>
+                </>
+              )}
             </>
           ) : null}
         </SheetContent>
