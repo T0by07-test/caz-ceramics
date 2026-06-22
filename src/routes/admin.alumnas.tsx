@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { Search, UserPlus, ArrowLeftRight, Gift, BellRing } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Search, UserPlus, ArrowLeftRight, Gift, BellRing, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -100,6 +100,7 @@ function fullName(p: { name: string | null; surname: string | null; email: strin
 
 function AdminStudentsPage() {
   const { role: viewerRole } = useAuth();
+  const navigate = useNavigate();
   const [rows, setRows] = useState<StudentRow[]>([]);
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
@@ -277,6 +278,14 @@ function AdminStudentsPage() {
             <SelectItem value="sin_actividad">{ESTADO_LABELS.sin_actividad}</SelectItem>
           </SelectContent>
         </Select>
+        {tagFilter !== "all" ? (
+          <Button
+            variant="secondary"
+            onClick={() => navigate({ to: "/admin/mensajes", search: { tag: tagFilter } })}
+          >
+            <MessageCircle className="mr-1 h-4 w-4" /> Enviar mensaje a este grupo
+          </Button>
+        ) : null}
       </div>
 
       <Card className="shadow-card">
