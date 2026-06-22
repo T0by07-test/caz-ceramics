@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
     if (!claudeRes.ok) {
       const err = await claudeRes.text();
       console.error("Claude error:", err);
-      return jsonResponse({ error: "extraction_failed", message: err, transcript }, 502);
+      return jsonResponse({ error: "extraction_failed", message: err }, 502);
     }
 
     const claudeJson = await claudeRes.json() as { content: Array<{ text: string }> };
