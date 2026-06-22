@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -41,16 +42,37 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { formatLongDate, formatTimeRange, toIsoDate } from "@/lib/calendar";
+import {
+  endOfMonth,
+  formatLongDate,
+  formatTimeRange,
+  startOfMonth,
+  toIsoDate,
+} from "@/lib/calendar";
 import { sendPaymentReminder } from "@/lib/admin-tools";
+import { useAuth } from "@/lib/auth";
+import type { Role } from "@/lib/auth";
+import {
+  deriveEstado,
+  ESTADO_LABELS,
+  formatSlot,
+  ROLE_LABELS,
+  type Estado,
+  type MembershipStatus,
+} from "@/lib/members";
+import { TagPicker, type Tag } from "@/components/admin/TagPicker";
+import { SlotEditor } from "@/components/admin/SlotEditor";
 
 export const Route = createFileRoute("/admin/alumnas")({
-  head: () => ({ meta: [{ title: "Alumnas — Admin" }] }),
+  head: () => ({ meta: [{ title: "Miembros — Admin" }] }),
   component: AdminStudentsPage,
 });
 
 type StudentRow = {
   id: string;
+  role: Role;
+  membership_status: MembershipStatus;
+  is_regular: boolean;
   name: string | null;
   surname: string | null;
   email: string | null;
@@ -58,18 +80,33 @@ type StudentRow = {
   plan_name: string | null;
   credits_remaining: number | null;
   pending_makeups: number;
+  tags: { id: string; name: string }[];
+  slots: { id: string; weekday: number; start_time: string }[];
+  estado: Estado;
 };
 
 type PlanOption = { id: string; name: string; price_cents: number };
+
+const ESTADO_BADGE: Record<Estado, "default" | "secondary" | "outline" | "destructive"> = {
+  activa: "default",
+  pausada: "secondary",
+  inactiva: "destructive",
+  sin_actividad: "outline",
+};
 
 function fullName(p: { name: string | null; surname: string | null; email: string | null }) {
   return [p.name, p.surname].filter(Boolean).join(" ").trim() || p.email || "—";
 }
 
 function AdminStudentsPage() {
+  const { role: viewerRole } = useAuth();
   const [rows, setRows] = useState<StudentRow[]>([]);
+  const [allTags, setAllTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState<"all" | Role>("all");
+  const [tagFilter, setTagFilter] = useState<"all" | string>("all");
+  const [estadoFilter, setEstadoFilter] = useState<"all" | Estado>("all");
   const [selected, setSelected] = useState<StudentRow | null>(null);
   const [grantOpen, setGrantOpen] = useState(false);
   const [grantStudent, setGrantStudent] = useState<StudentRow | null>(null);
@@ -86,29 +123,42 @@ function AdminStudentsPage() {
         .order("classes_per_month", { ascending: true });
       setPlans((data ?? []) as PlanOption[]);
     })();
+    void (async () => {
+      const { data } = await supabase.from("tags").select("id, name, color").order("name");
+      setAllTags((data ?? []) as Tag[]);
+    })();
   }, []);
 
   const load = async () => {
     setLoading(true);
-    const monthStart = toIsoDate(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+    const now = new Date();
+    const monthStart = toIsoDate(startOfMonth(now));
+    const monthEndIso = toIsoDate(endOfMonth(now));
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("id, name, surname, email, whatsapp")
-      .eq("role", "user")
+      .select(
+        "id, role, name, surname, email, whatsapp, membership_status, is_regular, profile_tags(tags(id,name)), recurring_slots(id,weekday,start_time)",
+      )
       .order("created_at", { ascending: false });
-    const ids = (profiles ?? []).map((p) => p.id);
-    const [{ data: subs }, { data: makeups }, { data: plans }] = await Promise.all([
-      supabase
-        .from("subscriptions")
-        .select("student_id, plan_id, credits_remaining")
-        .eq("month", monthStart),
-      supabase
-        .from("makeups")
-        .select("student_id")
-        .is("used_booking_id", null)
-        .gt("expires_at", new Date().toISOString()),
-      supabase.from("plans").select("id, name"),
-    ]);
+    const [{ data: subs }, { data: makeups }, { data: plans }, { data: monthBookings }] =
+      await Promise.all([
+        supabase
+          .from("subscriptions")
+          .select("student_id, plan_id, credits_remaining")
+          .eq("month", monthStart),
+        supabase
+          .from("makeups")
+          .select("student_id")
+          .is("used_booking_id", null)
+          .gt("expires_at", new Date().toISOString()),
+        supabase.from("plans").select("id, name"),
+        supabase
+          .from("bookings")
+          .select("student_id, classes!inner(date)")
+          .gte("classes.date", monthStart)
+          .lte("classes.date", monthEndIso)
+          .in("status", ["reserved", "confirmed", "attended"]),
+      ]);
     const planNameById = new Map((plans ?? []).map((p) => [p.id, p.name]));
     const subByStudent = new Map(
       (subs ?? []).map((s) => [
@@ -119,20 +169,34 @@ function AdminStudentsPage() {
     const makeupCount = new Map<string, number>();
     for (const m of makeups ?? [])
       makeupCount.set(m.student_id, (makeupCount.get(m.student_id) ?? 0) + 1);
+    const bookedThisMonth = new Set((monthBookings ?? []).map((b) => b.student_id));
 
-    const result: StudentRow[] = (profiles ?? []).map((p) => ({
-      id: p.id,
-      name: p.name,
-      surname: p.surname,
-      email: p.email,
-      whatsapp: p.whatsapp,
-      plan_name: subByStudent.get(p.id)?.plan_name ?? null,
-      credits_remaining: subByStudent.get(p.id)?.credits_remaining ?? null,
-      pending_makeups: makeupCount.get(p.id) ?? 0,
-    }));
+    const result: StudentRow[] = (profiles ?? []).map((p) => {
+      const tags = ((p.profile_tags ?? []) as { tags: { id: string; name: string } | null }[])
+        .map((pt) => pt.tags)
+        .filter((t): t is { id: string; name: string } => t !== null);
+      const slots = ((p.recurring_slots ?? []) as StudentRow["slots"]).slice();
+      const membership = (p.membership_status ?? "active") as MembershipStatus;
+      const isRegular = Boolean(p.is_regular);
+      return {
+        id: p.id,
+        role: (p.role ?? "user") as Role,
+        membership_status: membership,
+        is_regular: isRegular,
+        name: p.name,
+        surname: p.surname,
+        email: p.email,
+        whatsapp: p.whatsapp,
+        plan_name: subByStudent.get(p.id)?.plan_name ?? null,
+        credits_remaining: subByStudent.get(p.id)?.credits_remaining ?? null,
+        pending_makeups: makeupCount.get(p.id) ?? 0,
+        tags,
+        slots,
+        estado: deriveEstado(membership, bookedThisMonth.has(p.id), isRegular),
+      };
+    });
     setRows(result);
     setLoading(false);
-    void ids;
   };
 
   useEffect(() => {
@@ -141,20 +205,27 @@ function AdminStudentsPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((r) =>
-      [r.name, r.surname, r.email, r.whatsapp].some((v) => (v ?? "").toLowerCase().includes(q)),
-    );
-  }, [rows, search]);
+    return rows.filter((r) => {
+      if (
+        q &&
+        ![r.name, r.surname, r.email, r.whatsapp].some((v) => (v ?? "").toLowerCase().includes(q))
+      )
+        return false;
+      if (roleFilter !== "all" && r.role !== roleFilter) return false;
+      if (tagFilter !== "all" && !r.tags.some((t) => t.id === tagFilter)) return false;
+      if (estadoFilter !== "all" && r.estado !== estadoFilter) return false;
+      return true;
+    });
+  }, [rows, search, roleFilter, tagFilter, estadoFilter]);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <span className="text-label uppercase">Personas</span>
-          <h1 className="text-h1 mt-1">Alumnas</h1>
+          <h1 className="text-h1 mt-1">Miembros</h1>
           <p className="text-body mt-2 text-muted-foreground">
-            Busca, consulta su plan activo y revisa su historial.
+            Busca, filtra por rol, tag o estado y revisa su actividad.
           </p>
         </div>
         <div className="relative max-w-sm">
@@ -163,10 +234,49 @@ function AdminStudentsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por nombre, email…"
-            aria-label="Buscar alumnas"
+            aria-label="Buscar miembros"
             className="pl-9"
           />
         </div>
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as "all" | Role)}>
+          <SelectTrigger className="w-40" aria-label="Filtrar por rol">
+            <SelectValue placeholder="Rol" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos los roles</SelectItem>
+            <SelectItem value="admin">{ROLE_LABELS.admin}</SelectItem>
+            <SelectItem value="instructora">{ROLE_LABELS.instructora}</SelectItem>
+            <SelectItem value="user">{ROLE_LABELS.user}</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={tagFilter} onValueChange={(v) => setTagFilter(v)}>
+          <SelectTrigger className="w-40" aria-label="Filtrar por tag">
+            <SelectValue placeholder="Tag" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos los tags</SelectItem>
+            {allTags.map((t) => (
+              <SelectItem key={t.id} value={t.id}>
+                {t.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={estadoFilter} onValueChange={(v) => setEstadoFilter(v as "all" | Estado)}>
+          <SelectTrigger className="w-44" aria-label="Filtrar por estado">
+            <SelectValue placeholder="Estado" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos los estados</SelectItem>
+            <SelectItem value="activa">{ESTADO_LABELS.activa}</SelectItem>
+            <SelectItem value="pausada">{ESTADO_LABELS.pausada}</SelectItem>
+            <SelectItem value="inactiva">{ESTADO_LABELS.inactiva}</SelectItem>
+            <SelectItem value="sin_actividad">{ESTADO_LABELS.sin_actividad}</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <Card className="shadow-card">
@@ -181,11 +291,11 @@ function AdminStudentsPage() {
             <div className="p-6">
               <EmptyState
                 icon={<UserPlus className="h-5 w-5" />}
-                title={rows.length === 0 ? "Aún no hay alumnas" : "Sin resultados"}
+                title={rows.length === 0 ? "Aún no hay miembros" : "Sin resultados"}
                 description={
                   rows.length === 0
-                    ? "Las alumnas aparecerán aquí cuando se registren."
-                    : "Prueba con otro término de búsqueda."
+                    ? "Los miembros aparecerán aquí cuando se registren."
+                    : "Prueba con otro término de búsqueda o filtro."
                 }
               />
             </div>
@@ -193,9 +303,12 @@ function AdminStudentsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Alumna</TableHead>
+                  <TableHead>Miembro</TableHead>
                   <TableHead className="hidden md:table-cell">Email</TableHead>
-                  <TableHead className="hidden lg:table-cell">WhatsApp</TableHead>
+                  <TableHead>Rol</TableHead>
+                  <TableHead className="hidden lg:table-cell">Tags</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead className="hidden lg:table-cell">Slot</TableHead>
                   <TableHead>Plan del mes</TableHead>
                   <TableHead className="text-center">Créditos</TableHead>
                   <TableHead className="text-center">Recup.</TableHead>
@@ -209,8 +322,29 @@ function AdminStudentsPage() {
                     <TableCell className="hidden truncate text-muted-foreground md:table-cell">
                       {r.email ?? "—"}
                     </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{ROLE_LABELS[r.role]}</Badge>
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      {r.tags.length === 0 ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        <div className="flex flex-wrap gap-1">
+                          {r.tags.map((t) => (
+                            <Badge key={t.id} variant="secondary">
+                              {t.name}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={ESTADO_BADGE[r.estado]}>{ESTADO_LABELS[r.estado]}</Badge>
+                    </TableCell>
                     <TableCell className="hidden text-muted-foreground lg:table-cell">
-                      {r.whatsapp ?? "—"}
+                      {r.slots.length === 0
+                        ? "—"
+                        : r.slots.map((s) => formatSlot(s.weekday, s.start_time)).join(", ")}
                     </TableCell>
                     <TableCell>
                       {r.plan_name ? (
@@ -265,6 +399,8 @@ function AdminStudentsPage() {
 
       <StudentDetailSheet
         student={selected}
+        viewerRole={viewerRole}
+        allTags={allTags}
         onOpenChange={(o) => !o && setSelected(null)}
         onChanged={() => void load()}
       />
@@ -319,19 +455,112 @@ type Notif = {
 
 function StudentDetailSheet({
   student,
+  viewerRole,
+  allTags,
   onOpenChange,
   onChanged,
 }: {
   student: StudentRow | null;
+  viewerRole: Role | null;
+  allTags: Tag[];
   onOpenChange: (o: boolean) => void;
   onChanged: () => void;
 }) {
   const open = student !== null;
+  const readOnly = viewerRole !== "admin";
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [notifs, setNotifs] = useState<Notif[]>([]);
   const [loading, setLoading] = useState(false);
   const [moveBooking, setMoveBooking] = useState<Booking | null>(null);
+  const [tagIds, setTagIds] = useState<string[]>([]);
+  const [membership, setMembership] = useState<MembershipStatus>("active");
+  const [isRegular, setIsRegular] = useState(false);
+  const [slots, setSlots] = useState<StudentRow["slots"]>([]);
+
+  useEffect(() => {
+    if (!student) return;
+    setTagIds(student.tags.map((t) => t.id));
+    setMembership(student.membership_status);
+    setIsRegular(student.is_regular);
+    setSlots(student.slots);
+  }, [student]);
+
+  const toggleTag = async (tagId: string, next: boolean) => {
+    if (!student) return;
+    setTagIds((prev) => (next ? [...prev, tagId] : prev.filter((id) => id !== tagId)));
+    const { error } = next
+      ? await supabase.from("profile_tags").insert({ profile_id: student.id, tag_id: tagId })
+      : await supabase
+          .from("profile_tags")
+          .delete()
+          .match({ profile_id: student.id, tag_id: tagId });
+    if (error) {
+      toast.error(`No se pudo actualizar el tag: ${error.message}`);
+      setTagIds((prev) => (next ? prev.filter((id) => id !== tagId) : [...prev, tagId]));
+      return;
+    }
+    onChanged();
+  };
+
+  const changeMembership = async (value: MembershipStatus) => {
+    if (!student) return;
+    const prev = membership;
+    setMembership(value);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ membership_status: value })
+      .eq("id", student.id);
+    if (error) {
+      toast.error(`No se pudo actualizar el estado: ${error.message}`);
+      setMembership(prev);
+      return;
+    }
+    onChanged();
+  };
+
+  const changeRegular = async (value: boolean) => {
+    if (!student) return;
+    setIsRegular(value);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_regular: value })
+      .eq("id", student.id);
+    if (error) {
+      toast.error(`No se pudo actualizar: ${error.message}`);
+      setIsRegular(!value);
+      return;
+    }
+    onChanged();
+  };
+
+  const addSlot = async (weekday: number, startTime: string) => {
+    if (!student) return;
+    const { data, error } = await supabase
+      .from("recurring_slots")
+      .insert({ student_id: student.id, weekday, start_time: startTime })
+      .select("id, weekday, start_time")
+      .single();
+    if (error || !data) {
+      toast.error(`No se pudo añadir el slot: ${error?.message ?? ""}`);
+      return;
+    }
+    setSlots((prev) => [...prev, data]);
+    onChanged();
+  };
+
+  const removeSlot = async (slotId: string) => {
+    if (!student) return;
+    const prev = slots;
+    setSlots((s) => s.filter((x) => x.id !== slotId));
+    const { error } = await supabase.from("recurring_slots").delete().eq("id", slotId);
+    if (error) {
+      toast.error(`No se pudo quitar el slot: ${error.message}`);
+      setSlots(prev);
+      return;
+    }
+    onChanged();
+  };
 
   useEffect(() => {
     if (!student) return;
@@ -385,6 +614,56 @@ function StudentDetailSheet({
                   {student.whatsapp ? ` · ${student.whatsapp}` : null}
                 </SheetDescription>
               </SheetHeader>
+
+              <section className="mt-6 space-y-4">
+                <h3 className="text-h3">Actividad y tags</h3>
+                <div className="space-y-1.5">
+                  <Label>Tags</Label>
+                  <TagPicker
+                    allTags={allTags}
+                    selectedIds={tagIds}
+                    onToggle={(id, next) => void toggleTag(id, next)}
+                    disabled={readOnly}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="membership-status">Estado de membresía</Label>
+                  <Select
+                    value={membership}
+                    onValueChange={(v) => void changeMembership(v as MembershipStatus)}
+                    disabled={readOnly}
+                  >
+                    <SelectTrigger id="membership-status" className="w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Activa</SelectItem>
+                      <SelectItem value="paused">Pausada</SelectItem>
+                      <SelectItem value="inactive">Inactiva</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+                  <Label htmlFor="is-regular" className="cursor-pointer">
+                    Habitual (cuenta como activa)
+                  </Label>
+                  <Switch
+                    id="is-regular"
+                    checked={isRegular}
+                    onCheckedChange={(v) => void changeRegular(v)}
+                    disabled={readOnly}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Slot fijo</Label>
+                  <SlotEditor
+                    slots={slots.map((s) => ({ ...s, active: true, note: null }))}
+                    onAdd={(weekday, startTime) => void addSlot(weekday, startTime)}
+                    onRemove={(id) => void removeSlot(id)}
+                    disabled={readOnly}
+                  />
+                </div>
+              </section>
 
               <section className="mt-6 space-y-2">
                 <h3 className="text-h3">Reservas</h3>
