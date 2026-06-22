@@ -106,7 +106,7 @@ function Index() {
         {/* Cómo funciona */}
         <section className="mt-20 sm:mt-28">
           <div className="text-center">
-            <span className="text-label uppercase">Cómo funciona</span>
+            <span className="text-label uppercase">¿Cómo funciona?</span>
             <h2 className="text-h2 mt-2">De la solicitud a tu primera clase</h2>
           </div>
           <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
