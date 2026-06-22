@@ -46,6 +46,7 @@ type UpcomingClass = {
   date: string;
   start_time: string;
   end_time: string;
+  audience: "adults" | "kids";
 };
 
 function SolicitarPage() {
@@ -67,7 +68,7 @@ function SolicitarPage() {
       const todayIso = toIsoDate(new Date());
       const { data, error } = await supabase
         .from("classes")
-        .select("id, date, start_time, end_time")
+        .select("id, date, start_time, end_time, audience")
         .eq("status", "scheduled")
         .gte("date", todayIso)
         .order("date", { ascending: true })
