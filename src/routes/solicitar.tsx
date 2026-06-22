@@ -30,11 +30,11 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 export const Route = createFileRoute("/solicitar")({
   head: () => ({
     meta: [
-      { title: "Solicitar plaza — Cazu Ceramics" },
+      { title: "Solicitar plaza — Cazú Ceramics" },
       {
         name: "description",
         content:
-          "Solicita tu plaza en Cazu Ceramics. Elige las clases que te interesan y Cande te escribirá.",
+          "Solicita tu plaza en Cazú Ceramics. Elige las clases que te interesan y Cande te escribirá.",
       },
     ],
   }),
