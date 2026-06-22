@@ -1,13 +1,34 @@
 import { useEffect, type ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { useAuth, type Role } from "@/lib/auth";
+import { useAuth, isStaff, type Role } from "@/lib/auth";
 
 type Props = {
   children: ReactNode;
-  requireRole?: Role;
+  requireRole?: Role | Role[];
+  requireStaff?: boolean; // admin OR instructora
+  requireAdmin?: boolean; // admin only
 };
 
-export function RouteGuard({ children, requireRole }: Props) {
+function isAllowed(
+  role: Role | null,
+  { requireRole, requireStaff, requireAdmin }: Omit<Props, "children">,
+): boolean {
+  if (requireAdmin) return role === "admin";
+  if (requireStaff) return isStaff(role);
+  if (requireRole) {
+    return Array.isArray(requireRole)
+      ? requireRole.includes(role as Role)
+      : role === requireRole;
+  }
+  return true;
+}
+
+export function RouteGuard({
+  children,
+  requireRole,
+  requireStaff,
+  requireAdmin,
+}: Props) {
   const { session, role, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -17,12 +38,16 @@ export function RouteGuard({ children, requireRole }: Props) {
       navigate({ to: "/login" });
       return;
     }
-    if (requireRole && role && role !== requireRole) {
-      navigate({ to: role === "admin" ? "/admin" : "/app" });
+    if (!isAllowed(role, { requireRole, requireStaff, requireAdmin })) {
+      navigate({ to: isStaff(role) ? "/admin" : "/app" });
     }
-  }, [session, role, loading, requireRole, navigate]);
+  }, [session, role, loading, requireRole, requireStaff, requireAdmin, navigate]);
 
-  if (loading || !session || (requireRole && role !== requireRole)) {
+  if (
+    loading ||
+    !session ||
+    !isAllowed(role, { requireRole, requireStaff, requireAdmin })
+  ) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground">
         Cargando…
