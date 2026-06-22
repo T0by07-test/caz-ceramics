@@ -30,11 +30,11 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 export const Route = createFileRoute("/solicitar")({
   head: () => ({
     meta: [
-      { title: "Solicitar plaza — Cazu Ceramics" },
+      { title: "Solicitar plaza — Cazú Ceramics" },
       {
         name: "description",
         content:
-          "Solicita tu plaza en Cazu Ceramics. Elige las clases que te interesan y Cande te escribirá.",
+          "Solicita tu plaza en Cazú Ceramics. Elige las clases que te interesan y Cande te escribirá.",
       },
     ],
   }),
@@ -160,15 +160,15 @@ function SolicitarPage() {
       <div className="mx-auto w-full max-w-2xl">
         <div className="mb-6">
           <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
-            ← Cazu Ceramics
+            ← Cazú Ceramics
           </Link>
         </div>
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="text-h2">Solicitar plaza</CardTitle>
             <CardDescription>
-              Déjanos tus datos y elige las clases que te interesan. Cande revisará tu
-              solicitud y te escribirá.
+              En Cazú Ceramics trabajamos en grupos reducidos, con atención personalizada y&nbsp;
+              con la calma que pide la cerámica. Solicita tu plaza y te confirmaremos.
             </CardDescription>
           </CardHeader>
           <CardContent>
