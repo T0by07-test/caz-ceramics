@@ -5,14 +5,14 @@ const SHOP_URL = "https://cazuceramics.com";
 
 export const Route = createFileRoute("/")({
   head: () => ({
-    meta: [
-      { title: "Cazu Ceramics — Clases de cerámica en un espacio acogedor" },
-      {
-        name: "description",
-        content:
-          "Solicita tu plaza en Cazu Ceramics. Clases de cerámica en grupos reducidos, atención personalizada y un ambiente cálido y artesanal.",
-      },
-      { property: "og:title", content: "Cazu Ceramics" },
+      meta: [
+        { title: "Cazú Ceramics — Clases de cerámica en un espacio acogedor" },
+        {
+          name: "description",
+          content:
+            "Solicita tu plaza en Cazú Ceramics. Clases de cerámica en grupos reducidos, atención personalizada y un ambiente cálido y artesanal.",
+        },
+        { property: "og:title", content: "Cazú Ceramics" },
       {
         property: "og:description",
         content: "Clases de cerámica en grupos reducidos. Solicita tu plaza.",
