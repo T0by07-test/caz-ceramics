@@ -97,8 +97,10 @@ export type Database = {
           date: string
           end_time: string
           id: string
+          instructor_id: string | null
           start_time: string
           status: string
+          title: string | null
         }
         Insert: {
           capacity_ideal?: number
@@ -107,8 +109,10 @@ export type Database = {
           date: string
           end_time: string
           id?: string
+          instructor_id?: string | null
           start_time: string
           status?: string
+          title?: string | null
         }
         Update: {
           capacity_ideal?: number
@@ -117,8 +121,351 @@ export type Database = {
           date?: string
           end_time?: string
           id?: string
+          instructor_id?: string | null
           start_time?: string
           status?: string
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classes_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_rates: {
+        Row: {
+          active: boolean
+          default_pct: number
+          teacher: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          default_pct?: number
+          teacher: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          default_pct?: number
+          teacher?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      enrollment_request_classes: {
+        Row: {
+          class_id: string
+          created_at: string
+          granted: boolean
+          id: string
+          request_id: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          granted?: boolean
+          id?: string
+          request_id: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          granted?: boolean
+          id?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollment_request_classes_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollment_request_classes_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "enrollment_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      enrollment_requests: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          message: string | null
+          name: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          surname: string
+          whatsapp: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          message?: string | null
+          name: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          surname: string
+          whatsapp?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string | null
+          name?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          surname?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollment_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expense_entries: {
+        Row: {
+          amount_cents: number | null
+          category: string | null
+          concept: string | null
+          created_at: string
+          entry_date: string | null
+          id: string
+          method: string | null
+          month: string | null
+          notes: string | null
+          provider: string | null
+          vat_cents: number | null
+        }
+        Insert: {
+          amount_cents?: number | null
+          category?: string | null
+          concept?: string | null
+          created_at?: string
+          entry_date?: string | null
+          id?: string
+          method?: string | null
+          month?: string | null
+          notes?: string | null
+          provider?: string | null
+          vat_cents?: number | null
+        }
+        Update: {
+          amount_cents?: number | null
+          category?: string | null
+          concept?: string | null
+          created_at?: string
+          entry_date?: string | null
+          id?: string
+          method?: string | null
+          month?: string | null
+          notes?: string | null
+          provider?: string | null
+          vat_cents?: number | null
+        }
+        Relationships: []
+      }
+      finance_settings: {
+        Row: {
+          declared_pct: number
+          fee_bizum_pct: number
+          fee_revolut_pct: number
+          id: number
+          irpf_rate: number
+          iva_rate: number
+          updated_at: string
+        }
+        Insert: {
+          declared_pct?: number
+          fee_bizum_pct?: number
+          fee_revolut_pct?: number
+          id?: number
+          irpf_rate?: number
+          iva_rate?: number
+          updated_at?: string
+        }
+        Update: {
+          declared_pct?: number
+          fee_bizum_pct?: number
+          fee_revolut_pct?: number
+          id?: number
+          irpf_rate?: number
+          iva_rate?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      invite_classes: {
+        Row: {
+          class_id: string
+          created_at: string
+          id: string
+          invite_id: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          id?: string
+          invite_id: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          id?: string
+          invite_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invite_classes_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invite_classes_invite_id_fkey"
+            columns: ["invite_id"]
+            isOneToOne: false
+            referencedRelation: "invites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          expires_at: string
+          id: string
+          name: string | null
+          profile_id: string | null
+          request_id: string | null
+          status: string
+          surname: string | null
+          token: string
+          whatsapp: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          expires_at?: string
+          id?: string
+          name?: string | null
+          profile_id?: string | null
+          request_id?: string | null
+          status?: string
+          surname?: string | null
+          token: string
+          whatsapp?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          expires_at?: string
+          id?: string
+          name?: string | null
+          profile_id?: string | null
+          request_id?: string | null
+          status?: string
+          surname?: string | null
+          token?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invites_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invites_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invites_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "enrollment_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ledger_entries: {
+        Row: {
+          amount_cents: number | null
+          category: string | null
+          collector: string[] | null
+          commission_pct_override: number | null
+          created_at: string
+          entry_date: string | null
+          id: string
+          item: string | null
+          method: string | null
+          month: string | null
+          notes: string | null
+          status: string | null
+          student_name: string | null
+        }
+        Insert: {
+          amount_cents?: number | null
+          category?: string | null
+          collector?: string[] | null
+          commission_pct_override?: number | null
+          created_at?: string
+          entry_date?: string | null
+          id?: string
+          item?: string | null
+          method?: string | null
+          month?: string | null
+          notes?: string | null
+          status?: string | null
+          student_name?: string | null
+        }
+        Update: {
+          amount_cents?: number | null
+          category?: string | null
+          collector?: string[] | null
+          commission_pct_override?: number | null
+          created_at?: string
+          entry_date?: string | null
+          id?: string
+          item?: string | null
+          method?: string | null
+          month?: string | null
+          notes?: string | null
+          status?: string | null
+          student_name?: string | null
         }
         Relationships: []
       }
@@ -230,6 +577,7 @@ export type Database = {
           booking_id: string | null
           created_at: string
           id: string
+          method: string | null
           status: string
           stripe_session_id: string | null
           student_id: string
@@ -240,6 +588,7 @@ export type Database = {
           booking_id?: string | null
           created_at?: string
           id?: string
+          method?: string | null
           status?: string
           stripe_session_id?: string | null
           student_id: string
@@ -250,6 +599,7 @@ export type Database = {
           booking_id?: string | null
           created_at?: string
           id?: string
+          method?: string | null
           status?: string
           stripe_session_id?: string | null
           student_id?: string
@@ -309,11 +659,46 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_tags: {
+        Row: {
+          created_at: string
+          profile_id: string
+          tag_id: string
+        }
+        Insert: {
+          created_at?: string
+          profile_id: string
+          tag_id: string
+        }
+        Update: {
+          created_at?: string
+          profile_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_tags_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
           email: string | null
           id: string
+          is_regular: boolean
+          membership_status: string
           name: string | null
           notification_preference: string
           role: string
@@ -324,6 +709,8 @@ export type Database = {
           created_at?: string
           email?: string | null
           id: string
+          is_regular?: boolean
+          membership_status?: string
           name?: string | null
           notification_preference?: string
           role?: string
@@ -334,6 +721,8 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          is_regular?: boolean
+          membership_status?: string
           name?: string | null
           notification_preference?: string
           role?: string
@@ -341,6 +730,44 @@ export type Database = {
           whatsapp?: string | null
         }
         Relationships: []
+      }
+      recurring_slots: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          note: string | null
+          start_time: string
+          student_id: string
+          weekday: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          note?: string | null
+          start_time: string
+          student_id: string
+          weekday: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          note?: string | null
+          start_time?: string
+          student_id?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_slots_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscriptions: {
         Row: {
@@ -387,6 +814,27 @@ export type Database = {
           },
         ]
       }
+      tags: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       waitlist: {
         Row: {
           class_id: string
@@ -431,6 +879,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_enrollment_request: {
+        Args: { p_granted_class_ids: string[]; p_request_id: string }
+        Returns: string
+      }
       admin_grant_makeup: {
         Args: { p_reason: string; p_student_id: string }
         Returns: string
@@ -457,6 +909,7 @@ export type Database = {
           status: string
         }[]
       }
+      can_manage_classes: { Args: never; Returns: boolean }
       cancel_booking: {
         Args: { p_booking_id: string }
         Returns: {
@@ -480,6 +933,17 @@ export type Database = {
         Args: { p_session_id: string }
         Returns: undefined
       }
+      create_enrollment_request: {
+        Args: {
+          p_class_ids: string[]
+          p_email: string
+          p_message: string
+          p_name: string
+          p_surname: string
+          p_whatsapp: string
+        }
+        Returns: string
+      }
       enqueue_24h_reminders: { Args: never; Returns: number }
       enqueue_monthly_summary: { Args: never; Returns: number }
       enqueue_notification: {
@@ -491,6 +955,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      enroll_from_invite: { Args: { p_token: string }; Returns: undefined }
       expire_pending_drop_ins: { Args: never; Returns: number }
       fail_payment: { Args: { p_session_id: string }; Returns: undefined }
       grant_plan_subscription: {
@@ -498,6 +963,7 @@ export type Database = {
         Returns: undefined
       }
       is_admin: { Args: never; Returns: boolean }
+      is_staff: { Args: never; Returns: boolean }
       join_waitlist: {
         Args: { p_class_id: string }
         Returns: {
@@ -505,12 +971,18 @@ export type Database = {
           waitlist_id: string
         }[]
       }
+      mark_attendance: {
+        Args: { p_booking_id: string; p_status: string }
+        Returns: undefined
+      }
       mark_notification_failed: {
         Args: { p_error: string; p_id: string }
         Returns: undefined
       }
       mark_notification_sent: { Args: { p_id: string }; Returns: undefined }
       promote_waitlist: { Args: { p_class_id: string }; Returns: undefined }
+      purchase_plan_cash: { Args: { p_plan_id: string }; Returns: undefined }
+      redeem_invite: { Args: { p_token: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never
