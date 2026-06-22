@@ -94,4 +94,19 @@ describe("validateVoiceForm", () => {
     });
     expect(errs).toHaveLength(0);
   });
+
+  it("rejects invalid entry_date format", () => {
+    const errs = validateVoiceForm({ ...base, entry_date: "22-06-2026" });
+    expect(errs).toContain("Formato de fecha inválido (YYYY-MM-DD)");
+  });
+
+  it("rejects negative amount_cents when Pagado", () => {
+    const errs = validateVoiceForm({ ...base, amount_cents: -100 });
+    expect(errs).toContain("Importe no puede ser negativo");
+  });
+
+  it("rejects invalid month value", () => {
+    const errs = validateVoiceForm({ ...base, month: "DECEMBAR" });
+    expect(errs).toContain("Mes no válido");
+  });
 });

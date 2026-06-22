@@ -1,3 +1,5 @@
+import { MONTHS } from "./types";
+
 export interface VoiceExtracted {
   student_name: string | null;
   amount_cents: number | null;
@@ -34,9 +36,12 @@ export function validateVoiceForm(f: VoiceExtracted): string[] {
   const errors: string[] = [];
   if (!f.student_name) errors.push("Nombre del alumno requerido");
   if (!f.month) errors.push("Mes requerido");
+  else if (!(MONTHS as readonly string[]).includes(f.month)) errors.push("Mes no válido");
   if (!f.entry_date) errors.push("Fecha requerida");
+  else if (!/^\d{4}-\d{2}-\d{2}$/.test(f.entry_date)) errors.push("Formato de fecha inválido (YYYY-MM-DD)");
   if (f.status === "Pagado") {
     if (f.amount_cents === null) errors.push("Importe requerido para pagos cobrados");
+    if (f.amount_cents !== null && f.amount_cents < 0) errors.push("Importe no puede ser negativo");
     if (!f.method) errors.push("Método de pago requerido");
   }
   return errors;
