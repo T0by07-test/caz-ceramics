@@ -83,7 +83,7 @@ function Index() {
         <section className="mx-auto max-w-2xl pt-10 text-center sm:pt-16 lg:pt-24">
           <span className="text-label uppercase">Estudio de cerámica</span>
           <h1 className="text-h1 mt-3 text-foreground">
-            Modela, crea y disfruta del barro a tu ritmo
+            Crea, modela y disfruta del barro a tu ritmo&nbsp;
           </h1>
           <p className="text-body mt-5 text-muted-foreground">
             En Cazú Ceramics trabajamos en grupos reducidos, con atención personalizada y
