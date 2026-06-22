@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-export type Role = "student" | "admin";
+export type Role = "admin" | "instructora" | "user";
 
 interface AuthContextValue {
   session: Session | null;
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .select("role")
       .eq("id", userId)
       .maybeSingle();
-    setRole(((data?.role as Role) ?? "student"));
+    setRole(((data?.role as Role) ?? "user"));
     setLoading(false);
   }
 
@@ -75,4 +75,8 @@ export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
+}
+
+export function isStaff(role: Role | null): boolean {
+  return role === "admin" || role === "instructora";
 }

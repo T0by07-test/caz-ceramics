@@ -94,7 +94,7 @@ function AdminStudentsPage() {
     const { data: profiles } = await supabase
       .from("profiles")
       .select("id, name, surname, email, whatsapp")
-      .eq("role", "student")
+      .eq("role", "user")
       .order("created_at", { ascending: false });
     const ids = (profiles ?? []).map((p) => p.id);
     const [{ data: subs }, { data: makeups }, { data: plans }] = await Promise.all([

@@ -12,7 +12,7 @@ export const Route = createFileRoute("/app")({
 
 function AppLayout() {
   return (
-    <RouteGuard requireRole="student">
+    <RouteGuard requireRole="user">
       <>
         <PaymentTestModeBanner />
         <AppShell brand="Cerámica Studio" items={studentNavItems} />
