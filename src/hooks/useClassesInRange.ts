@@ -9,6 +9,7 @@ export type ClassRow = {
   capacity_ideal: number;
   capacity_max: number;
   status: "scheduled" | "auto_cancelled" | "cancelled_by_admin";
+  instructor_id: string | null;
 };
 
 export type ClassWithCount = ClassRow & {
@@ -39,7 +40,7 @@ export function useClassesInRange(
 
     let q = supabase
       .from("classes")
-      .select("id, date, start_time, end_time, capacity_ideal, capacity_max, status")
+      .select("id, date, start_time, end_time, capacity_ideal, capacity_max, status, instructor_id")
       .gte("date", startIso)
       .lte("date", endIso)
       .order("date", { ascending: true })

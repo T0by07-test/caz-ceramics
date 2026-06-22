@@ -31,6 +31,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { formatLongDate, formatTimeRange, toIsoDate } from "@/lib/calendar";
+import { useAuth } from "@/lib/auth";
 import { useClassesInRange, type ClassWithCount } from "@/hooks/useClassesInRange";
 import {
   calendarSearchSchema,
@@ -52,9 +53,11 @@ type ClassStatus = "scheduled" | "auto_cancelled" | "cancelled_by_admin";
 function AdminClassesPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
+  const { user, role } = useAuth();
   const view: CalendarView = search.view ?? "month";
   const reference = useMemo(() => parseReference(search.date), [search.date]);
   const range = useMemo(() => rangeForView(view, reference), [view, reference]);
+  const [onlyMine, setOnlyMine] = useState(false);
 
   const setView = (v: CalendarView) =>
     navigate({ search: (prev) => ({ ...prev, view: v }) });
@@ -67,6 +70,14 @@ function AdminClassesPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<ClassWithCount | null>(null);
   const { classes, loading, refresh } = useClassesInRange(range, "admin");
+
+  const visibleClasses = useMemo(
+    () =>
+      onlyMine && role === "instructora" && user
+        ? classes.filter((c) => c.instructor_id === user.id)
+        : classes,
+    [classes, onlyMine, role, user],
+  );
 
   // Keep "selected" in sync if the underlying class changes (capacity / status updates).
   useEffect(() => {
@@ -99,10 +110,24 @@ function AdminClassesPage() {
         onViewChange={setView}
       />
 
+      {role === "instructora" ? (
+        <div className="flex items-center gap-2">
+          <Switch
+            id="only-mine"
+            checked={onlyMine}
+            onCheckedChange={setOnlyMine}
+            aria-label="Mostrar solo mis clases"
+          />
+          <Label htmlFor="only-mine" className="cursor-pointer">
+            Mis clases
+          </Label>
+        </div>
+      ) : null}
+
       <CalendarBoard
         view={view}
         reference={reference}
-        classes={classes}
+        classes={visibleClasses}
         loading={loading}
         onSelectClass={setSelected}
       />
@@ -165,6 +190,10 @@ function ClassFormDialog({
   const [capacityIdeal, setCapacityIdeal] = useState(6);
   const [capacityMax, setCapacityMax] = useState(7);
   const [status, setStatus] = useState<ClassStatus>("scheduled");
+  const [instructorId, setInstructorId] = useState("");
+  const [instructoras, setInstructoras] = useState<
+    { id: string; name: string | null; surname: string | null; email: string | null }[]
+  >([]);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -176,6 +205,7 @@ function ClassFormDialog({
       setCapacityIdeal(cls.capacity_ideal);
       setCapacityMax(cls.capacity_max);
       setStatus(cls.status);
+      setInstructorId(cls.instructor_id ?? "");
     } else if (mode === "create") {
       setDate(defaultDate ?? toIsoDate(new Date()));
       setStartTime("18:30");
@@ -183,8 +213,26 @@ function ClassFormDialog({
       setCapacityIdeal(6);
       setCapacityMax(7);
       setStatus("scheduled");
+      setInstructorId("");
     }
   }, [open, mode, cls, defaultDate]);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, name, surname, email")
+        .eq("role", "instructora")
+        .order("name", { ascending: true });
+      if (cancelled) return;
+      setInstructoras((data ?? []) as typeof instructoras);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -205,6 +253,7 @@ function ClassFormDialog({
         capacity_ideal: capacityIdeal,
         capacity_max: capacityMax,
         status,
+        instructor_id: instructorId || null,
       });
       setSubmitting(false);
       if (error) {
@@ -223,6 +272,7 @@ function ClassFormDialog({
           capacity_ideal: capacityIdeal,
           capacity_max: capacityMax,
           status,
+          instructor_id: instructorId || null,
         })
         .eq("id", cls.id);
       setSubmitting(false);
@@ -300,6 +350,25 @@ function ClassFormDialog({
                 onChange={(e) => setCapacityMax(Number(e.target.value))}
               />
             </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="instructor">Instructora</Label>
+            <Select
+              value={instructorId || "none"}
+              onValueChange={(v) => setInstructorId(v === "none" ? "" : v)}
+            >
+              <SelectTrigger id="instructor">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sin instructora</SelectItem>
+                {instructoras.map((i) => (
+                  <SelectItem key={i.id} value={i.id}>
+                    {[i.name, i.surname].filter(Boolean).join(" ") || i.email || "Instructora"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           {mode === "edit" && (
             <div className="space-y-1.5">
