@@ -58,7 +58,7 @@ function Index() {
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-full bg-primary" aria-hidden />
-          <span className="text-h3">Cazu Ceramics</span>
+          <span className="text-h3">Cazú Ceramics</span>
         </div>
         <nav className="flex items-center gap-5">
           <a
