@@ -400,6 +400,11 @@ function CalendarPicker({
                       <span className="tabular-nums">
                         {formatTimeRange(c.start_time, c.end_time)}
                       </span>
+                      {c.audience === "kids" ? (
+                        <span className="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                          Niños
+                        </span>
+                      ) : null}
                     </label>
                   </li>
                 );
