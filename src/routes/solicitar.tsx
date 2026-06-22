@@ -160,15 +160,15 @@ function SolicitarPage() {
       <div className="mx-auto w-full max-w-2xl">
         <div className="mb-6">
           <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
-            ← Cazu Ceramics
+            ← Cazú Ceramics
           </Link>
         </div>
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="text-h2">Solicitar plaza</CardTitle>
             <CardDescription>
-              Déjanos tus datos y elige las clases que te interesan. Cande revisará tu
-              solicitud y te escribirá.
+              En Cazú Ceramics trabajamos en grupos reducidos, con atención personalizada y&nbsp;
+              con la calma que pide la cerámica. Solicita tu plaza y te confirmaremos.
             </CardDescription>
           </CardHeader>
           <CardContent>
