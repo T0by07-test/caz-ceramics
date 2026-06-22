@@ -6,6 +6,7 @@ export interface UseVoiceRecorder {
   state: RecorderState;
   start: () => Promise<void>;
   stop: () => Promise<Blob>;
+  reset: () => void;
   error: string | null;
 }
 
@@ -54,5 +55,10 @@ export function useVoiceRecorder(): UseVoiceRecorder {
     });
   }, []);
 
-  return { state, start, stop, error };
+  const reset = useCallback(() => {
+    setState("idle");
+    setError(null);
+  }, []);
+
+  return { state, start, stop, reset, error };
 }

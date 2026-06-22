@@ -57,7 +57,7 @@ function emptyForm(): VoiceExtracted {
 }
 
 export function VoiceFAB() {
-  const { state, start, stop, error: recorderError } = useVoiceRecorder();
+  const { state, start, stop, reset, error: recorderError } = useVoiceRecorder();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<VoiceExtracted>(emptyForm());
   const [amountEur, setAmountEur] = useState("");
@@ -73,6 +73,11 @@ export function VoiceFAB() {
       const blob = await stop();
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          toast.error("Sesión expirada. Por favor, recarga la página.");
+          reset();
+          return;
+        }
         const fd = new FormData();
         fd.append("audio", blob, "recording.webm");
         fd.append("today", new Date().toISOString().slice(0, 10));
@@ -81,7 +86,7 @@ export function VoiceFAB() {
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/finance-voice`,
           {
             method: "POST",
-            headers: { Authorization: `Bearer ${session?.access_token ?? ""}` },
+            headers: { Authorization: `Bearer ${session.access_token}` },
             body: fd,
           },
         );
@@ -98,12 +103,14 @@ export function VoiceFAB() {
           } else {
             toast.error("Error al procesar el audio");
           }
+          reset();
           return;
         }
 
         const normalized = normalizeVoiceFields(json.fields);
         if (!normalized) {
           toast.error("Respuesta inesperada del servidor");
+          reset();
           return;
         }
         setForm(normalized);
@@ -111,6 +118,7 @@ export function VoiceFAB() {
         setOpen(true);
       } catch {
         toast.error("Error de red al procesar el audio");
+        reset();
       }
     }
   };
@@ -174,7 +182,7 @@ export function VoiceFAB() {
         {fabIcon()}
       </Button>
 
-      <Dialog open={open} onOpenChange={(v) => { if (!v) { setOpen(false); setForm(emptyForm()); setAmountEur(""); } }}>
+      <Dialog open={open} onOpenChange={(v) => { if (!v && saving) return; if (!v) { setOpen(false); setForm(emptyForm()); setAmountEur(""); } }}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Confirmar ingreso</DialogTitle>
