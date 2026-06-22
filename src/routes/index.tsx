@@ -86,7 +86,7 @@ function Index() {
             Modela, crea y disfruta del barro a tu ritmo
           </h1>
           <p className="text-body mt-5 text-muted-foreground">
-            En Cazu Ceramics trabajamos en grupos reducidos, con atención personalizada y
+            En Cazú Ceramics trabajamos en grupos reducidos, con atención personalizada y
             la calma que pide la cerámica. Solicita tu plaza y te escribimos para empezar.
           </p>
 
