@@ -31,6 +31,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { formatLongDate, formatTimeRange, toIsoDate } from "@/lib/calendar";
+import { formatSlot } from "@/lib/members";
 import { useAuth } from "@/lib/auth";
 import { useClassesInRange, type ClassWithCount } from "@/hooks/useClassesInRange";
 import {
@@ -405,7 +406,13 @@ type BookedStudent = {
   id: string;
   status: string;
   source: string;
-  profiles: { name: string | null; surname: string | null; email: string | null } | null;
+  profiles: {
+    name: string | null;
+    surname: string | null;
+    email: string | null;
+    profile_tags: { tags: { id: string; name: string } | null }[] | null;
+    recurring_slots: { id: string; weekday: number; start_time: string }[] | null;
+  } | null;
 };
 
 function AdminClassDrawer({
@@ -435,7 +442,9 @@ function AdminClassDrawer({
     setLoadingStudents(true);
     const { data, error } = await supabase
       .from("bookings")
-      .select("id, status, source, profiles:student_id ( name, surname, email )")
+      .select(
+        "id, status, source, profiles:student_id ( name, surname, email, profile_tags(tags(id,name)), recurring_slots(id,weekday,start_time) )",
+      )
       .eq("class_id", classId)
       .in("status", ["reserved", "confirmed", "attended"]);
     if (error) {
@@ -553,6 +562,10 @@ function AdminClassDrawer({
                   {students.map((s) => {
                     const present = s.status === "attended";
                     const switchId = `attendance-${s.id}`;
+                    const tags = (s.profiles?.profile_tags ?? [])
+                      .map((pt) => pt.tags)
+                      .filter((t): t is { id: string; name: string } => t !== null);
+                    const firstSlot = (s.profiles?.recurring_slots ?? [])[0];
                     return (
                       <li key={s.id} className="flex items-center justify-between gap-3 px-3 py-2">
                         <div className="min-w-0">
@@ -564,6 +577,20 @@ function AdminClassDrawer({
                           <div className="truncate text-xs text-muted-foreground">
                             {s.profiles?.email}
                           </div>
+                          {firstSlot ? (
+                            <div className="text-xs text-muted-foreground">
+                              {formatSlot(firstSlot.weekday, firstSlot.start_time)}
+                            </div>
+                          ) : null}
+                          {tags.length > 0 ? (
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {tags.map((t) => (
+                                <Badge key={t.id} variant="secondary">
+                                  {t.name}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : null}
                         </div>
                         <div className="flex shrink-0 items-center gap-2">
                           <Label htmlFor={switchId} className="text-xs text-muted-foreground">
