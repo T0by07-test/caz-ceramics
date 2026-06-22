@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   AlertTriangle,
   CalendarDays,
@@ -22,11 +22,26 @@ import {
   formatTimeRange,
   toIsoDate,
 } from "@/lib/calendar";
+import { RouteGuard } from "@/components/RouteGuard";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Dashboard — Admin" }] }),
-  component: AdminDashboardPage,
+  component: AdminDashboardRoute,
 });
+
+function AdminDashboardRoute() {
+  const { role } = useAuth();
+  const navigate = useNavigate();
+
+  // The dashboard is finance-heavy. Instructoras have no access — bounce them
+  // to their landing page instead of the admin home (which is this route).
+  useEffect(() => {
+    if (role === "instructora") navigate({ to: "/admin/clases" });
+  }, [role, navigate]);
+
+  return <RouteGuard requireStaff>{role === "admin" ? <AdminDashboardPage /> : null}</RouteGuard>;
+}
 
 type WeekClass = {
   id: string;

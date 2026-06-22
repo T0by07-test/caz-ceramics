@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { RouteGuard } from "@/components/RouteGuard";
 import { Check, Copy, Inbox, X } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
@@ -37,7 +38,7 @@ import { acceptRequest, copyToClipboard, rejectRequest } from "@/lib/admin-tools
 
 export const Route = createFileRoute("/admin/solicitudes")({
   head: () => ({ meta: [{ title: "Solicitudes — Admin" }] }),
-  component: AdminRequestsPage,
+  component: AdminRequestsRoute,
 });
 
 type RequestStatus = "pending" | "accepted" | "rejected" | "cancelled";
@@ -92,6 +93,14 @@ type RequestsQuery = {
     };
   };
 };
+
+function AdminRequestsRoute() {
+  return (
+    <RouteGuard requireAdmin>
+      <AdminRequestsPage />
+    </RouteGuard>
+  );
+}
 
 function AdminRequestsPage() {
   const [rows, setRows] = useState<EnrollmentRequest[] | null>(null);

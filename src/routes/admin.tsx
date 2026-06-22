@@ -12,6 +12,7 @@ import {
   Receipt,
 } from "lucide-react";
 import { RouteGuard } from "@/components/RouteGuard";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -21,22 +22,25 @@ export const Route = createFileRoute("/admin")({
 });
 
 function AdminLayout() {
+  const { role } = useAuth();
+  const dashboard = { to: "/admin", label: "Dashboard", icon: LayoutDashboard };
+  const solicitudes = { to: "/admin/solicitudes", label: "Solicitudes", icon: Inbox };
+  const clases = { to: "/admin/clases", label: "Clases", icon: CalendarDays };
+  const miembros = { to: "/admin/alumnas", label: "Miembros", icon: Users };
+  const mensajes = { to: "/admin/mensajes", label: "Mensajes", icon: MessageCircle };
+  const finanzas = { to: "/admin/finanzas", label: "Finanzas", icon: PiggyBank };
+  const ingresos = { to: "/admin/registro", label: "Ingresos", icon: NotebookPen };
+  const gastos = { to: "/admin/gastos", label: "Gastos", icon: Receipt };
+  const notificaciones = { to: "/admin/notificaciones", label: "Notificaciones", icon: Bell };
+
+  const items =
+    role === "admin"
+      ? [dashboard, solicitudes, clases, miembros, mensajes, finanzas, ingresos, gastos, notificaciones]
+      : [clases, miembros, mensajes]; // instructora: Clases, Miembros, Mensajes only
+
   return (
-    <RouteGuard requireRole="admin">
-      <AppShell
-        brand="Cerámica Studio · Admin"
-        items={[
-          { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
-          { to: "/admin/solicitudes", label: "Solicitudes", icon: Inbox },
-          { to: "/admin/clases", label: "Clases", icon: CalendarDays },
-          { to: "/admin/alumnas", label: "Alumnas", icon: Users },
-          { to: "/admin/mensajes", label: "Mensajes", icon: MessageCircle },
-          { to: "/admin/finanzas", label: "Finanzas", icon: PiggyBank },
-          { to: "/admin/registro", label: "Ingresos", icon: NotebookPen },
-          { to: "/admin/gastos", label: "Gastos", icon: Receipt },
-          { to: "/admin/notificaciones", label: "Notificaciones", icon: Bell },
-        ]}
-      />
+    <RouteGuard requireStaff>
+      <AppShell brand="Cerámica Studio · Admin" items={items} />
     </RouteGuard>
   );
 }

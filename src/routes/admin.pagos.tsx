@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { ExternalLink } from "lucide-react";
+import { RouteGuard } from "@/components/RouteGuard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,7 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin/pagos")({
   head: () => ({ meta: [{ title: "Pagos — Admin" }] }),
-  component: AdminPaymentsPage,
+  component: AdminPaymentsRoute,
 });
 
 type StatusFilter = "all" | "pending" | "confirmed" | "failed";
@@ -54,6 +55,14 @@ function statusBadge(status: string) {
     return <Badge className="bg-success text-success-foreground">Confirmado</Badge>;
   if (status === "failed") return <Badge variant="destructive">Fallido</Badge>;
   return <Badge variant="secondary">Pendiente</Badge>;
+}
+
+function AdminPaymentsRoute() {
+  return (
+    <RouteGuard requireAdmin>
+      <AdminPaymentsPage />
+    </RouteGuard>
+  );
 }
 
 function AdminPaymentsPage() {

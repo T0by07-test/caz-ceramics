@@ -45,11 +45,20 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { MultiTeacherSelect } from "@/components/finance/MultiTeacherSelect";
+import { RouteGuard } from "@/components/RouteGuard";
 
 export const Route = createFileRoute("/admin/registro")({
   head: () => ({ meta: [{ title: "Registro — Admin" }] }),
-  component: AdminLedgerPage,
+  component: AdminLedgerRoute,
 });
+
+function AdminLedgerRoute() {
+  return (
+    <RouteGuard requireAdmin>
+      <AdminLedgerPage />
+    </RouteGuard>
+  );
+}
 
 /**
  * `ledger_entries` is admin-only via RLS (is_admin()) and is not yet reflected in

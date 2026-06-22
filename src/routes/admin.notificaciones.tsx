@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { RouteGuard } from "@/components/RouteGuard";
 
 type StatusFilter = "all" | "queued" | "sent" | "failed";
 
@@ -28,8 +29,16 @@ type Row = {
 
 export const Route = createFileRoute("/admin/notificaciones")({
   head: () => ({ meta: [{ title: "Notificaciones — Admin" }] }),
-  component: NotificationsPage,
+  component: NotificationsRoute,
 });
+
+function NotificationsRoute() {
+  return (
+    <RouteGuard requireAdmin>
+      <NotificationsPage />
+    </RouteGuard>
+  );
+}
 
 const TYPE_LABEL: Record<string, string> = {
   reservation_confirmed: "Reserva confirmada",
