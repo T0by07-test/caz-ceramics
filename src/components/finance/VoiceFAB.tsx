@@ -277,6 +277,15 @@ export function VoiceFAB() {
             </div>
 
             <div>
+              <Label>Categoría</Label>
+              <Input
+                value={form.category ?? ""}
+                onChange={(e) => setForm({ ...form, category: e.target.value || null })}
+                placeholder="Ingreso, cuota..."
+              />
+            </div>
+
+            <div>
               <Label>Profesora(s)</Label>
               <MultiTeacherSelect
                 value={form.collector}
