@@ -99,7 +99,7 @@ function Index() {
             </Button>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
-            El acceso es por invitación. Solicita tu plaza y Cande te escribirá.
+            El acceso es por invitación. Solicita tu plaza y te confirmaremos.
           </p>
         </section>
 
