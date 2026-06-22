@@ -40,6 +40,7 @@ import {
   rangeForView,
   shiftReference,
   type CalendarView,
+  type CalendarSearch,
 } from "@/lib/calendar-view";
 import { CalendarHeader } from "@/components/calendar/CalendarHeader";
 import { CalendarBoard } from "@/components/calendar/CalendarBoard";
@@ -61,11 +62,11 @@ function AdminClassesPage() {
   const [onlyMine, setOnlyMine] = useState(false);
 
   const setView = (v: CalendarView) =>
-    navigate({ search: (prev) => ({ ...prev, view: v }) });
+    navigate({ search: (prev: CalendarSearch) => ({ ...prev, view: v }) });
   const shift = (dir: -1 | 1) =>
-    navigate({ search: (prev) => ({ ...prev, date: toIsoDate(shiftReference(view, reference, dir)) }) });
+    navigate({ search: (prev: CalendarSearch) => ({ ...prev, date: toIsoDate(shiftReference(view, reference, dir)) }) });
   const goToday = () =>
-    navigate({ search: (prev) => ({ ...prev, date: toIsoDate(new Date()) }) });
+    navigate({ search: (prev: CalendarSearch) => ({ ...prev, date: toIsoDate(new Date()) }) });
 
   const [selected, setSelected] = useState<ClassWithCount | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
