@@ -405,18 +405,17 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-  // Endpoint hardening (A2.3, shared contract #1): when CRON_SECRET is set,
-  // require a matching "x-cron-secret" header. Before the secret is configured
-  // we allow the request (progressive hardening) so the queue keeps draining.
-  if (CRON_SECRET) {
-    if (req.headers.get("x-cron-secret") !== CRON_SECRET) {
-      return new Response(JSON.stringify({ ok: false, error: "unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+  // Fail-closed: require CRON_SECRET to be configured AND the caller to present
+  // a matching "x-cron-secret" header. Never allow unauthenticated callers to
+  // drain the notification queue.
+  if (!CRON_SECRET || req.headers.get("x-cron-secret") !== CRON_SECRET) {
+    if (!CRON_SECRET) {
+      console.error("CRON_SECRET not configured — process-notifications rejecting request.");
     }
-  } else {
-    console.warn("CRON_SECRET not set — process-notifications endpoint is unauthenticated.");
+    return new Response(JSON.stringify({ ok: false, error: "unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
   try {
     const { data: rows, error } = await supabase.rpc("claim_notifications", { p_limit: 100 });
