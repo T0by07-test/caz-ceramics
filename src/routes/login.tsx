@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { useAuth, isStaff } from "@/lib/auth";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
@@ -28,7 +28,7 @@ function LoginPage() {
   useEffect(() => {
     if (loading) return;
     if (session && role) {
-      navigate({ to: role === "admin" ? "/admin" : "/app" });
+      navigate({ to: isStaff(role) ? "/admin" : "/app" });
     }
   }, [session, role, loading, navigate]);
 

@@ -40,7 +40,17 @@ function AdminDashboardRoute() {
     if (role === "instructora") navigate({ to: "/admin/clases" });
   }, [role, navigate]);
 
-  return <RouteGuard requireStaff>{role === "admin" ? <AdminDashboardPage /> : null}</RouteGuard>;
+  return (
+    <RouteGuard requireStaff>
+      {role === "admin" ? (
+        <AdminDashboardPage />
+      ) : (
+        <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">
+          Redirigiendo…
+        </div>
+      )}
+    </RouteGuard>
+  );
 }
 
 type WeekClass = {
