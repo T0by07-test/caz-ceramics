@@ -140,7 +140,7 @@ function AdminStudentsPage() {
         "id, role, name, surname, email, whatsapp, membership_status, is_regular, profile_tags(tags(id,name)), recurring_slots(id,weekday,start_time)",
       )
       .order("created_at", { ascending: false });
-    const [{ data: subs }, { data: makeups }, { data: plans }, { data: monthBookings }] =
+    const [{ data: subs }, { data: makeups }, { data: plansList }, { data: monthBookings }] =
       await Promise.all([
         supabase
           .from("subscriptions")
@@ -159,7 +159,7 @@ function AdminStudentsPage() {
           .lte("classes.date", monthEndIso)
           .in("status", ["reserved", "confirmed", "attended"]),
       ]);
-    const planNameById = new Map((plans ?? []).map((p) => [p.id, p.name]));
+    const planNameById = new Map((plansList ?? []).map((p) => [p.id, p.name]));
     const subByStudent = new Map(
       (subs ?? []).map((s) => [
         s.student_id,
@@ -362,32 +362,36 @@ function AdminStudentsPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setReminderStudent(r);
-                            setReminderOpen(true);
-                          }}
-                          aria-label="Enviar recordatorio de pago"
-                        >
-                          <BellRing className="mr-1 h-4 w-4" /> Recordatorio
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setGrantStudent(r);
-                            setGrantOpen(true);
-                          }}
-                          aria-label="Conceder recuperación"
-                        >
-                          <Gift className="mr-1 h-4 w-4" /> Recuperación
-                        </Button>
-                      </div>
+                      {viewerRole === "admin" ? (
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setReminderStudent(r);
+                              setReminderOpen(true);
+                            }}
+                            aria-label="Enviar recordatorio de pago"
+                          >
+                            <BellRing className="mr-1 h-4 w-4" /> Recordatorio
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setGrantStudent(r);
+                              setGrantOpen(true);
+                            }}
+                            aria-label="Conceder recuperación"
+                          >
+                            <Gift className="mr-1 h-4 w-4" /> Recuperación
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
