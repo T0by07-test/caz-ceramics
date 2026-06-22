@@ -4,7 +4,7 @@ export type RecorderState = "idle" | "recording" | "processing";
 
 export interface UseVoiceRecorder {
   state: RecorderState;
-  start: () => void;
+  start: () => Promise<void>;
   stop: () => Promise<Blob>;
   error: string | null;
 }
