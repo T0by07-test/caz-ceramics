@@ -404,7 +404,11 @@ function CalendarPicker({
                         <span className="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                           Niños
                         </span>
-                      ) : null}
+                      ) : (
+                        <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                          Adultos
+                        </span>
+                      )}
                     </label>
                   </li>
                 );
