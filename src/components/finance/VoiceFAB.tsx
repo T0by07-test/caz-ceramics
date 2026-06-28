@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { Mic, StopCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +28,99 @@ import {
   type VoiceExtracted,
 } from "@/lib/finance/voice";
 import { MONTHS } from "@/lib/finance/types";
+
+// --- Fuzzy student name matching ---
+
+function levenshtein(a: string, b: string): number {
+  const prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  const curr = new Array<number>(b.length + 1);
+  for (let i = 1; i <= a.length; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      curr[j] = a[i - 1] === b[j - 1]
+        ? prev[j - 1]
+        : 1 + Math.min(prev[j], curr[j - 1], prev[j - 1]);
+    }
+    prev.splice(0, b.length + 1, ...curr);
+  }
+  return prev[b.length];
+}
+
+function norm(s: string) {
+  return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+
+function fuzzyRank(query: string, candidates: string[]): string[] {
+  const q = norm(query);
+  return candidates
+    .map((c) => {
+      const cn = norm(c);
+      let score = 0;
+      if (cn === q) score = 100;
+      else if (cn.startsWith(q)) score = 80;
+      else if (cn.includes(q)) score = 60;
+      else {
+        const dist = levenshtein(q, cn);
+        score = (1 - dist / Math.max(q.length, cn.length)) * 50;
+      }
+      return { c, score };
+    })
+    .filter((x) => x.score > 20)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 8)
+    .map((x) => x.c);
+}
+
+function StudentCombobox({
+  value,
+  onChange,
+  students,
+}: {
+  value: string | null;
+  onChange: (v: string | null) => void;
+  students: string[];
+}) {
+  const [query, setQuery] = useState(value ?? "");
+
+  useEffect(() => {
+    setQuery(value ?? "");
+  }, [value]);
+
+  const suggestions = useMemo(
+    () => (query.length >= 2 ? fuzzyRank(query, students) : []),
+    [query, students],
+  );
+  const chips = suggestions.filter((s) => norm(s) !== norm(query));
+
+  return (
+    <div>
+      <Input
+        className={value == null ? "border-yellow-400" : ""}
+        value={query}
+        onChange={(e) => {
+          const v = e.target.value;
+          setQuery(v);
+          onChange(v || null);
+        }}
+        placeholder="Nombre"
+      />
+      {chips.length > 0 && (
+        <div className="mt-1.5 flex flex-wrap gap-1">
+          {chips.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => { setQuery(s); onChange(s); }}
+              className="rounded-full border border-primary/40 bg-primary/10 px-2.5 py-0.5 text-xs text-primary hover:bg-primary/20"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const METHODS = [
   { value: "E", label: "E · Efectivo" },
@@ -61,6 +154,22 @@ export function VoiceFAB() {
   const [form, setForm] = useState<VoiceExtracted>(emptyForm());
   const [amountEur, setAmountEur] = useState("");
   const [saving, setSaving] = useState(false);
+  const [students, setStudents] = useState<string[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from("ledger_entries")
+      .select("student_name")
+      .not("student_name", "is", null)
+      .then(({ data }) => {
+        const names = [
+          ...new Set(
+            (data ?? []).map((d) => d.student_name).filter(Boolean) as string[],
+          ),
+        ];
+        setStudents(names.sort());
+      });
+  }, []);
 
   // resetRef breaks the circular dep: handleTranscript needs reset, reset comes from the hook
   const resetRef = useRef(() => {});
@@ -211,11 +320,10 @@ export function VoiceFAB() {
           <div className="grid gap-3 py-2">
             <div>
               <Label>Alumna *</Label>
-              <Input
-                className={fieldBorder(form.student_name)}
-                value={form.student_name ?? ""}
-                onChange={(e) => setForm({ ...form, student_name: e.target.value || null })}
-                placeholder="Nombre"
+              <StudentCombobox
+                value={form.student_name}
+                onChange={(v) => setForm({ ...form, student_name: v })}
+                students={students}
               />
             </div>
 
