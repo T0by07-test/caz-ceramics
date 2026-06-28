@@ -156,18 +156,18 @@ function AdminRequestsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+        <div className="min-w-0">
           <span className="text-label uppercase">Admisiones</span>
           <h1 className="text-h1 mt-1">Solicitudes</h1>
           <p className="text-body mt-2 text-muted-foreground">
             Revisa las solicitudes de inscripción, aprueba las clases y envía la invitación.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline">Pendientes: {counts.pending}</Badge>
+        <div className="flex items-center gap-2 sm:shrink-0">
+          <Badge variant="outline" className="shrink-0">Pendientes: {counts.pending}</Badge>
           <Select value={filter} onValueChange={(v) => setFilter(v as StatusFilter)}>
-            <SelectTrigger className="w-44">
+            <SelectTrigger className="w-full sm:w-44">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -179,7 +179,7 @@ function AdminRequestsPage() {
       </div>
 
       <Card className="shadow-card">
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-x-auto">
           {rows === null ? (
             <div className="space-y-2 p-6">
               {Array.from({ length: 5 }).map((_, i) => (
