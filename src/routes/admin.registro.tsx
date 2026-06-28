@@ -101,6 +101,7 @@ function itemGroup(item: string | null): number {
   const s = (item ?? "").trim().toLowerCase();
   if (!s) return 3;
   if (WEEKDAY_RE.test(s)) return 0;
+  if (s === "clase suelta" || s.startsWith("alumnos")) return 0;
   if (s.includes("coworker")) return 1;
   if (s.startsWith("taller") || s.includes("workshop")) return 2;
   return 3;
@@ -222,8 +223,13 @@ function AdminLedgerPage() {
     });
     // Stable sort by item group: clases regulares → coworkers → workshops → resto.
     return result
-      .map((r, i) => ({ r, i, g: itemGroup(r.item) }))
-      .sort((a, b) => (a.g - b.g) || (a.i - b.i))
+      .map((r, i) => ({ r, i, g: itemGroup(r.item), k: (r.item ?? "").trim().toLowerCase() }))
+      .sort((a, b) => {
+        if (a.g !== b.g) return a.g - b.g;
+        // Within "resto", cluster by item name (productos juntos, etc.).
+        if (a.g === 3 && a.k !== b.k) return a.k.localeCompare(b.k);
+        return a.i - b.i;
+      })
       .map(({ r }) => r);
   }, [rows, search, statusFilter, methodFilter, categoryFilter, monthFilter]);
 
