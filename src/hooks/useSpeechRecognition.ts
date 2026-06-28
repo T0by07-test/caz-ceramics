@@ -44,6 +44,8 @@ export function useSpeechRecognition(
     recognition.continuous = true;
     recognition.interimResults = false;
 
+    let errored = false;
+
     recognition.onresult = (e: { results: { length: number; [i: number]: { [j: number]: { transcript: string } } } }) => {
       const parts: string[] = [];
       for (let i = 0; i < e.results.length; i++) {
@@ -53,6 +55,7 @@ export function useSpeechRecognition(
     };
 
     recognition.onerror = (e: { error: string }) => {
+      errored = true;
       setError(
         e.error === "not-allowed"
           ? "Permiso de micrófono denegado"
@@ -63,6 +66,7 @@ export function useSpeechRecognition(
     };
 
     recognition.onend = () => {
+      if (errored) return;
       recognitionRef.current = null;
       setState("processing");
       onResultRef.current(transcriptRef.current);
