@@ -99,13 +99,15 @@ type Promiseable = {
 const WEEKDAY_RE = /^(lunes|martes|miércoles|miercoles|miercole|jueves|viernes|sábado|sabado|domingo|niños|ninos)/i;
 function itemGroup(item: string | null): number {
   const s = (item ?? "").trim().toLowerCase();
-  if (!s) return 3;
+  if (!s) return 5;
   if (WEEKDAY_RE.test(s)) return 0;
-  if (s === "clase suelta" || s.startsWith("alumnos")) return 0;
-  if (s.includes("coworker")) return 1;
-  if (s.startsWith("taller") || s.includes("workshop")) return 2;
-  return 3;
+  if (s.startsWith("alumnos")) return 0;
+  if (s === "clase suelta") return 1;
+  if (s.includes("coworker")) return 2;
+  if (s.startsWith("taller") || s.includes("workshop")) return 3;
+  return 4;
 }
+
 
 type LedgerTable = {
   select: (cols: string) => Orderable & Promiseable;
@@ -221,16 +223,17 @@ function AdminLedgerPage() {
       }
       return true;
     });
-    // Stable sort by item group: clases regulares → coworkers → workshops → resto.
+    // Stable sort: clases regulares → clases sueltas → coworkers → workshops → resto.
     return result
       .map((r, i) => ({ r, i, g: itemGroup(r.item), k: (r.item ?? "").trim().toLowerCase() }))
       .sort((a, b) => {
         if (a.g !== b.g) return a.g - b.g;
         // Within "resto", cluster by item name (productos juntos, etc.).
-        if (a.g === 3 && a.k !== b.k) return a.k.localeCompare(b.k);
+        if (a.g === 4 && a.k !== b.k) return a.k.localeCompare(b.k);
         return a.i - b.i;
       })
       .map(({ r }) => r);
+
   }, [rows, search, statusFilter, methodFilter, categoryFilter, monthFilter]);
 
   const totals = useMemo(() => {
