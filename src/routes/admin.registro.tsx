@@ -255,7 +255,15 @@ function AdminLedgerPage() {
     [rows],
   );
   const months = useMemo(
-    () => Array.from(new Set(rows.map((r) => r.month).filter((m): m is string => !!m))).sort(),
+    () =>
+      Array.from(new Set(rows.map((r) => r.month).filter((m): m is string => !!m))).sort(
+        (a, b) => {
+          const oa = monthOrder(a);
+          const ob = monthOrder(b);
+          if (oa !== ob) return oa - ob;
+          return a.localeCompare(b);
+        },
+      ),
     [rows],
   );
   const methods = useMemo(
@@ -278,9 +286,21 @@ function AdminLedgerPage() {
     });
     // Stable sort: clases regulares → clases sueltas → coworkers → workshops → resto.
     return result
-      .map((r, i) => ({ r, i, g: itemGroup(r.item), k: (r.item ?? "").trim().toLowerCase() }))
+      .map((r, i) => ({
+        r,
+        i,
+        g: itemGroup(r.item),
+        k: (r.item ?? "").trim().toLowerCase(),
+        wd: weekdayIndex(r.item),
+        mn: itemMinutes(r.item),
+      }))
       .sort((a, b) => {
         if (a.g !== b.g) return a.g - b.g;
+        // Regular classes: Mon..Sun..Niños, then start time.
+        if (a.g === 0) {
+          if (a.wd !== b.wd) return a.wd - b.wd;
+          if (a.mn !== b.mn) return a.mn - b.mn;
+        }
         // Within "resto", cluster by item name (productos juntos, etc.).
         if (a.g === 4 && a.k !== b.k) return a.k.localeCompare(b.k);
         return a.i - b.i;
