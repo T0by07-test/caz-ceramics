@@ -100,20 +100,20 @@ function NotificationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+        <div className="min-w-0">
           <span className="text-label uppercase">Operaciones</span>
           <h1 className="text-h1 mt-1">Notificaciones</h1>
           <p className="text-body mt-2 text-muted-foreground">
             Últimas 200 notificaciones enviadas o en cola.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline">En cola: {counts.queued}</Badge>
-          <Badge variant="outline">Enviadas: {counts.sent}</Badge>
-          <Badge variant="outline">Fallidas: {counts.failed}</Badge>
+        <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+          <Badge variant="outline" className="shrink-0">En cola: {counts.queued}</Badge>
+          <Badge variant="outline" className="shrink-0">Enviadas: {counts.sent}</Badge>
+          <Badge variant="outline" className="shrink-0">Fallidas: {counts.failed}</Badge>
           <Select value={filter} onValueChange={(v) => setFilter(v as StatusFilter)}>
-            <SelectTrigger className="w-44">
+            <SelectTrigger className="w-full sm:w-44">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
