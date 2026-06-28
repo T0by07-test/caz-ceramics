@@ -319,6 +319,67 @@ function AdminStudentsPage() {
               />
             </div>
           ) : (
+            <>
+            <ul className="divide-y divide-border md:hidden">
+              {filtered.map((r) => (
+                <li
+                  key={`m-${r.id}`}
+                  className="cursor-pointer space-y-2 p-4"
+                  onClick={() => setSelected(r)}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{fullName(r)}</p>
+                      {r.email ? (
+                        <p className="truncate text-xs text-muted-foreground">{r.email}</p>
+                      ) : null}
+                    </div>
+                    <Badge variant={ESTADO_BADGE[r.estado]} className="shrink-0">
+                      {ESTADO_LABELS[r.estado]}
+                    </Badge>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                    <Badge variant="outline">{ROLE_LABELS[r.role]}</Badge>
+                    {r.plan_name ? <Badge variant="secondary">{r.plan_name}</Badge> : null}
+                    {viewerRole === "admin" && r.credits_remaining != null ? (
+                      <span className="text-muted-foreground">
+                        {r.credits_remaining} créditos
+                        {r.pending_makeups > 0 ? ` · ${r.pending_makeups} recup.` : ""}
+                      </span>
+                    ) : null}
+                  </div>
+                  {viewerRole === "admin" ? (
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setReminderStudent(r);
+                          setReminderOpen(true);
+                        }}
+                        aria-label="Enviar recordatorio de pago"
+                      >
+                        <BellRing className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setGrantStudent(r);
+                          setGrantOpen(true);
+                        }}
+                        aria-label="Conceder recuperación"
+                      >
+                        <Gift className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+            <div className="hidden md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -426,6 +487,8 @@ function AdminStudentsPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
+            </>
           )}
         </CardContent>
       </Card>
