@@ -83,21 +83,15 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: authHeader } } },
     );
-    const adminDb = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    const adminDb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
     const { data: userData, error: authError } = await supabase.auth.getUser();
     if (authError || !userData?.user) return jsonResponse({ error: "Authentication required" }, 401);
 
-    const { data: profile } = await adminDb
-      .from("profiles")
-      .select("role")
-      .eq("id", userData.user.id)
-      .maybeSingle();
+    const { data: profile } = await adminDb.from("profiles").select("role").eq("id", userData.user.id).maybeSingle();
     if (!profile || profile.role !== "admin") return jsonResponse({ error: "Admin access required" }, 403);
 
+    // Parse JSON body — transcript comes from Browser Web Speech API (client-side STT)
     const body = await req.json() as {
       transcript?: string;
       today?: string;
@@ -140,14 +134,18 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "extraction_failed", message: err }, 502);
     }
 
-    const aiJson = await aiRes.json() as {
+    const aiJson = (await aiRes.json()) as {
       choices?: Array<{ message?: { content?: string } }>;
     };
     const rawText = aiJson.choices?.[0]?.message?.content ?? "";
 
     let fields: unknown;
     try {
-      const cleaned = rawText.replace(/^```(?:json)?\s*/m, "").replace(/\s*```\s*$/m, "").trim();
+      // Strip potential markdown code fences before parsing
+      const cleaned = rawText
+        .replace(/^```(?:json)?\s*/m, "")
+        .replace(/\s*```\s*$/m, "")
+        .trim();
       fields = JSON.parse(cleaned);
     } catch {
       return jsonResponse({ error: "parse_failed", transcript }, 422);
