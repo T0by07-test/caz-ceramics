@@ -137,18 +137,23 @@ function AdminExpensesPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
+        <div className="min-w-0">
           <span className="text-label uppercase">Finanzas</span>
           <h1 className="text-h1 mt-1">Gastos</h1>
           <p className="text-body mt-2 text-muted-foreground">
             Costes fijos y variables. El IVA soportado reduce el IVA a pagar.
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => setExportOpen(true)} size="lg" variant="outline" className="gap-2">
+        <div className="flex flex-wrap gap-2 sm:shrink-0">
+          <Button
+            onClick={() => setExportOpen(true)}
+            size="lg"
+            variant="outline"
+            className="flex-1 gap-2 sm:flex-none"
+          >
             <FileDown className="h-4 w-4" /> Exportar
           </Button>
-          <Button onClick={() => setCreating(true)} size="lg" className="gap-2">
+          <Button onClick={() => setCreating(true)} size="lg" className="flex-1 gap-2 sm:flex-none">
             <Plus className="h-4 w-4" /> Nuevo gasto
           </Button>
         </div>
@@ -176,7 +181,7 @@ function AdminExpensesPage() {
       </div>
 
       <Card className="shadow-card">
-        <CardContent className="grid gap-3 p-4 md:grid-cols-3">
+        <CardContent className="grid gap-3 p-4 sm:grid-cols-2 md:grid-cols-3">
           <div className="space-y-1.5">
             <Label htmlFor="search">Buscar</Label>
             <div className="relative">
@@ -226,7 +231,7 @@ function AdminExpensesPage() {
       </Card>
 
       <Card className="shadow-card">
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-x-auto">
           {loading ? (
             <div className="space-y-2 p-6">
               {Array.from({ length: 6 }).map((_, i) => (
