@@ -96,6 +96,16 @@ type Promiseable = {
   }>["then"];
 };
 
+const WEEKDAY_RE = /^(lunes|martes|miércoles|miercoles|miercole|jueves|viernes|sábado|sabado|domingo|niños|ninos)/i;
+function itemGroup(item: string | null): number {
+  const s = (item ?? "").trim().toLowerCase();
+  if (!s) return 3;
+  if (WEEKDAY_RE.test(s)) return 0;
+  if (s.includes("coworker")) return 1;
+  if (s.startsWith("taller") || s.includes("workshop")) return 2;
+  return 3;
+}
+
 type LedgerTable = {
   select: (cols: string) => Orderable & Promiseable;
   insert: (
@@ -199,7 +209,7 @@ function AdminLedgerPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return rows.filter((r) => {
+    const result = rows.filter((r) => {
       if (statusFilter !== ALL && r.status !== statusFilter) return false;
       if (methodFilter !== ALL && r.method !== methodFilter) return false;
       if (categoryFilter !== ALL && r.category !== categoryFilter) return false;
@@ -210,6 +220,11 @@ function AdminLedgerPage() {
       }
       return true;
     });
+    // Stable sort by item group: clases regulares → coworkers → workshops → resto.
+    return result
+      .map((r, i) => ({ r, i, g: itemGroup(r.item) }))
+      .sort((a, b) => (a.g - b.g) || (a.i - b.i))
+      .map(({ r }) => r);
   }, [rows, search, statusFilter, methodFilter, categoryFilter, monthFilter]);
 
   const totals = useMemo(() => {
@@ -394,9 +409,6 @@ function AdminLedgerPage() {
                     </TableCell>
                     <TableCell className="font-medium">
                       <div>{r.student_name ?? "—"}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {formatDateOrMonth(r.entry_date, r.month)}
-                      </div>
                     </TableCell>
                     <TableCell>{r.item ?? "—"}</TableCell>
                     <TableCell className="hidden text-muted-foreground lg:table-cell">
