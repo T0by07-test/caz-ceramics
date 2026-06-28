@@ -83,6 +83,7 @@ type StudentRow = {
   tags: { id: string; name: string }[];
   slots: { id: string; weekday: number; start_time: string }[];
   estado: Estado;
+  assigned_instructor: string | null;
 };
 
 type PlanOption = { id: string; name: string; price_cents: number };
@@ -135,12 +136,19 @@ function AdminStudentsPage() {
     const now = new Date();
     const monthStart = toIsoDate(startOfMonth(now));
     const monthEndIso = toIsoDate(endOfMonth(now));
-    const { data: profiles } = await supabase
+    type ProfileRow = {
+      id: string; role: string | null; name: string | null; surname: string | null;
+      email: string | null; whatsapp: string | null; membership_status: string | null;
+      is_regular: boolean | null; assigned_instructor: string | null;
+      profile_tags: { tags: { id: string; name: string } | null }[];
+      recurring_slots: { id: string; weekday: number; start_time: string }[];
+    };
+    const { data: profiles } = await (supabase
       .from("profiles")
       .select(
-        "id, role, name, surname, email, whatsapp, membership_status, is_regular, profile_tags(tags(id,name)), recurring_slots(id,weekday,start_time)",
+        "id, role, name, surname, email, whatsapp, membership_status, is_regular, assigned_instructor, profile_tags(tags(id,name)), recurring_slots(id,weekday,start_time)",
       )
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false }) as unknown as Promise<{ data: ProfileRow[] | null }>);
     const [{ data: subs }, { data: makeups }, { data: plansList }, { data: monthBookings }] =
       await Promise.all([
         supabase
@@ -194,6 +202,7 @@ function AdminStudentsPage() {
         tags,
         slots,
         estado: deriveEstado(membership, bookedThisMonth.has(p.id), isRegular),
+        assigned_instructor: p.assigned_instructor ?? null,
       };
     });
     setRows(result);
@@ -498,6 +507,7 @@ function StudentDetailSheet({
   const [membership, setMembership] = useState<MembershipStatus>("active");
   const [isRegular, setIsRegular] = useState(false);
   const [slots, setSlots] = useState<StudentRow["slots"]>([]);
+  const [instructor, setInstructor] = useState<string | null>(null);
 
   useEffect(() => {
     if (!student) return;
@@ -505,6 +515,7 @@ function StudentDetailSheet({
     setMembership(student.membership_status);
     setIsRegular(student.is_regular);
     setSlots(student.slots);
+    setInstructor(student.assigned_instructor);
   }, [student]);
 
   const toggleTag = async (tagId: string, next: boolean) => {
@@ -550,6 +561,22 @@ function StudentDetailSheet({
     if (error) {
       toast.error(`No se pudo actualizar: ${error.message}`);
       setIsRegular(!value);
+      return;
+    }
+    onChanged();
+  };
+
+  const changeInstructor = async (value: string | null) => {
+    if (!student) return;
+    const prev = instructor;
+    setInstructor(value);
+    const { error } = await (supabase
+      .from("profiles")
+      .update({ assigned_instructor: value } as object)
+      .eq("id", student.id) as unknown as Promise<{ error: { message: string } | null }>);
+    if (error) {
+      toast.error(`No se pudo actualizar la profesora: ${error.message}`);
+      setInstructor(prev);
       return;
     }
     onChanged();
@@ -675,6 +702,25 @@ function StudentDetailSheet({
                     disabled={readOnly}
                   />
                 </div>
+                <div className="space-y-1.5">
+                  <Label>Profesora asignada</Label>
+                  <Select
+                    value={instructor ?? "none"}
+                    onValueChange={(v) => void changeInstructor(v === "none" ? null : v)}
+                    disabled={readOnly}
+                  >
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="Sin asignar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sin asignar</SelectItem>
+                      <SelectItem value="Cande">Cande</SelectItem>
+                      <SelectItem value="Sofi">Sofi</SelectItem>
+                      <SelectItem value="Martu">Martu</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="space-y-1.5">
                   <Label>Slot fijo</Label>
                   <SlotEditor
