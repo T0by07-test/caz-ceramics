@@ -25,19 +25,19 @@ export function CalendarHeader({
   const title = viewTitle(view, reference);
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-      <div className="flex items-center gap-2">
-        <Button type="button" variant="outline" size="icon" onClick={onPrev} aria-label="Anterior">
+      <div className="flex min-w-0 items-center gap-1 sm:gap-2">
+        <Button type="button" variant="outline" size="icon" onClick={onPrev} aria-label="Anterior" className="shrink-0">
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <h2 className="text-h2 min-w-[14ch] text-center capitalize lg:text-left">{title}</h2>
-        <Button type="button" variant="outline" size="icon" onClick={onNext} aria-label="Siguiente">
+        <h2 className="text-h2 min-w-0 flex-1 truncate text-center capitalize lg:min-w-[14ch] lg:flex-none lg:text-left">{title}</h2>
+        <Button type="button" variant="outline" size="icon" onClick={onNext} aria-label="Siguiente" className="shrink-0">
           <ChevronRight className="h-4 w-4" />
         </Button>
-        <Button type="button" variant="ghost" size="sm" onClick={onToday} className="ml-1">
+        <Button type="button" variant="ghost" size="sm" onClick={onToday} className="ml-1 shrink-0">
           Hoy
         </Button>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <ToggleGroup
           type="single"
           value={view}

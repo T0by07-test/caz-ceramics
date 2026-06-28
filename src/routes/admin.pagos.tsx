@@ -179,6 +179,37 @@ function AdminPaymentsPage() {
               />
             </div>
           ) : (
+            <>
+            <ul className="divide-y divide-border md:hidden">
+              {rows.map((r) => (
+                <li key={`m-${r.id}`} className="space-y-1 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{r.student_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(r.created_at).toLocaleDateString("es-ES")} ·{" "}
+                        {r.subscription_id ? "Plan" : r.booking_id ? "Clase suelta" : "—"}
+                      </p>
+                    </div>
+                    <span className="shrink-0 font-semibold tabular-nums">{formatEur(r.amount_cents)}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    {statusBadge(r.status)}
+                    {r.stripe_session_id ? (
+                      <a
+                        href={`https://dashboard.stripe.com/test/payments/${r.stripe_session_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                      >
+                        Stripe <ExternalLink className="h-3 w-3" />
+                      </a>
+                    ) : null}
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -223,6 +254,8 @@ function AdminPaymentsPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
+            </>
           )}
         </CardContent>
       </Card>
