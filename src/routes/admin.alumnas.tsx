@@ -747,7 +747,7 @@ function StudentDetailSheet({
                     onValueChange={(v) => void changeMembership(v as MembershipStatus)}
                     disabled={readOnly}
                   >
-                    <SelectTrigger id="membership-status" className="w-48">
+                    <SelectTrigger id="membership-status" className="w-full sm:w-48">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -775,7 +775,7 @@ function StudentDetailSheet({
                     onValueChange={(v) => void changeInstructor(v === "none" ? null : v)}
                     disabled={readOnly}
                   >
-                    <SelectTrigger className="w-48">
+                    <SelectTrigger className="w-full sm:w-48">
                       <SelectValue placeholder="Sin asignar" />
                     </SelectTrigger>
                     <SelectContent>
