@@ -63,37 +63,15 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (!profile || profile.role !== "admin") return jsonResponse({ error: "Admin access required" }, 403);
 
-    // Parse multipart form
-    const formData = await req.formData();
-    const audioFile = formData.get("audio");
-    const today = (formData.get("today") as string) ?? new Date().toISOString().slice(0, 10);
+    // Parse JSON body — transcript comes from Browser Web Speech API (client-side STT)
+    const body = await req.json() as { transcript?: string; today?: string };
+    const transcript = body.transcript?.trim() ?? "";
+    const today = body.today ?? new Date().toISOString().slice(0, 10);
 
-    if (!audioFile || !(audioFile instanceof File)) {
-      return jsonResponse({ error: "Missing audio file" }, 400);
-    }
-
-    // Step 1: Transcribe audio with OpenAI Whisper
-    const whisperForm = new FormData();
-    whisperForm.append("file", audioFile, audioFile.name || "audio.webm");
-    whisperForm.append("model", "whisper-1");
-    whisperForm.append("language", "es");
-
-    const whisperRes = await fetch("https://api.openai.com/v1/audio/transcriptions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${Deno.env.get("OPENAI_API_KEY")!}` },
-      body: whisperForm,
-    });
-
-    if (!whisperRes.ok) {
-      const err = await whisperRes.text();
-      console.error("Whisper error:", err);
-      return jsonResponse({ error: "transcription_failed", message: err }, 502);
-    }
-
-    const { text: transcript } = await whisperRes.json() as { text: string };
     if (!transcript) return jsonResponse({ error: "empty_transcript" }, 422);
 
-    // Step 2: Extract structured fields with Claude
+    // Extract structured fields with Claude
+    // TODO: replace with Lovable AI Gateway once endpoint is available (0 keys)
     const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {

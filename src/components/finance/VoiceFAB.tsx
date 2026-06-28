@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Mic, StopCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { MultiTeacherSelect } from "@/components/finance/MultiTeacherSelect";
-import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import {
   normalizeVoiceFields,
   validateVoiceForm,
@@ -57,70 +57,92 @@ function emptyForm(): VoiceExtracted {
 }
 
 export function VoiceFAB() {
-  const { state, start, stop, reset, error: recorderError } = useVoiceRecorder();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<VoiceExtracted>(emptyForm());
   const [amountEur, setAmountEur] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const handleFabClick = async () => {
-    if (state === "idle") {
-      await start();
-      if (recorderError) toast.error(recorderError);
+  // resetRef breaks the circular dep: handleTranscript needs reset, reset comes from the hook
+  const resetRef = useRef(() => {});
+
+  const closeDialog = useCallback(() => {
+    setOpen(false);
+    setForm(emptyForm());
+    setAmountEur("");
+    resetRef.current();
+  }, []);
+
+  const handleTranscript = useCallback(async (transcript: string) => {
+    if (!transcript.trim()) {
+      toast.error("No se detectó voz. Intenta de nuevo.");
+      resetRef.current();
       return;
     }
-    if (state === "recording") {
-      const blob = await stop();
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.access_token) {
-          toast.error("Sesión expirada. Por favor, recarga la página.");
-          reset();
-          return;
-        }
-        const fd = new FormData();
-        fd.append("audio", blob, "recording.webm");
-        fd.append("today", new Date().toISOString().slice(0, 10));
-
-        const res = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/finance-voice`,
-          {
-            method: "POST",
-            headers: { Authorization: `Bearer ${session.access_token}` },
-            body: fd,
-          },
-        );
-
-        const json = await res.json() as {
-          fields?: unknown;
-          transcript?: string;
-          error?: string;
-        };
-
-        if (!res.ok || json.error) {
-          if (json.error === "parse_failed") {
-            toast.error("No se pudo interpretar el audio. Transcripción: " + (json.transcript ?? ""));
-          } else {
-            toast.error("Error al procesar el audio");
-          }
-          reset();
-          return;
-        }
-
-        const normalized = normalizeVoiceFields(json.fields);
-        if (!normalized) {
-          toast.error("Respuesta inesperada del servidor");
-          reset();
-          return;
-        }
-        setForm(normalized);
-        setAmountEur(normalized.amount_cents !== null ? (normalized.amount_cents / 100).toFixed(2) : "");
-        setOpen(true);
-      } catch {
-        toast.error("Error de red al procesar el audio");
-        reset();
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error("Sesión expirada. Por favor, recarga la página.");
+        resetRef.current();
+        return;
       }
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/finance-voice`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            transcript,
+            today: new Date().toISOString().slice(0, 10),
+          }),
+        },
+      );
+
+      const json = await res.json() as {
+        fields?: unknown;
+        transcript?: string;
+        error?: string;
+      };
+
+      if (!res.ok || json.error) {
+        if (json.error === "parse_failed") {
+          toast.error("No se pudo interpretar el audio. Añade el ingreso manualmente.");
+        } else {
+          toast.error("Error al procesar el audio");
+        }
+        resetRef.current();
+        return;
+      }
+
+      const normalized = normalizeVoiceFields(json.fields);
+      if (!normalized) {
+        toast.error("Respuesta inesperada del servidor");
+        resetRef.current();
+        return;
+      }
+      setForm(normalized);
+      setAmountEur(normalized.amount_cents !== null ? (normalized.amount_cents / 100).toFixed(2) : "");
+      setOpen(true);
+      // state stays "processing" (FAB disabled) while dialog is open; closeDialog() resets to idle
+    } catch {
+      toast.error("Error de red al procesar el audio");
+      resetRef.current();
     }
+  }, []);
+
+  const { state, start, stop, reset, error: speechError } = useSpeechRecognition(handleTranscript);
+  resetRef.current = reset;
+
+  useEffect(() => {
+    if (speechError) toast.error(speechError);
+  }, [speechError]);
+
+  const handleFabClick = () => {
+    if (state === "idle") { start(); return; }
+    if (state === "listening") { stop(); }
   };
 
   const handleConfirm = async () => {
@@ -153,14 +175,12 @@ export function VoiceFAB() {
       return;
     }
     toast.success("Ingreso guardado");
-    setOpen(false);
-    setForm(emptyForm());
-    setAmountEur("");
+    closeDialog();
   };
 
   const fabIcon = () => {
     if (state === "processing") return <Loader2 className="h-6 w-6 animate-spin" />;
-    if (state === "recording") return <StopCircle className="h-6 w-6" />;
+    if (state === "listening") return <StopCircle className="h-6 w-6" />;
     return <Mic className="h-6 w-6" />;
   };
 
@@ -174,15 +194,15 @@ export function VoiceFAB() {
         disabled={state === "processing"}
         className={[
           "fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg",
-          state === "recording" ? "bg-red-500 hover:bg-red-600 animate-pulse" : "",
+          state === "listening" ? "bg-red-500 hover:bg-red-600 animate-pulse" : "",
         ].join(" ")}
         size="icon"
-        aria-label={state === "recording" ? "Detener grabación" : "Registrar pago por voz"}
+        aria-label={state === "listening" ? "Detener grabación" : "Registrar pago por voz"}
       >
         {fabIcon()}
       </Button>
 
-      <Dialog open={open} onOpenChange={(v) => { if (!v && saving) return; if (!v) { setOpen(false); setForm(emptyForm()); setAmountEur(""); } }}>
+      <Dialog open={open} onOpenChange={(v) => { if (!v && !saving) closeDialog(); }}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Confirmar ingreso</DialogTitle>
@@ -313,7 +333,7 @@ export function VoiceFAB() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setOpen(false); setForm(emptyForm()); setAmountEur(""); }}>
+            <Button variant="outline" onClick={closeDialog}>
               Cancelar
             </Button>
             <Button onClick={handleConfirm} disabled={saving}>
