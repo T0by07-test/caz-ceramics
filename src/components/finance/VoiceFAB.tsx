@@ -336,7 +336,7 @@ export function VoiceFAB() {
         onClick={handleFabClick}
         disabled={state === "processing"}
         className={[
-          "fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg",
+          "fixed bottom-24 right-4 z-50 h-14 w-14 rounded-full shadow-lg lg:bottom-6 lg:right-6",
           state === "listening" ? "bg-red-500 hover:bg-red-600 animate-pulse" : "",
         ].join(" ")}
         size="icon"
