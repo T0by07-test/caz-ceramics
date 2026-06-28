@@ -82,13 +82,22 @@ type LedgerEntry = {
   created_at: string;
 };
 
+type Orderable = {
+  order: (
+    col: string,
+    opts: { ascending: boolean },
+  ) => Orderable & Promiseable;
+};
+
+type Promiseable = {
+  then: Promise<{
+    data: LedgerEntry[] | null;
+    error: { message: string } | null;
+  }>["then"];
+};
+
 type LedgerTable = {
-  select: (cols: string) => {
-    order: (
-      col: string,
-      opts: { ascending: boolean },
-    ) => Promise<{ data: LedgerEntry[] | null; error: { message: string } | null }>;
-  };
+  select: (cols: string) => Orderable & Promiseable;
   insert: (
     values: Partial<LedgerEntry>,
   ) => Promise<{ error: { message: string } | null }>;
