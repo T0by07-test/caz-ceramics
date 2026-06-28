@@ -469,18 +469,23 @@ function AdminLedgerPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
+        <div className="min-w-0">
           <span className="text-label uppercase">Finanzas</span>
           <h1 className="text-h1 mt-1">Registro</h1>
           <p className="text-body mt-2 text-muted-foreground">
             El cuaderno de ingresos y actividad. Filtra, edita y añade entradas manualmente.
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => setExportOpen(true)} size="lg" variant="outline" className="gap-2">
+        <div className="flex flex-wrap gap-2 sm:shrink-0">
+          <Button
+            onClick={() => setExportOpen(true)}
+            size="lg"
+            variant="outline"
+            className="flex-1 gap-2 sm:flex-none"
+          >
             <FileDown className="h-4 w-4" /> Exportar
           </Button>
-          <Button onClick={() => setCreating(true)} size="lg" className="gap-2">
+          <Button onClick={() => setCreating(true)} size="lg" className="flex-1 gap-2 sm:flex-none">
             <Plus className="h-4 w-4" /> Nueva entrada
           </Button>
         </div>
@@ -512,7 +517,7 @@ function AdminLedgerPage() {
       </div>
 
       <Card className="shadow-card">
-        <CardContent className="grid gap-3 p-4 md:grid-cols-3 lg:grid-cols-5">
+        <CardContent className="grid gap-3 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           <div className="space-y-1.5">
             <Label htmlFor="search">Buscar</Label>
             <div className="relative">
@@ -592,8 +597,8 @@ function AdminLedgerPage() {
       </Card>
 
       {/* Legend + column picker */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
             Pagado
@@ -612,7 +617,7 @@ function AdminLedgerPage() {
       </div>
 
       <Card className="shadow-card">
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-x-auto">
           {loading ? (
             <div className="space-y-2 p-6">
               {Array.from({ length: 6 }).map((_, i) => (
