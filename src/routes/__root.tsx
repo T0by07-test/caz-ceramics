@@ -36,10 +36,14 @@ export const Route = createRootRoute({
       { title: "Cerámica Studio — Reservas" },
       { name: "description", content: "Reserva tus clases de cerámica en nuestro estudio." },
       { name: "author", content: "Cerámica Studio" },
-      { property: "og:title", content: "Cerámica Studio" },
+      { property: "og:title", content: "Cerámica Studio — Reservas" },
       { property: "og:description", content: "Reserva tus clases de cerámica en nuestro estudio." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Cerámica Studio — Reservas" },
+      { name: "twitter:description", content: "Reserva tus clases de cerámica en nuestro estudio." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/970013cf-9176-4ac1-8d72-e2153af0f629/id-preview-1c19401e--995d85d1-d1cf-4d33-a106-2a11d90dc0f9.lovable.app-1782646880800.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/970013cf-9176-4ac1-8d72-e2153af0f629/id-preview-1c19401e--995d85d1-d1cf-4d33-a106-2a11d90dc0f9.lovable.app-1782646880800.png" },
     ],
     links: [
       {
