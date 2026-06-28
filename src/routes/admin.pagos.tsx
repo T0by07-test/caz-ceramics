@@ -209,7 +209,8 @@ function AdminPaymentsPage() {
                 </li>
               ))}
             </ul>
-            <Table className="hidden md:table">
+            <div className="hidden md:block">
+            <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Fecha</TableHead>
@@ -253,6 +254,7 @@ function AdminPaymentsPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
             </>
           )}
         </CardContent>
