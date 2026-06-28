@@ -697,6 +697,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          assigned_instructor: string | null
           created_at: string
           email: string | null
           id: string
@@ -709,6 +710,7 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          assigned_instructor?: string | null
           created_at?: string
           email?: string | null
           id: string
@@ -721,6 +723,7 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          assigned_instructor?: string | null
           created_at?: string
           email?: string | null
           id?: string
