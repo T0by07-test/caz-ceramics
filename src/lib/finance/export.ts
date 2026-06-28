@@ -112,6 +112,20 @@ export function buildSheetData<Row>(
   };
 }
 
+/** Payment-method code for cash. */
+export const CASH_METHOD = "E";
+
+/**
+ * Default per-transaction income selection for the Gestor export: every row except
+ * cash (efectivo). Cazu excludes cash and declares ~80%, then fine-tunes individual
+ * transactions manually. Expenses default to all rows selected (handled by the caller).
+ */
+export function defaultIncomeSelection<Row extends { id: string; method: string | null }>(
+  rows: Row[],
+): string[] {
+  return rows.filter((r) => r.method !== CASH_METHOD).map((r) => r.id);
+}
+
 /** Short label for filenames, e.g. "2026-Q2", "junio", "2026", "todo". */
 export function periodLabel(period: Period): string {
   switch (period.mode) {

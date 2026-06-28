@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { filterByPeriod, buildSheetData, type Period } from "./export";
+import { filterByPeriod, buildSheetData, defaultIncomeSelection, type Period } from "./export";
 import { INCOME_COLUMNS, EXPENSE_COLUMNS } from "./export-columns";
 import type { LedgerEntryRow, ExpenseEntryRow } from "./db";
 
@@ -124,5 +124,20 @@ describe("buildSheetData", () => {
     const sheet = buildSheetData(rows, INCOME_COLUMNS, ["fecha"]);
     // exceljs converts via getTime() (UTC); local midnight would shift a day in UTC+ zones
     expect((sheet.rows[0][0] as Date).toISOString()).toBe("2026-06-10T00:00:00.000Z");
+  });
+});
+
+describe("defaultIncomeSelection", () => {
+  it("selects every income row except cash (efectivo) by default", () => {
+    const rows = [
+      L({ id: "card", method: "T" }),
+      L({ id: "cash", method: "E" }),
+      L({ id: "bizum", method: "B" }),
+      L({ id: "revolut", method: "R" }),
+      L({ id: "nomethod", method: null }),
+    ];
+    expect(defaultIncomeSelection(rows).sort()).toEqual(
+      ["bizum", "card", "nomethod", "revolut"].sort(),
+    );
   });
 });

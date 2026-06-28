@@ -27,8 +27,10 @@ import {
   buildSheetData,
   exportToXlsx,
   periodLabel,
+  defaultIncomeSelection,
   type Period,
 } from "@/lib/finance/export";
+import { formatEur } from "@/lib/finance/format";
 
 type Dataset = "income" | "expense" | "both";
 type Mode = Period["mode"];
@@ -57,6 +59,117 @@ function defaultKeys(columns: { key: string; defaultOn: boolean }[]): string[] {
 
 function currentMonthLabel(): string {
   return new Date().toLocaleDateString("es-ES", { month: "long" }).toUpperCase();
+}
+
+/** Compact date label for a transaction row (UTC to match the export date logic). */
+function fmtTxDate(entryDate: string | null, month: string | null): string {
+  if (entryDate)
+    return new Date(entryDate + "T00:00:00Z").toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "short",
+      timeZone: "UTC",
+    });
+  if (month) return month.slice(0, 3).toLowerCase();
+  return "—";
+}
+
+type TxRow = {
+  id: string;
+  entry_date: string | null;
+  month: string | null;
+  amount_cents: number | null;
+  method: string | null;
+};
+
+/** Per-transaction checkbox list with a live selected-total / percentage indicator. */
+function TransactionPicker<R extends TxRow>({
+  rows,
+  selected,
+  onChange,
+  describe,
+  showPct,
+}: {
+  rows: R[];
+  selected: Set<string>;
+  onChange: (s: Set<string>) => void;
+  describe: (r: R) => string;
+  showPct?: boolean;
+}) {
+  const totalCents = rows.reduce((a, r) => a + (r.amount_cents ?? 0), 0);
+  const selCents = rows.reduce((a, r) => a + (selected.has(r.id) ? (r.amount_cents ?? 0) : 0), 0);
+  const pct = totalCents > 0 ? Math.round((selCents / totalCents) * 100) : 0;
+
+  const setAll = (on: boolean) => onChange(on ? new Set(rows.map((r) => r.id)) : new Set());
+  const toggleId = (id: string) => {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    onChange(next);
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs text-muted-foreground">
+          Seleccionado <span className="font-medium text-foreground">{formatEur(selCents)}</span> /{" "}
+          {formatEur(totalCents)}
+          {showPct && totalCents > 0 && (
+            <span className={pct > 80 ? "text-warning" : ""}> · {pct}%</span>
+          )}{" "}
+          ({selected.size}/{rows.length})
+        </p>
+        <div className="flex items-center gap-3 text-xs">
+          <button
+            type="button"
+            className="text-primary hover:underline"
+            onClick={() => setAll(true)}
+          >
+            Todos
+          </button>
+          <button
+            type="button"
+            className="text-primary hover:underline"
+            onClick={() => setAll(false)}
+          >
+            Ninguno
+          </button>
+        </div>
+      </div>
+      <div className="max-h-56 space-y-0.5 overflow-y-auto rounded-md border border-border p-1.5">
+        {rows.length === 0 ? (
+          <p className="px-1 py-2 text-xs text-muted-foreground">
+            Sin transacciones en el periodo.
+          </p>
+        ) : (
+          rows.map((r) => (
+            <label
+              key={r.id}
+              className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-accent"
+            >
+              <input
+                type="checkbox"
+                className="accent-primary"
+                checked={selected.has(r.id)}
+                onChange={() => toggleId(r.id)}
+              />
+              <span className="w-10 shrink-0 text-xs text-muted-foreground">
+                {fmtTxDate(r.entry_date, r.month)}
+              </span>
+              <span className="min-w-0 flex-1 truncate">{describe(r)}</span>
+              {r.method && (
+                <span className="shrink-0 rounded border px-1 text-[10px] text-muted-foreground">
+                  {r.method}
+                </span>
+              )}
+              <span className="w-20 shrink-0 text-right tabular-nums text-muted-foreground">
+                {r.amount_cents != null ? formatEur(r.amount_cents) : "—"}
+              </span>
+            </label>
+          ))
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function ExportDialog({
@@ -93,6 +206,10 @@ export function ExportDialog({
   const [expenseCols, setExpenseCols] = useState<Set<string>>(
     () => new Set(readKeys(LS.expense, defaultKeys(EXPENSE_COLUMNS))),
   );
+
+  // Per-transaction selection (recomputed to defaults whenever the period/data changes).
+  const [selectedIncomeIds, setSelectedIncomeIds] = useState<Set<string>>(new Set());
+  const [selectedExpenseIds, setSelectedExpenseIds] = useState<Set<string>>(new Set());
 
   // Reset dataset selection to the entry point each time the dialog opens.
   useEffect(() => {
@@ -184,6 +301,15 @@ export function ExportDialog({
   const approximate =
     (doIncome ? incomePreview.approximate : 0) + (doExpense ? expensePreview.approximate : 0);
 
+  // Default selection: income excludes cash (efectivo); expenses include everything.
+  // Re-runs only when the filtered set changes (period/data), not on manual toggles.
+  useEffect(() => {
+    setSelectedIncomeIds(new Set(defaultIncomeSelection(incomePreview.rows)));
+  }, [incomePreview]);
+  useEffect(() => {
+    setSelectedExpenseIds(new Set(expensePreview.rows.map((r) => r.id)));
+  }, [expensePreview]);
+
   const toggle = (set: Set<string>, key: string, setter: (s: Set<string>) => void) => {
     const next = new Set(set);
     if (next.has(key)) next.delete(key);
@@ -201,9 +327,9 @@ export function ExportDialog({
     try {
       let files = 0;
       if (doIncome) {
-        const { rows } = filterByPeriod(incomeRows, period);
+        const rows = incomePreview.rows.filter((r) => selectedIncomeIds.has(r.id));
         if (rows.length === 0) {
-          toast.warning("Ingresos: sin datos en el periodo seleccionado");
+          toast.warning("Ingresos: ninguna transacción seleccionada");
         } else {
           await exportToXlsx({
             sheetName: "Ingresos",
@@ -214,9 +340,9 @@ export function ExportDialog({
         }
       }
       if (doExpense) {
-        const { rows } = filterByPeriod(expenseRows, period);
+        const rows = expensePreview.rows.filter((r) => selectedExpenseIds.has(r.id));
         if (rows.length === 0) {
-          toast.warning("Gastos: sin datos en el periodo seleccionado");
+          toast.warning("Gastos: ninguna transacción seleccionada");
         } else {
           await exportToXlsx({
             sheetName: "Gastos",
@@ -372,6 +498,39 @@ export function ExportDialog({
               )}
             </p>
           </div>
+
+          {/* Transactions */}
+          {!dataLoading && (doIncome || doExpense) && (
+            <div className="space-y-4">
+              {doIncome && (
+                <div className="space-y-2">
+                  <Label className="text-xs uppercase text-muted-foreground">
+                    Transacciones · Ingresos
+                  </Label>
+                  <TransactionPicker
+                    rows={incomePreview.rows}
+                    selected={selectedIncomeIds}
+                    onChange={setSelectedIncomeIds}
+                    showPct
+                    describe={(r) => `${r.student_name ?? "—"}${r.item ? " · " + r.item : ""}`}
+                  />
+                </div>
+              )}
+              {doExpense && (
+                <div className="space-y-2">
+                  <Label className="text-xs uppercase text-muted-foreground">
+                    Transacciones · Gastos
+                  </Label>
+                  <TransactionPicker
+                    rows={expensePreview.rows}
+                    selected={selectedExpenseIds}
+                    onChange={setSelectedExpenseIds}
+                    describe={(r) => r.concept ?? r.provider ?? r.category ?? "—"}
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Columns */}
           <div className="grid gap-5 sm:grid-cols-2">
