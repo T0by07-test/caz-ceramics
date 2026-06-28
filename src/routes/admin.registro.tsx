@@ -96,6 +96,16 @@ type Promiseable = {
   }>["then"];
 };
 
+const WEEKDAY_RE = /^(lunes|martes|miércoles|miercoles|miercole|jueves|viernes|sábado|sabado|domingo|niños|ninos)/i;
+function itemGroup(item: string | null): number {
+  const s = (item ?? "").trim().toLowerCase();
+  if (!s) return 3;
+  if (WEEKDAY_RE.test(s)) return 0;
+  if (s.includes("coworker")) return 1;
+  if (s.startsWith("taller") || s.includes("workshop")) return 2;
+  return 3;
+}
+
 type LedgerTable = {
   select: (cols: string) => Orderable & Promiseable;
   insert: (
