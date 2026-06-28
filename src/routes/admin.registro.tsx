@@ -379,6 +379,12 @@ function AdminLedgerPage() {
     void load();
   }, []);
 
+  useEffect(() => {
+    const handler = () => void load();
+    window.addEventListener("ledger:insert", handler);
+    return () => window.removeEventListener("ledger:insert", handler);
+  }, []);
+
   const categories = useMemo(
     () =>
       Array.from(new Set(rows.map((r) => r.category).filter((c): c is string => !!c))).sort(),

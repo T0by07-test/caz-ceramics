@@ -29,7 +29,7 @@ JSON fields:
 - item: short description or null
 - category: category or null
 - collector: array of teacher names who ran the class ([] if only Cande or unclear)
-- notes: any extra info or null
+- notes: ONLY if user explicitly says "nota", "apunta", "observa", "anota" or similar — otherwise ALWAYS null
 
 Transcription: "${transcript}"`;
 }

@@ -155,6 +155,7 @@ export function VoiceFAB() {
   const [amountEur, setAmountEur] = useState("");
   const [saving, setSaving] = useState(false);
   const [students, setStudents] = useState<string[]>([]);
+  const [instructorMap, setInstructorMap] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     supabase
@@ -169,7 +170,39 @@ export function VoiceFAB() {
         ];
         setStudents(names.sort());
       });
+
+    // Load profiles for instructor auto-fill (best-effort; column may not exist yet)
+    (supabase.from as unknown as (t: string) => {
+      select: (cols: string) => { eq: (c: string, v: string) => Promise<{ data: { name: string; surname: string | null; assigned_instructor: string | null }[] | null }> }
+    })("profiles")
+      .select("name, surname, assigned_instructor")
+      .eq("role", "student")
+      .then(({ data }) => {
+        const map = new Map<string, string>();
+        (data ?? []).forEach((p) => {
+          if (!p.assigned_instructor) return;
+          const full = [p.name, p.surname].filter(Boolean).join(" ");
+          map.set(norm(full), p.assigned_instructor);
+          if (p.name) map.set(norm(p.name), p.assigned_instructor);
+        });
+        setInstructorMap(map);
+      });
   }, []);
+
+  function findInstructor(studentName: string): string | null {
+    const q = norm(studentName);
+    let best: string | null = null;
+    let bestScore = 20;
+    instructorMap.forEach((instructor, key) => {
+      let score = 0;
+      if (key === q) score = 100;
+      else if (key.startsWith(q) || q.startsWith(key)) score = 80;
+      else if (key.includes(q)) score = 60;
+      else { const dist = levenshtein(q, key); score = (1 - dist / Math.max(q.length, key.length)) * 50; }
+      if (score > bestScore) { bestScore = score; best = instructor; }
+    });
+    return best;
+  }
 
   // resetRef breaks the circular dep: handleTranscript needs reset, reset comes from the hook
   const resetRef = useRef(() => {});
@@ -284,6 +317,7 @@ export function VoiceFAB() {
       return;
     }
     toast.success("Ingreso guardado");
+    window.dispatchEvent(new CustomEvent("ledger:insert"));
     closeDialog();
   };
 
@@ -322,7 +356,14 @@ export function VoiceFAB() {
               <Label>Alumna *</Label>
               <StudentCombobox
                 value={form.student_name}
-                onChange={(v) => setForm({ ...form, student_name: v })}
+                onChange={(v) => {
+                  const instructor = v ? findInstructor(v) : null;
+                  setForm((prev) => ({
+                    ...prev,
+                    student_name: v,
+                    collector: instructor && prev.collector.length === 0 ? [instructor] : prev.collector,
+                  }));
+                }}
                 students={students}
               />
             </div>
