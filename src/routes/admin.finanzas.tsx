@@ -141,18 +141,22 @@ function AdminFinanzasPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
+        <div className="min-w-0">
           <span className="text-label uppercase">Finanzas</span>
           <h1 className="text-h1 mt-1">Panel financiero</h1>
           <p className="text-body mt-2 text-muted-foreground">
             Ingresos, gastos y beneficio neto real. Impuestos orientativos — validar con el gestor.
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button className="gap-2" onClick={() => setExportOpen(true)}>
+        <div className="flex flex-wrap gap-2 sm:shrink-0">
+          <Button className="flex-1 gap-2 sm:flex-none" onClick={() => setExportOpen(true)}>
             <FileDown className="h-4 w-4" /> Exportar para Gestor
           </Button>
-          <Button variant="outline" className="gap-2" onClick={() => setSettingsOpen(true)}>
+          <Button
+            variant="outline"
+            className="flex-1 gap-2 sm:flex-none"
+            onClick={() => setSettingsOpen(true)}
+          >
             <SlidersHorizontal className="h-4 w-4" /> Ajustes
           </Button>
         </div>
@@ -315,8 +319,8 @@ function AdminFinanzasPage() {
                 {methodData.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Sin datos.</p>
                 ) : (
-                  <div className="grid grid-cols-[160px_1fr] items-center gap-4">
-                    <div className="h-[160px]">
+                  <div className="grid grid-cols-1 items-center gap-4 sm:grid-cols-[160px_1fr]">
+                    <div className="mx-auto h-[160px] w-[160px] sm:mx-0">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
@@ -371,9 +375,12 @@ function AdminFinanzasPage() {
               ) : (
                 <ul className="divide-y divide-border">
                   {commissions.map((c) => (
-                    <li key={c.teacher} className="flex items-center justify-between gap-3 py-2">
-                      <span className="font-medium">{c.teacher}</span>
-                      <span className="flex items-center gap-4 text-sm">
+                    <li
+                      key={c.teacher}
+                      className="flex flex-col gap-1 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+                    >
+                      <span className="min-w-0 truncate font-medium">{c.teacher}</span>
+                      <span className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
                         <span className="text-muted-foreground">
                           {currentMonth ? titleCase(currentMonth.month) : ""}:{" "}
                           <b className="text-foreground">{formatEur(c.monthCents)}</b>
