@@ -90,15 +90,19 @@ function AdminClassesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
           <span className="text-label uppercase">Administración</span>
           <h1 className="text-h1 mt-1">Clases del mes</h1>
           <p className="text-body mt-2 text-muted-foreground">
             Crea, edita o bloquea horarios. Los cambios se reflejan en tiempo real.
           </p>
         </div>
-        <Button onClick={() => setCreateOpen(true)} size="lg" className="gap-2">
+        <Button
+          onClick={() => setCreateOpen(true)}
+          size="lg"
+          className="w-full gap-2 sm:w-auto sm:shrink-0"
+        >
           <Plus className="h-4 w-4" /> Crear clase
         </Button>
       </div>
