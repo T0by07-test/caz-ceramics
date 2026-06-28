@@ -113,11 +113,11 @@ function PlanesPage() {
           {plans.map((p) => (
             <Card key={p.id} className="flex flex-col gap-4 p-6">
               <div className="flex items-start justify-between gap-3">
-                <div>
+                <div className="min-w-0">
                   <h2 className="text-h3">{p.name}</h2>
                   <p className="text-label mt-1 uppercase">{p.classes_per_month} clases / mes</p>
                 </div>
-                <Badge variant="secondary">Pago único</Badge>
+                <Badge variant="secondary" className="shrink-0">Pago único</Badge>
               </div>
               <p className="text-3xl font-semibold tabular-nums">
                 {(p.price_cents / 100).toLocaleString("es-ES", {
