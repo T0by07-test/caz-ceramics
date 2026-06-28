@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouterState } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell";
 import {
   LayoutDashboard,
@@ -14,6 +14,7 @@ import {
 import { RouteGuard } from "@/components/RouteGuard";
 import { useAuth } from "@/lib/auth";
 import { VoiceFAB } from "@/components/finance/VoiceFAB";
+import { GastosVoiceFAB } from "@/components/finance/GastosVoiceFAB";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -24,6 +25,8 @@ export const Route = createFileRoute("/admin")({
 
 function AdminLayout() {
   const { role } = useAuth();
+  const { location } = useRouterState();
+  const isGastos = location.pathname === "/admin/gastos";
   const dashboard = { to: "/admin", label: "Dashboard", icon: LayoutDashboard };
   const solicitudes = { to: "/admin/solicitudes", label: "Solicitudes", icon: Inbox };
   const clases = { to: "/admin/clases", label: "Clases", icon: CalendarDays };
@@ -42,7 +45,7 @@ function AdminLayout() {
   return (
     <RouteGuard requireStaff>
       <AppShell brand="Cerámica Studio · Admin" items={items} />
-      <VoiceFAB />
+      {isGastos ? <GastosVoiceFAB /> : <VoiceFAB />}
     </RouteGuard>
   );
 }

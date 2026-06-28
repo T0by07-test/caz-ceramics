@@ -96,6 +96,12 @@ function AdminExpensesPage() {
     void load();
   }, []);
 
+  useEffect(() => {
+    const handler = () => void load();
+    window.addEventListener("expense:insert", handler);
+    return () => window.removeEventListener("expense:insert", handler);
+  }, []);
+
   const categories = useMemo(
     () => Array.from(new Set(rows.map((r) => r.category).filter((c): c is string => !!c))).sort(),
     [rows],

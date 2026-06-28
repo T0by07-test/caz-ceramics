@@ -1,4 +1,4 @@
-// finance-voice v2: notes only on explicit request
+// finance-voice v3: ingreso + gasto modes, smart category context
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -35,6 +35,41 @@ JSON fields:
 Transcription: "${transcript}"`;
 }
 
+function buildGastosPrompt(
+  transcript: string,
+  today: string,
+  knownCategories: string[],
+  knownConcepts: string[],
+): string {
+  const currentMonth = new Date(today).toLocaleString("es-ES", { month: "long" }).toUpperCase();
+  const catHint = knownCategories.length > 0
+    ? `Known expense categories (prefer these if voice matches): ${knownCategories.join(", ")}.`
+    : "";
+  const conceptHint = knownConcepts.length > 0
+    ? `Known concepts from past expenses (use as spelling reference): ${knownConcepts.slice(0, 25).join(", ")}.`
+    : "";
+
+  return `You are an assistant for Cazú Ceramics, a pottery studio in Valencia, Spain.
+Extract expense info from the transcription below and return ONLY valid JSON, no markdown, no explanation.
+
+Today is ${today}. Current month in Spanish: ${currentMonth}.
+${catHint}
+${conceptHint}
+
+JSON fields:
+- entry_date: ISO date YYYY-MM-DD ("hoy" → ${today}), or null if not mentioned
+- month: month in uppercase Spanish, e.g. JUNIO (use current month if not mentioned)
+- category: expense category — match a known category if the voice is close, otherwise infer from context
+- concept: short description of what was bought or paid for
+- provider: supplier or vendor name, or null
+- amount_cents: integer cents (null if not mentioned)
+- vat_cents: IVA soportado in integer cents — ONLY if user explicitly mentions "con IVA", "IVA de X", "IVA incluido"; otherwise null (will be auto-calculated at 21%)
+- method: single char — E=efectivo/cash, T=tarjeta/card, B=Bizum, R=Revolut (null if unclear)
+- notes: ONLY if user explicitly says "nota", "apunta", "anota" or similar — otherwise ALWAYS null
+
+Transcription: "${transcript}"`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405, headers: corsHeaders });
@@ -43,7 +78,6 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return jsonResponse({ error: "Authentication required" }, 401);
 
-    // Verify admin role using caller's JWT
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY")!,
@@ -64,18 +98,25 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (!profile || profile.role !== "admin") return jsonResponse({ error: "Admin access required" }, 403);
 
-    // Parse JSON body — transcript comes from Browser Web Speech API (client-side STT)
-    const body = await req.json() as { transcript?: string; today?: string };
+    const body = await req.json() as {
+      transcript?: string;
+      today?: string;
+      mode?: "ingreso" | "gasto";
+      knownCategories?: string[];
+      knownConcepts?: string[];
+    };
     const transcript = body.transcript?.trim() ?? "";
     const today = body.today ?? new Date().toISOString().slice(0, 10);
+    const mode = body.mode ?? "ingreso";
 
     if (!transcript) return jsonResponse({ error: "empty_transcript" }, 422);
 
-    // Extract structured fields via Lovable AI Gateway (no extra API key needed)
     const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!lovableKey) {
-      return jsonResponse({ error: "missing_lovable_api_key" }, 500);
-    }
+    if (!lovableKey) return jsonResponse({ error: "missing_lovable_api_key" }, 500);
+
+    const prompt = mode === "gasto"
+      ? buildGastosPrompt(transcript, today, body.knownCategories ?? [], body.knownConcepts ?? [])
+      : buildExtractionPrompt(transcript, today);
 
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -86,9 +127,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "user", content: buildExtractionPrompt(transcript, today) },
-        ],
+        messages: [{ role: "user", content: prompt }],
         response_format: { type: "json_object" },
       }),
     });
@@ -96,12 +135,8 @@ Deno.serve(async (req) => {
     if (!aiRes.ok) {
       const err = await aiRes.text();
       console.error("Lovable AI Gateway error:", aiRes.status, err);
-      if (aiRes.status === 429) {
-        return jsonResponse({ error: "rate_limited", message: "Demasiadas solicitudes, intenta en un momento" }, 429);
-      }
-      if (aiRes.status === 402) {
-        return jsonResponse({ error: "credits_exhausted", message: "Sin créditos de IA disponibles" }, 402);
-      }
+      if (aiRes.status === 429) return jsonResponse({ error: "rate_limited" }, 429);
+      if (aiRes.status === 402) return jsonResponse({ error: "credits_exhausted" }, 402);
       return jsonResponse({ error: "extraction_failed", message: err }, 502);
     }
 
@@ -112,7 +147,6 @@ Deno.serve(async (req) => {
 
     let fields: unknown;
     try {
-      // Strip potential markdown code fences before parsing
       const cleaned = rawText.replace(/^```(?:json)?\s*/m, "").replace(/\s*```\s*$/m, "").trim();
       fields = JSON.parse(cleaned);
     } catch {
