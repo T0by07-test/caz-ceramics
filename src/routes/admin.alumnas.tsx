@@ -231,14 +231,14 @@ function AdminStudentsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
+        <div className="min-w-0">
           <span className="text-label uppercase">Personas</span>
           <h1 className="text-h1 mt-1">Miembros</h1>
           <p className="text-body mt-2 text-muted-foreground">
             Busca, filtra por rol, tag o estado y revisa su actividad.
           </p>
         </div>
-        <div className="relative max-w-sm">
+        <div className="relative w-full sm:max-w-sm">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
@@ -250,9 +250,9 @@ function AdminStudentsPage() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
         <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as "all" | Role)}>
-          <SelectTrigger className="w-40" aria-label="Filtrar por rol">
+          <SelectTrigger className="w-full sm:w-40" aria-label="Filtrar por rol">
             <SelectValue placeholder="Rol" />
           </SelectTrigger>
           <SelectContent>
@@ -263,7 +263,7 @@ function AdminStudentsPage() {
           </SelectContent>
         </Select>
         <Select value={tagFilter} onValueChange={(v) => setTagFilter(v)}>
-          <SelectTrigger className="w-40" aria-label="Filtrar por tag">
+          <SelectTrigger className="w-full sm:w-40" aria-label="Filtrar por tag">
             <SelectValue placeholder="Tag" />
           </SelectTrigger>
           <SelectContent>
@@ -276,7 +276,7 @@ function AdminStudentsPage() {
           </SelectContent>
         </Select>
         <Select value={estadoFilter} onValueChange={(v) => setEstadoFilter(v as "all" | Estado)}>
-          <SelectTrigger className="w-44" aria-label="Filtrar por estado">
+          <SelectTrigger className="w-full sm:w-44" aria-label="Filtrar por estado">
             <SelectValue placeholder="Estado" />
           </SelectTrigger>
           <SelectContent>
@@ -290,6 +290,7 @@ function AdminStudentsPage() {
         {tagFilter !== "all" ? (
           <Button
             variant="secondary"
+            className="col-span-2 sm:col-auto"
             onClick={() => navigate({ to: "/admin/mensajes", search: { tag: tagFilter } })}
           >
             <MessageCircle className="mr-1 h-4 w-4" /> Enviar mensaje a este grupo
@@ -298,7 +299,7 @@ function AdminStudentsPage() {
       </div>
 
       <Card className="shadow-card">
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-x-auto">
           {loading ? (
             <div className="space-y-2 p-6">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -400,7 +401,8 @@ function AdminStudentsPage() {
                             }}
                             aria-label="Enviar recordatorio de pago"
                           >
-                            <BellRing className="mr-1 h-4 w-4" /> Recordatorio
+                            <BellRing className="h-4 w-4 sm:mr-1" />
+                            <span className="hidden sm:inline">Recordatorio</span>
                           </Button>
                           <Button
                             size="sm"
@@ -412,7 +414,8 @@ function AdminStudentsPage() {
                             }}
                             aria-label="Conceder recuperación"
                           >
-                            <Gift className="mr-1 h-4 w-4" /> Recuperación
+                            <Gift className="h-4 w-4 sm:mr-1" />
+                            <span className="hidden sm:inline">Recuperación</span>
                           </Button>
                         </div>
                       ) : (
