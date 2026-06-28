@@ -139,7 +139,7 @@ function MisReservasPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="min-w-0">
         <span className="text-label uppercase">Tu actividad</span>
         <h1 className="text-h1 mt-1">Mis reservas</h1>
         <p className="text-body mt-2 text-muted-foreground">
@@ -148,11 +148,11 @@ function MisReservasPage() {
       </div>
 
       <Tabs defaultValue="upcoming">
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-2 gap-1 sm:inline-flex sm:w-auto sm:gap-0">
           <TabsTrigger value="upcoming">Próximas</TabsTrigger>
           <TabsTrigger value="past">Pasadas</TabsTrigger>
           <TabsTrigger value="cancelled">Canceladas</TabsTrigger>
-          <TabsTrigger value="waitlist">Lista de espera</TabsTrigger>
+          <TabsTrigger value="waitlist">Espera</TabsTrigger>
         </TabsList>
         <TabsContent value="upcoming" className="mt-4">
           <BookingList
