@@ -27,9 +27,14 @@ function expandMethod(method: string | null): string | null {
   return METHOD_LABELS[method] ?? method;
 }
 
-/** entry_date ("yyyy-mm-dd") → local Date at midnight, or null. */
+/**
+ * entry_date ("yyyy-mm-dd") → Date at UTC midnight, or null.
+ * exceljs serialises dates via getTime() (UTC), so a UTC-midnight Date renders the
+ * correct calendar day in Excel regardless of the exporter's timezone. Local
+ * midnight would shift a day back in UTC+ zones (e.g. Europe/Madrid).
+ */
 function toDate(entryDate: string | null): Date | null {
-  return entryDate ? new Date(entryDate + "T00:00:00") : null;
+  return entryDate ? new Date(entryDate + "T00:00:00Z") : null;
 }
 
 /** Integer cents → euros as a real number (2 decimals), or null. */

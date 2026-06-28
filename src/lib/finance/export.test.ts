@@ -118,4 +118,11 @@ describe("buildSheetData", () => {
     const sheet = buildSheetData(rows, INCOME_COLUMNS, ["profesoras", "notas"]);
     expect(sheet.rows).toEqual([["Sofi, Martu", null]]);
   });
+
+  it("emits the date column at UTC midnight so Excel shows the right day in any timezone", () => {
+    const rows = [L({ entry_date: "2026-06-10" })];
+    const sheet = buildSheetData(rows, INCOME_COLUMNS, ["fecha"]);
+    // exceljs converts via getTime() (UTC); local midnight would shift a day in UTC+ zones
+    expect((sheet.rows[0][0] as Date).toISOString()).toBe("2026-06-10T00:00:00.000Z");
+  });
 });
