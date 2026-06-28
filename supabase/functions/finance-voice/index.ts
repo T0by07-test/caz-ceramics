@@ -70,30 +70,44 @@ Deno.serve(async (req) => {
 
     if (!transcript) return jsonResponse({ error: "empty_transcript" }, 422);
 
-    // Extract structured fields with Claude
-    // TODO: replace with Lovable AI Gateway once endpoint is available (0 keys)
-    const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
+    // Extract structured fields via Lovable AI Gateway (no extra API key needed)
+    const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+    if (!lovableKey) {
+      return jsonResponse({ error: "missing_lovable_api_key" }, 500);
+    }
+
+    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        "x-api-key": Deno.env.get("ANTHROPIC_API_KEY")!,
-        "anthropic-version": "2023-06-01",
+        "Lovable-API-Key": lovableKey,
+        "X-Lovable-AIG-SDK": "vercel-ai-sdk",
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 512,
-        messages: [{ role: "user", content: buildExtractionPrompt(transcript, today) }],
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "user", content: buildExtractionPrompt(transcript, today) },
+        ],
+        response_format: { type: "json_object" },
       }),
     });
 
-    if (!claudeRes.ok) {
-      const err = await claudeRes.text();
-      console.error("Claude error:", err);
+    if (!aiRes.ok) {
+      const err = await aiRes.text();
+      console.error("Lovable AI Gateway error:", aiRes.status, err);
+      if (aiRes.status === 429) {
+        return jsonResponse({ error: "rate_limited", message: "Demasiadas solicitudes, intenta en un momento" }, 429);
+      }
+      if (aiRes.status === 402) {
+        return jsonResponse({ error: "credits_exhausted", message: "Sin créditos de IA disponibles" }, 402);
+      }
       return jsonResponse({ error: "extraction_failed", message: err }, 502);
     }
 
-    const claudeJson = await claudeRes.json() as { content: Array<{ text: string }> };
-    const rawText = claudeJson.content[0]?.text ?? "";
+    const aiJson = await aiRes.json() as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+    const rawText = aiJson.choices?.[0]?.message?.content ?? "";
 
     let fields: unknown;
     try {
