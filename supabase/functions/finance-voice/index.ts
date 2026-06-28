@@ -30,7 +30,7 @@ JSON fields:
 - item: short description or null
 - category: category or null
 - collector: array of teacher names who ran the class ([] if only Cande or unclear)
-- notes: ONLY if user explicitly says "nota", "apunta", "observa", "anota" or similar — otherwise ALWAYS null
+- notes: ONLY if user explicitly uses words like "nota", "apunta", "anota", "observa", "importante", or asks to record something extra. NEVER use notes to restate facts already captured in other fields (amount, method, month, student, date). If in doubt, use null.
 
 Transcription: "${transcript}"`;
 }

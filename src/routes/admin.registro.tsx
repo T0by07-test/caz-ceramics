@@ -10,6 +10,7 @@ import {
   ChevronUp,
   ChevronDown,
   ChevronsUpDown,
+  FileDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
@@ -56,6 +57,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { MultiTeacherSelect } from "@/components/finance/MultiTeacherSelect";
 import { RouteGuard } from "@/components/RouteGuard";
+import { monthOrder } from "@/lib/finance/dates";
+import { ExportDialog } from "@/components/finance/ExportDialog";
 
 export const Route = createFileRoute("/admin/registro")({
   head: () => ({ meta: [{ title: "Registro — Admin" }] }),
@@ -148,25 +151,6 @@ function itemMinutes(item: string | null): number {
   const min = Number(m[2]);
   if (Number.isNaN(h) || Number.isNaN(min)) return Number.POSITIVE_INFINITY;
   return h * 60 + min;
-}
-
-const MONTH_INDEX: Record<string, number> = {
-  enero: 0,
-  febrero: 1,
-  marzo: 2,
-  abril: 3,
-  mayo: 4,
-  junio: 5,
-  julio: 6,
-  agosto: 7,
-  septiembre: 8,
-  setiembre: 8,
-  octubre: 9,
-  noviembre: 10,
-  diciembre: 11,
-};
-function monthOrder(month: string): number {
-  return MONTH_INDEX[month.trim().toLowerCase()] ?? 99;
 }
 
 type LedgerTable = {
@@ -346,8 +330,9 @@ function AdminLedgerPage() {
   const [editing, setEditing] = useState<LedgerEntry | null>(null);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<LedgerEntry | null>(null);
-  const [sort, setSort] = useState<SortState>(null);
+  const [sort, setSort] = useState<SortState>({ key: "fecha", dir: "desc" });
   const [visibleCols, setVisibleCols] = useState<Set<ColumnKey>>(new Set(DEFAULT_VISIBLE));
+  const [exportOpen, setExportOpen] = useState(false);
 
   const handleSort = (key: string) => {
     setSort((prev) => {
@@ -491,9 +476,14 @@ function AdminLedgerPage() {
             El cuaderno de ingresos y actividad. Filtra, edita y añade entradas manualmente.
           </p>
         </div>
-        <Button onClick={() => setCreating(true)} size="lg" className="gap-2">
-          <Plus className="h-4 w-4" /> Nueva entrada
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setExportOpen(true)} size="lg" variant="outline" className="gap-2">
+            <FileDown className="h-4 w-4" /> Exportar
+          </Button>
+          <Button onClick={() => setCreating(true)} size="lg" className="gap-2">
+            <Plus className="h-4 w-4" /> Nueva entrada
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
@@ -783,6 +773,8 @@ function AdminLedgerPage() {
           )}
         </CardContent>
       </Card>
+
+      <ExportDialog open={exportOpen} onOpenChange={setExportOpen} defaultDataset="income" />
 
       <LedgerFormSheet
         mode="create"
