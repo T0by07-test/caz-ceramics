@@ -122,7 +122,7 @@ function AdminPaymentsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="min-w-0">
         <span className="text-label uppercase">Finanzas</span>
         <h1 className="text-h1 mt-1">Pagos</h1>
         <p className="text-body mt-2 text-muted-foreground">
@@ -131,7 +131,7 @@ function AdminPaymentsPage() {
       </div>
 
       <Card className="shadow-card">
-        <CardContent className="grid gap-3 p-4 sm:grid-cols-4">
+        <CardContent className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-1.5">
             <Label htmlFor="status">Estado</Label>
             <Select value={status} onValueChange={(v) => setStatus(v as StatusFilter)}>
@@ -164,7 +164,7 @@ function AdminPaymentsPage() {
       </Card>
 
       <Card className="shadow-card">
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-x-auto">
           {loading ? (
             <div className="space-y-2 p-6">
               {Array.from({ length: 6 }).map((_, i) => (

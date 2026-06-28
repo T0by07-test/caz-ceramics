@@ -122,7 +122,7 @@ function AdminMessagesPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="min-w-0">
         <span className="text-label uppercase">Comunicación</span>
         <h1 className="text-h1 mt-1">Mensajes</h1>
         <p className="text-body mt-2 text-muted-foreground">
