@@ -1,3 +1,4 @@
+// finance-voice v2: notes only on explicit request
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
