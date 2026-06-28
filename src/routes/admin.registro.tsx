@@ -82,13 +82,22 @@ type LedgerEntry = {
   created_at: string;
 };
 
+type Orderable = {
+  order: (
+    col: string,
+    opts: { ascending: boolean; nullsFirst?: boolean },
+  ) => Orderable & Promiseable;
+};
+
+type Promiseable = {
+  then: Promise<{
+    data: LedgerEntry[] | null;
+    error: { message: string } | null;
+  }>["then"];
+};
+
 type LedgerTable = {
-  select: (cols: string) => {
-    order: (
-      col: string,
-      opts: { ascending: boolean },
-    ) => Promise<{ data: LedgerEntry[] | null; error: { message: string } | null }>;
-  };
+  select: (cols: string) => Orderable & Promiseable;
   insert: (
     values: Partial<LedgerEntry>,
   ) => Promise<{ error: { message: string } | null }>;
@@ -131,6 +140,16 @@ const METHOD_LABELS: Record<string, string> = {
   R: "Revolut",
 };
 
+function currentMonthLabel() {
+  return new Date().toLocaleDateString("es-ES", { month: "long" }).toUpperCase();
+}
+
+function formatDateOrMonth(entryDate: string | null, month: string | null): string {
+  if (entryDate) return new Date(entryDate).toLocaleDateString("es-ES");
+  if (month) return month.toLowerCase();
+  return "—";
+}
+
 function AdminLedgerPage() {
   const [rows, setRows] = useState<LedgerEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -138,7 +157,7 @@ function AdminLedgerPage() {
   const [statusFilter, setStatusFilter] = useState(ALL);
   const [methodFilter, setMethodFilter] = useState(ALL);
   const [categoryFilter, setCategoryFilter] = useState(ALL);
-  const [monthFilter, setMonthFilter] = useState(ALL);
+  const [monthFilter, setMonthFilter] = useState(currentMonthLabel());
   const [editing, setEditing] = useState<LedgerEntry | null>(null);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<LedgerEntry | null>(null);
@@ -149,6 +168,7 @@ function AdminLedgerPage() {
       .select(
         "id, entry_date, month, student_name, item, category, amount_cents, method, status, notes, collector, commission_pct_override, created_at",
       )
+      .order("entry_date", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false });
     if (error) {
       toast.error("No se pudo cargar el registro", { description: error.message });
@@ -370,11 +390,14 @@ function AdminLedgerPage() {
                     onClick={() => setEditing(r)}
                   >
                     <TableCell className="whitespace-nowrap text-muted-foreground">
-                      {r.entry_date
-                        ? new Date(r.entry_date).toLocaleDateString("es-ES")
-                        : "—"}
+                      {formatDateOrMonth(r.entry_date, r.month)}
                     </TableCell>
-                    <TableCell className="font-medium">{r.student_name ?? "—"}</TableCell>
+                    <TableCell className="font-medium">
+                      <div>{r.student_name ?? "—"}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {formatDateOrMonth(r.entry_date, r.month)}
+                      </div>
+                    </TableCell>
                     <TableCell>{r.item ?? "—"}</TableCell>
                     <TableCell className="hidden text-muted-foreground lg:table-cell">
                       {r.category ?? "—"}
