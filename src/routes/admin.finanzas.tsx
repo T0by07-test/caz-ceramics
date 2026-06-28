@@ -13,7 +13,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Wallet, TrendingUp, CalendarClock, PiggyBank, SlidersHorizontal } from "lucide-react";
+import {
+  Wallet,
+  TrendingUp,
+  CalendarClock,
+  PiggyBank,
+  SlidersHorizontal,
+  FileDown,
+} from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,6 +40,7 @@ import { useFinanceData } from "@/lib/finance/useFinanceData";
 import { tbl, type CommissionRateRow } from "@/lib/finance/db";
 import { formatEur, inputToPct, pctToInput } from "@/lib/finance/format";
 import type { FinanceSettings, MonthlyFinance } from "@/lib/finance/types";
+import { ExportDialog } from "@/components/finance/ExportDialog";
 
 export const Route = createFileRoute("/admin/finanzas")({
   head: () => ({ meta: [{ title: "Finanzas — Admin" }] }),
@@ -62,6 +70,7 @@ const short = (m: string) => m.slice(0, 3);
 function AdminFinanzasPage() {
   const { loading, error, ledger, monthly, totals, settings, rates, reload } = useFinanceData();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
 
   const realMonths = useMemo(() => monthly.filter((m) => m.facturado > 0), [monthly]);
   const currentMonth: MonthlyFinance | undefined = realMonths[realMonths.length - 1];
@@ -139,10 +148,17 @@ function AdminFinanzasPage() {
             Ingresos, gastos y beneficio neto real. Impuestos orientativos — validar con el gestor.
           </p>
         </div>
-        <Button variant="outline" className="gap-2" onClick={() => setSettingsOpen(true)}>
-          <SlidersHorizontal className="h-4 w-4" /> Ajustes
-        </Button>
+        <div className="flex gap-2">
+          <Button className="gap-2" onClick={() => setExportOpen(true)}>
+            <FileDown className="h-4 w-4" /> Exportar para Gestor
+          </Button>
+          <Button variant="outline" className="gap-2" onClick={() => setSettingsOpen(true)}>
+            <SlidersHorizontal className="h-4 w-4" /> Ajustes
+          </Button>
+        </div>
       </div>
+
+      <ExportDialog open={exportOpen} onOpenChange={setExportOpen} defaultDataset="both" />
 
       {error && (
         <Card className="border-destructive/40 shadow-card">

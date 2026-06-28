@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Search, Pencil, Trash2, Receipt } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Receipt, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { tbl, type ExpenseEntryRow } from "@/lib/finance/db";
 import { formatEur } from "@/lib/finance/format";
+import { ExportDialog } from "@/components/finance/ExportDialog";
 
 export const Route = createFileRoute("/admin/gastos")({
   head: () => ({ meta: [{ title: "Gastos — Admin" }] }),
@@ -73,6 +74,7 @@ function AdminExpensesPage() {
   const [editing, setEditing] = useState<ExpenseEntryRow | null>(null);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<ExpenseEntryRow | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -136,9 +138,14 @@ function AdminExpensesPage() {
             Costes fijos y variables. El IVA soportado reduce el IVA a pagar.
           </p>
         </div>
-        <Button onClick={() => setCreating(true)} size="lg" className="gap-2">
-          <Plus className="h-4 w-4" /> Nuevo gasto
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setExportOpen(true)} size="lg" variant="outline" className="gap-2">
+            <FileDown className="h-4 w-4" /> Exportar
+          </Button>
+          <Button onClick={() => setCreating(true)} size="lg" className="gap-2">
+            <Plus className="h-4 w-4" /> Nuevo gasto
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
@@ -297,6 +304,8 @@ function AdminExpensesPage() {
           )}
         </CardContent>
       </Card>
+
+      <ExportDialog open={exportOpen} onOpenChange={setExportOpen} defaultDataset="expense" />
 
       <ExpenseFormSheet
         mode="create"

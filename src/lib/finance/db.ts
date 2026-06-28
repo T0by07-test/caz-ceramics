@@ -6,6 +6,7 @@ export type LedgerEntryRow = LedgerRow & {
   entry_date: string | null;
   student_name: string | null;
   item: string | null;
+  notes: string | null;
   created_at: string;
 };
 
