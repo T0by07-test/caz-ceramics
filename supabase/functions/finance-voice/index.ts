@@ -21,7 +21,7 @@ Extract payment info from the transcription below and return ONLY valid JSON, no
 Today is ${today}. Current month in Spanish: ${new Date(today).toLocaleString("es-ES", { month: "long" }).toUpperCase()}.
 
 JSON fields:
-- student_name: student name string (null if not mentioned )
+- student_name: student name string (null if not mentioned)
 - amount_cents: integer cents (null if not mentioned)
 - method: single char — E=efectivo/cash, T=tarjeta/card, B=Bizum, R=Revolut (null if unclear)
 - status: "Pagado" if they paid now/already; "Pendiente" if will pay later
