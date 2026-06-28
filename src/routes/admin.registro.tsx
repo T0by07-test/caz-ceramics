@@ -1,6 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Search, Pencil, Trash2, NotebookPen } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Pencil,
+  Trash2,
+  NotebookPen,
+  SlidersHorizontal,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -123,7 +133,6 @@ const WEEKDAY_ORDER: Record<string, number> = {
   ninos: 7,
 };
 
-/** Weekday index 0..7 from an item like "Lunes 18.30" / "Niños Lunes 17.00"; 99 if none. */
 function weekdayIndex(item: string | null): number {
   const s = (item ?? "").trim().toLowerCase();
   const m = s.match(WEEKDAY_RE);
@@ -131,7 +140,6 @@ function weekdayIndex(item: string | null): number {
   return WEEKDAY_ORDER[m[1]] ?? 99;
 }
 
-/** Minutes-since-midnight from the first HH.MM or HH:MM in the item; Infinity if none. */
 function itemMinutes(item: string | null): number {
   const s = (item ?? "").trim();
   const m = s.match(/(\d{1,2})[.:](\d{2})/);
@@ -161,7 +169,6 @@ function monthOrder(month: string): number {
   return MONTH_INDEX[month.trim().toLowerCase()] ?? 99;
 }
 
-
 type LedgerTable = {
   select: (cols: string) => Orderable & Promiseable;
   insert: (
@@ -187,16 +194,8 @@ function formatEur(cents: number) {
   return new Intl.NumberFormat("es-ES", {
     style: "currency",
     currency: "EUR",
-  }).format(cents / 100);
-}
-
-function statusBadge(status: string | null) {
-  if (status === "Pagado")
-    return <Badge className="bg-success text-success-foreground">Pagado</Badge>;
-  if (status === "Pendiente")
-    return <Badge className="bg-warning text-warning-foreground">Pendiente</Badge>;
-  if (status === "ausente") return <Badge variant="secondary">Ausente</Badge>;
-  return <Badge variant="outline">{status ?? "—"}</Badge>;
+    maximumFractionDigits: 0,
+  }).format(Math.round(cents / 100));
 }
 
 const METHOD_LABELS: Record<string, string> = {
@@ -211,9 +210,129 @@ function currentMonthLabel() {
 }
 
 function formatDateOrMonth(entryDate: string | null, month: string | null): string {
-  if (entryDate) return new Date(entryDate).toLocaleDateString("es-ES");
-  if (month) return month.toLowerCase();
+  if (entryDate) {
+    const d = new Date(entryDate + "T00:00:00");
+    return d.toLocaleDateString("es-ES", { day: "numeric", month: "short" });
+  }
+  if (month) return month.slice(0, 3).toLowerCase();
   return "—";
+}
+
+function rowBg(status: string | null): string {
+  if (status === "Pagado") return "bg-green-50 hover:bg-green-100/60";
+  if (status === "Pendiente") return "bg-amber-50 hover:bg-amber-100/60";
+  if (status === "ausente") return "bg-muted/40 opacity-70 hover:opacity-100";
+  return "";
+}
+
+// --- Column visibility ---
+
+type ColumnKey = "fecha" | "alumno" | "item" | "categoria" | "importe" | "metodo" | "estado" | "notas";
+
+const COLUMN_DEFS: { key: ColumnKey; label: string; locked?: boolean }[] = [
+  { key: "fecha",     label: "Fecha" },
+  { key: "alumno",    label: "Alumno", locked: true },
+  { key: "item",      label: "Clase / Producto" },
+  { key: "categoria", label: "Categoría" },
+  { key: "importe",   label: "Importe", locked: true },
+  { key: "metodo",    label: "Método" },
+  { key: "estado",    label: "Estado" },
+  { key: "notas",     label: "Notas" },
+];
+
+const DEFAULT_VISIBLE = new Set<ColumnKey>([
+  "fecha", "alumno", "item", "categoria", "importe", "metodo", "notas",
+  // "estado" hidden by default — row color used instead
+]);
+
+function ColumnPicker({
+  visible,
+  onChange,
+}: {
+  visible: Set<ColumnKey>;
+  onChange: (v: Set<ColumnKey>) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <Button size="sm" variant="outline" onClick={() => setOpen((p) => !p)} className="gap-1.5">
+        <SlidersHorizontal className="h-3.5 w-3.5" />
+        Columnas
+      </Button>
+      {open && (
+        <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-md border border-border bg-popover py-1 shadow-md">
+          {COLUMN_DEFS.map(({ key, label, locked }) => (
+            <label
+              key={key}
+              className={`flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent ${locked ? "cursor-default opacity-50" : ""}`}
+            >
+              <input
+                type="checkbox"
+                checked={visible.has(key)}
+                disabled={locked}
+                className="accent-primary"
+                onChange={() => {
+                  const next = new Set(visible);
+                  if (next.has(key)) next.delete(key);
+                  else next.add(key);
+                  onChange(next);
+                }}
+              />
+              {label}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// --- Sortable column header ---
+
+type SortState = { key: string; dir: "asc" | "desc" } | null;
+
+function SortableHead({
+  sortKey,
+  sort,
+  onSort,
+  children,
+  className = "",
+}: {
+  sortKey: string;
+  sort: SortState;
+  onSort: (key: string) => void;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const active = sort?.key === sortKey;
+  return (
+    <TableHead
+      className={`cursor-pointer select-none hover:bg-muted/40 ${className}`}
+      onClick={() => onSort(sortKey)}
+    >
+      <div className="flex items-center gap-1">
+        {children}
+        {active ? (
+          sort!.dir === "asc"
+            ? <ChevronUp className="h-3 w-3 text-primary" />
+            : <ChevronDown className="h-3 w-3 text-primary" />
+        ) : (
+          <ChevronsUpDown className="h-3 w-3 text-muted-foreground/40" />
+        )}
+      </div>
+    </TableHead>
+  );
 }
 
 function AdminLedgerPage() {
@@ -227,6 +346,17 @@ function AdminLedgerPage() {
   const [editing, setEditing] = useState<LedgerEntry | null>(null);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<LedgerEntry | null>(null);
+  const [sort, setSort] = useState<SortState>(null);
+  const [visibleCols, setVisibleCols] = useState<Set<ColumnKey>>(new Set(DEFAULT_VISIBLE));
+
+  const handleSort = (key: string) => {
+    setSort((prev) => {
+      if (prev?.key === key) {
+        return prev.dir === "asc" ? { key, dir: "desc" } : null;
+      }
+      return { key, dir: "asc" };
+    });
+  };
 
   const load = async () => {
     setLoading(true);
@@ -284,7 +414,33 @@ function AdminLedgerPage() {
       }
       return true;
     });
-    // Stable sort: clases regulares → clases sueltas → coworkers → workshops → resto.
+
+    if (sort) {
+      // User-selected column sort overrides the default grouping sort
+      return [...result].sort((a, b) => {
+        let av: string | number | null;
+        let bv: string | number | null;
+        switch (sort.key) {
+          case "fecha":      av = a.entry_date ?? a.month ?? ""; bv = b.entry_date ?? b.month ?? ""; break;
+          case "alumno":     av = a.student_name; bv = b.student_name; break;
+          case "item":       av = a.item;         bv = b.item; break;
+          case "categoria":  av = a.category;     bv = b.category; break;
+          case "importe":    av = a.amount_cents; bv = b.amount_cents; break;
+          case "metodo":     av = a.method;       bv = b.method; break;
+          case "estado":     av = a.status;       bv = b.status; break;
+          default:           return 0;
+        }
+        if (av == null) return 1;
+        if (bv == null) return -1;
+        const cmp =
+          typeof av === "number" && typeof bv === "number"
+            ? av - bv
+            : String(av).localeCompare(String(bv), "es");
+        return sort.dir === "asc" ? cmp : -cmp;
+      });
+    }
+
+    // Default: group by class type, then weekday + time
     return result
       .map((r, i) => ({
         r,
@@ -296,18 +452,15 @@ function AdminLedgerPage() {
       }))
       .sort((a, b) => {
         if (a.g !== b.g) return a.g - b.g;
-        // Regular classes: Mon..Sun..Niños, then start time.
         if (a.g === 0) {
           if (a.wd !== b.wd) return a.wd - b.wd;
           if (a.mn !== b.mn) return a.mn - b.mn;
         }
-        // Within "resto", cluster by item name (productos juntos, etc.).
         if (a.g === 4 && a.k !== b.k) return a.k.localeCompare(b.k);
         return a.i - b.i;
       })
       .map(({ r }) => r);
-
-  }, [rows, search, statusFilter, methodFilter, categoryFilter, monthFilter]);
+  }, [rows, search, statusFilter, methodFilter, categoryFilter, monthFilter, sort]);
 
   const totals = useMemo(() => {
     let cobrado = 0;
@@ -319,6 +472,8 @@ function AdminLedgerPage() {
     }
     return { cobrado, pendiente, count: filtered.length };
   }, [filtered]);
+
+  const col = (key: ColumnKey) => visibleCols.has(key);
 
   return (
     <div className="space-y-6">
@@ -440,9 +595,25 @@ function AdminLedgerPage() {
         </CardContent>
       </Card>
 
-      <p className="text-xs text-muted-foreground">
-        Métodos: T = Tarjeta · E = Efectivo · B = Bizum · R = Revolut
-      </p>
+      {/* Legend + column picker */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
+            Pagado
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+            Pendiente
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-gray-300" />
+            Ausente
+          </span>
+          <span className="hidden sm:inline">· T=Tarjeta · E=Efectivo · B=Bizum · R=Revolut</span>
+        </div>
+        <ColumnPicker visible={visibleCols} onChange={setVisibleCols} />
+      </div>
 
       <Card className="shadow-card">
         <CardContent className="p-0">
@@ -468,14 +639,54 @@ function AdminLedgerPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Alumno</TableHead>
-                  <TableHead>Clase / Producto</TableHead>
-                  <TableHead className="hidden lg:table-cell">Categoría</TableHead>
-                  <TableHead className="text-right">Importe (€)</TableHead>
-                  <TableHead>Método</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead className="hidden xl:table-cell">Notas</TableHead>
+                  {col("fecha") && (
+                    <SortableHead sortKey="fecha" sort={sort} onSort={handleSort}>
+                      Fecha
+                    </SortableHead>
+                  )}
+                  {col("alumno") && (
+                    <SortableHead sortKey="alumno" sort={sort} onSort={handleSort}>
+                      Alumno
+                    </SortableHead>
+                  )}
+                  {col("item") && (
+                    <SortableHead sortKey="item" sort={sort} onSort={handleSort}>
+                      Clase / Producto
+                    </SortableHead>
+                  )}
+                  {col("categoria") && (
+                    <SortableHead
+                      sortKey="categoria"
+                      sort={sort}
+                      onSort={handleSort}
+                      className="hidden lg:table-cell"
+                    >
+                      Categoría
+                    </SortableHead>
+                  )}
+                  {col("importe") && (
+                    <SortableHead
+                      sortKey="importe"
+                      sort={sort}
+                      onSort={handleSort}
+                      className="text-right"
+                    >
+                      Importe
+                    </SortableHead>
+                  )}
+                  {col("metodo") && (
+                    <SortableHead sortKey="metodo" sort={sort} onSort={handleSort}>
+                      Método
+                    </SortableHead>
+                  )}
+                  {col("estado") && (
+                    <SortableHead sortKey="estado" sort={sort} onSort={handleSort}>
+                      Estado
+                    </SortableHead>
+                  )}
+                  {col("notas") && (
+                    <TableHead className="hidden xl:table-cell">Notas</TableHead>
+                  )}
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -483,44 +694,68 @@ function AdminLedgerPage() {
                 {filtered.map((r) => (
                   <TableRow
                     key={r.id}
-                    className="cursor-pointer"
+                    className={`cursor-pointer ${rowBg(r.status)}`}
                     onClick={() => setEditing(r)}
                   >
-                    <TableCell className="whitespace-nowrap text-muted-foreground">
-                      {formatDateOrMonth(r.entry_date, r.month)}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      <div>{r.student_name ?? "—"}</div>
-                    </TableCell>
-                    <TableCell>{r.item ?? "—"}</TableCell>
-                    <TableCell className="hidden text-muted-foreground lg:table-cell">
-                      {r.category ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-right font-semibold">
-                      {r.amount_cents != null ? formatEur(r.amount_cents) : "—"}
-                    </TableCell>
-                    <TableCell>
-                      {r.method ? (
-                        <Badge variant="outline" title={METHOD_LABELS[r.method] ?? r.method}>
-                          {r.method}
+                    {col("fecha") && (
+                      <TableCell className="whitespace-nowrap text-muted-foreground">
+                        {formatDateOrMonth(r.entry_date, r.month)}
+                      </TableCell>
+                    )}
+                    {col("alumno") && (
+                      <TableCell className="font-medium">{r.student_name ?? "—"}</TableCell>
+                    )}
+                    {col("item") && (
+                      <TableCell>{r.item ?? "—"}</TableCell>
+                    )}
+                    {col("categoria") && (
+                      <TableCell className="hidden text-muted-foreground lg:table-cell">
+                        {r.category ?? "—"}
+                      </TableCell>
+                    )}
+                    {col("importe") && (
+                      <TableCell className="text-right font-semibold tabular-nums">
+                        {r.amount_cents != null ? formatEur(r.amount_cents) : "—"}
+                      </TableCell>
+                    )}
+                    {col("metodo") && (
+                      <TableCell>
+                        {r.method ? (
+                          <Badge variant="outline" title={METHOD_LABELS[r.method] ?? r.method}>
+                            {r.method}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                    )}
+                    {col("estado") && (
+                      <TableCell>
+                        <Badge
+                          className={
+                            r.status === "Pagado"
+                              ? "bg-success text-success-foreground"
+                              : r.status === "Pendiente"
+                              ? "bg-warning text-warning-foreground"
+                              : ""
+                          }
+                          variant={r.status === "ausente" ? "secondary" : "default"}
+                        >
+                          {r.status ?? "—"}
                         </Badge>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>{statusBadge(r.status)}</TableCell>
-                    <TableCell className="hidden max-w-[16rem] truncate text-muted-foreground xl:table-cell">
-                      {r.notes ?? "—"}
-                    </TableCell>
+                      </TableCell>
+                    )}
+                    {col("notas") && (
+                      <TableCell className="hidden max-w-[16rem] truncate text-muted-foreground xl:table-cell">
+                        {r.notes ?? "—"}
+                      </TableCell>
+                    )}
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditing(r);
-                          }}
+                          onClick={(e) => { e.stopPropagation(); setEditing(r); }}
                           aria-label="Editar entrada"
                         >
                           <Pencil className="h-4 w-4" />
@@ -528,10 +763,7 @@ function AdminLedgerPage() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDeleting(r);
-                          }}
+                          onClick={(e) => { e.stopPropagation(); setDeleting(r); }}
                           aria-label="Eliminar entrada"
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
@@ -550,21 +782,14 @@ function AdminLedgerPage() {
         mode="create"
         open={creating}
         onOpenChange={setCreating}
-        onSaved={() => {
-          setCreating(false);
-          void load();
-        }}
+        onSaved={() => { setCreating(false); void load(); }}
       />
-
       <LedgerFormSheet
         mode="edit"
         entry={editing}
         open={editing !== null}
         onOpenChange={(o) => !o && setEditing(null)}
-        onSaved={() => {
-          setEditing(null);
-          void load();
-        }}
+        onSaved={() => { setEditing(null); void load(); }}
       />
 
       <AlertDialog open={deleting !== null} onOpenChange={(o) => !o && setDeleting(null)}>
@@ -573,9 +798,7 @@ function AdminLedgerPage() {
             <AlertDialogTitle>¿Eliminar esta entrada?</AlertDialogTitle>
             <AlertDialogDescription>
               {deleting
-                ? `Se eliminará la entrada de ${deleting.student_name ?? "—"} (${
-                    deleting.item ?? "—"
-                  }). Esta acción no se puede deshacer.`
+                ? `Se eliminará la entrada de ${deleting.student_name ?? "—"} (${deleting.item ?? "—"}). Esta acción no se puede deshacer.`
                 : ""}
             </AlertDialogDescription>
           </AlertDialogHeader>
