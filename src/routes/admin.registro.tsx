@@ -108,6 +108,59 @@ function itemGroup(item: string | null): number {
   return 4;
 }
 
+const WEEKDAY_ORDER: Record<string, number> = {
+  lunes: 0,
+  martes: 1,
+  miércoles: 2,
+  miercoles: 2,
+  miercole: 2,
+  jueves: 3,
+  viernes: 4,
+  sábado: 5,
+  sabado: 5,
+  domingo: 6,
+  niños: 7,
+  ninos: 7,
+};
+
+/** Weekday index 0..7 from an item like "Lunes 18.30" / "Niños Lunes 17.00"; 99 if none. */
+function weekdayIndex(item: string | null): number {
+  const s = (item ?? "").trim().toLowerCase();
+  const m = s.match(WEEKDAY_RE);
+  if (!m) return 99;
+  return WEEKDAY_ORDER[m[1]] ?? 99;
+}
+
+/** Minutes-since-midnight from the first HH.MM or HH:MM in the item; Infinity if none. */
+function itemMinutes(item: string | null): number {
+  const s = (item ?? "").trim();
+  const m = s.match(/(\d{1,2})[.:](\d{2})/);
+  if (!m) return Number.POSITIVE_INFINITY;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (Number.isNaN(h) || Number.isNaN(min)) return Number.POSITIVE_INFINITY;
+  return h * 60 + min;
+}
+
+const MONTH_INDEX: Record<string, number> = {
+  enero: 0,
+  febrero: 1,
+  marzo: 2,
+  abril: 3,
+  mayo: 4,
+  junio: 5,
+  julio: 6,
+  agosto: 7,
+  septiembre: 8,
+  setiembre: 8,
+  octubre: 9,
+  noviembre: 10,
+  diciembre: 11,
+};
+function monthOrder(month: string): number {
+  return MONTH_INDEX[month.trim().toLowerCase()] ?? 99;
+}
+
 
 type LedgerTable = {
   select: (cols: string) => Orderable & Promiseable;
@@ -202,7 +255,15 @@ function AdminLedgerPage() {
     [rows],
   );
   const months = useMemo(
-    () => Array.from(new Set(rows.map((r) => r.month).filter((m): m is string => !!m))).sort(),
+    () =>
+      Array.from(new Set(rows.map((r) => r.month).filter((m): m is string => !!m))).sort(
+        (a, b) => {
+          const oa = monthOrder(a);
+          const ob = monthOrder(b);
+          if (oa !== ob) return oa - ob;
+          return a.localeCompare(b);
+        },
+      ),
     [rows],
   );
   const methods = useMemo(
@@ -225,9 +286,21 @@ function AdminLedgerPage() {
     });
     // Stable sort: clases regulares → clases sueltas → coworkers → workshops → resto.
     return result
-      .map((r, i) => ({ r, i, g: itemGroup(r.item), k: (r.item ?? "").trim().toLowerCase() }))
+      .map((r, i) => ({
+        r,
+        i,
+        g: itemGroup(r.item),
+        k: (r.item ?? "").trim().toLowerCase(),
+        wd: weekdayIndex(r.item),
+        mn: itemMinutes(r.item),
+      }))
       .sort((a, b) => {
         if (a.g !== b.g) return a.g - b.g;
+        // Regular classes: Mon..Sun..Niños, then start time.
+        if (a.g === 0) {
+          if (a.wd !== b.wd) return a.wd - b.wd;
+          if (a.mn !== b.mn) return a.mn - b.mn;
+        }
         // Within "resto", cluster by item name (productos juntos, etc.).
         if (a.g === 4 && a.k !== b.k) return a.k.localeCompare(b.k);
         return a.i - b.i;
