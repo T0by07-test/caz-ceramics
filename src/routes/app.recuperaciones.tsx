@@ -178,8 +178,8 @@ function RecuperacionesPage() {
 
       <div className="space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-h2">Reservar recuperación</h2>
-          <p className="text-xs text-muted-foreground">
+          <h2 className="text-h2 min-w-0">Reservar recuperación</h2>
+          <p className="text-xs text-muted-foreground sm:max-w-xs sm:text-right">
             Solo se muestran clases con plazas disponibles que aún no has reservado.
           </p>
         </div>
