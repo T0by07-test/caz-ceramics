@@ -30,12 +30,12 @@ const STEPS = [
   },
   {
     n: "2",
-    title: "Cande revisa tu solicitud",
+    title: "Revisaremos tu solicitud",
     body: "Confirma la disponibilidad y aprueba las clases que mejor encajan contigo.",
   },
   {
     n: "3",
-    title: "Recibes tu invitación",
+    title: "Recibiremos tu invitación",
     body: "Te llega un enlace por correo para crear tu cuenta en el estudio.",
   },
   {
@@ -86,8 +86,7 @@ function Index() {
             Crea, modela y disfruta del barro a tu ritmo.
           </h1>
           <p className="text-body mt-5 text-muted-foreground">
-            En Cazú Ceramics trabajamos con grupos reducidos, atención personalizada y&nbsp;
-            con la calma que pide la cerámica. Solicita tu plaza y te escribimos para empezar.
+            En Cazú Ceramics trabajamos con grupos reducidos, atención personalizada y con la calma que pide la cerámica. Solicita tu plaza y te escribimos para empezar.
           </p>
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
