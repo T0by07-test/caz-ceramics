@@ -129,10 +129,10 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "granted_class_ids must be a non-empty array of class ids" }, 400);
     }
 
-    // Run the privileged RPC via the service-role client. The RPC marks the
-    // request accepted, sets granted flags, creates the invite + invite_classes,
-    // and returns the invite token. (comp-only — no payment_mode.)
-    const { data: token, error: rpcError } = await admin.rpc("accept_enrollment_request", {
+    // Run the RPC via the caller-scoped client so auth.uid() resolves inside
+    // the SECURITY DEFINER function's is_admin() check. (The service-role
+    // client has no auth.uid() → the RPC would raise NOT_ADMIN.)
+    const { data: token, error: rpcError } = await supabase.rpc("accept_enrollment_request", {
       p_request_id: request_id,
       p_granted_class_ids: granted_class_ids,
     });
