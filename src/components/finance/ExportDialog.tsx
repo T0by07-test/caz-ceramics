@@ -193,6 +193,7 @@ export function ExportDialog({
     () => (readKeys(LS.mode, ["month"])[0] as Mode) ?? "month",
   );
   const [monthSel, setMonthSel] = useState("");
+  const [monthsSel, setMonthsSel] = useState<Set<string>>(new Set());
   const [yearSel, setYearSel] = useState(() => new Date().getFullYear());
   const [quarterSel, setQuarterSel] = useState<1 | 2 | 3 | 4>(
     () => (Math.floor(new Date().getMonth() / 3) + 1) as 1 | 2 | 3 | 4,
@@ -287,6 +288,8 @@ export function ExportDialog({
         return { mode: "all" };
       case "month":
         return { mode: "month", month: monthSel };
+      case "months":
+        return { mode: "months", months: [...monthsSel] };
       case "quarter":
         return { mode: "quarter", year: yearSel, quarter: quarterSel };
       case "year":
@@ -294,7 +297,7 @@ export function ExportDialog({
       case "custom":
         return { mode: "custom", from: customFrom, to: customTo };
     }
-  }, [mode, monthSel, yearSel, quarterSel, customFrom, customTo]);
+  }, [mode, monthSel, monthsSel, yearSel, quarterSel, customFrom, customTo]);
 
   const incomePreview = useMemo(() => filterByPeriod(incomeRows, period), [incomeRows, period]);
   const expensePreview = useMemo(() => filterByPeriod(expenseRows, period), [expenseRows, period]);
@@ -412,6 +415,7 @@ export function ExportDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="month">Mes</SelectItem>
+                  <SelectItem value="months">Varios meses</SelectItem>
                   <SelectItem value="quarter">Trimestre</SelectItem>
                   <SelectItem value="year">Año</SelectItem>
                   <SelectItem value="custom">Personalizado</SelectItem>
@@ -432,6 +436,33 @@ export function ExportDialog({
                     ))}
                   </SelectContent>
                 </Select>
+              )}
+
+              {mode === "months" && (
+                <div className="flex flex-wrap gap-1.5">
+                  {monthOptions.map((m) => {
+                    const on = monthsSel.has(m);
+                    return (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => {
+                          const next = new Set(monthsSel);
+                          if (on) next.delete(m);
+                          else next.add(m);
+                          setMonthsSel(next);
+                        }}
+                        className={`rounded-md border px-2.5 py-1 text-xs transition ${
+                          on
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-transparent hover:bg-accent"
+                        }`}
+                      >
+                        {m}
+                      </button>
+                    );
+                  })}
+                </div>
               )}
 
               {(mode === "quarter" || mode === "year") && (

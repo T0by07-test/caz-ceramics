@@ -4,6 +4,7 @@ import { monthLabelToIndex } from "./dates";
 export type Period =
   | { mode: "all" }
   | { mode: "month"; month: string } // Spanish month label, e.g. "JUNIO"
+  | { mode: "months"; months: string[] } // Multiple Spanish month labels
   | { mode: "quarter"; year: number; quarter: 1 | 2 | 3 | 4 }
   | { mode: "year"; year: number }
   | { mode: "custom"; from: string; to: string }; // ISO yyyy-mm-dd, inclusive
@@ -53,6 +54,19 @@ export function filterByPeriod<Row extends DatedRow>(
   if (period.mode === "month") {
     const target = monthLabelToIndex(period.month);
     return { rows: rows.filter((r) => rowMonthIndex(r) === target), approximate: 0 };
+  }
+
+  if (period.mode === "months") {
+    const targets = new Set(
+      period.months.map((m) => monthLabelToIndex(m)).filter((i): i is number => i != null),
+    );
+    return {
+      rows: rows.filter((r) => {
+        const mi = rowMonthIndex(r);
+        return mi != null && targets.has(mi);
+      }),
+      approximate: 0,
+    };
   }
 
   const out: Row[] = [];
@@ -133,6 +147,8 @@ export function periodLabel(period: Period): string {
       return "todo";
     case "month":
       return period.month.toLowerCase();
+    case "months":
+      return period.months.map((m) => m.toLowerCase()).join("-") || "meses";
     case "quarter":
       return `${period.year}-Q${period.quarter}`;
     case "year":
