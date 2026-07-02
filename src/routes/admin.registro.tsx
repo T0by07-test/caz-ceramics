@@ -873,7 +873,7 @@ function LedgerFormSheet({
   useEffect(() => {
     if (!open) return;
     if (mode === "edit" && entry) {
-      setEntryDate(entry.entry_date ?? "");
+      setEntryDate(entry.entry_date ?? new Date().toISOString().slice(0, 10));
       setMonth(entry.month ?? "");
       setStudentName(entry.student_name ?? "");
       setItem(entry.item ?? "");
