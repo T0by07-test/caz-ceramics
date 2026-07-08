@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
-import { Mic, StopCircle, Loader2 } from "lucide-react";
+import { Mic, StopCircle, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -287,6 +287,21 @@ export function VoiceFAB() {
     if (state === "listening") { stop(); }
   };
 
+  const openManualEntry = () => {
+    const today = new Date();
+    const isoDate = today.toISOString().slice(0, 10);
+    const monthName = today
+      .toLocaleString("es-ES", { month: "long" })
+      .toUpperCase();
+    setForm({
+      ...emptyForm(),
+      entry_date: isoDate,
+      month: monthName,
+    });
+    setAmountEur("");
+    setOpen(true);
+  };
+
   const handleConfirm = async () => {
     const finalForm: VoiceExtracted = {
       ...form,
@@ -332,6 +347,17 @@ export function VoiceFAB() {
 
   return (
     <>
+      <Button
+        onClick={openManualEntry}
+        variant="outline"
+        className="fixed bottom-24 right-20 z-50 h-11 w-11 rounded-full shadow-md lg:bottom-6 lg:right-24"
+        size="icon"
+        aria-label="Añadir ingreso manualmente"
+        title="Añadir manualmente"
+      >
+        <Plus className="h-5 w-5" />
+      </Button>
+
       <Button
         onClick={handleFabClick}
         disabled={state === "processing"}
