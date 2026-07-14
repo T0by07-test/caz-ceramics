@@ -330,6 +330,7 @@ function AdminLedgerPage() {
   const [methodFilter, setMethodFilter] = useState(ALL);
   const [categoryFilter, setCategoryFilter] = useState(ALL);
   const [monthFilter, setMonthFilter] = useState(currentMonthLabel());
+  const [teacherFilter, setTeacherFilter] = useState(ALL);
   const [editing, setEditing] = useState<LedgerEntry | null>(null);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<LedgerEntry | null>(null);
@@ -404,6 +405,13 @@ function AdminLedgerPage() {
     () => Array.from(new Set(rows.map((r) => r.method).filter((m): m is string => !!m))).sort(),
     [rows],
   );
+  const teachers = useMemo(
+    () =>
+      Array.from(
+        new Set(rows.flatMap((r) => r.collector ?? []).filter((t): t is string => !!t)),
+      ).sort(),
+    [rows],
+  );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -412,6 +420,7 @@ function AdminLedgerPage() {
       if (methodFilter !== ALL && r.method !== methodFilter) return false;
       if (categoryFilter !== ALL && r.category !== categoryFilter) return false;
       if (monthFilter !== ALL && r.month !== monthFilter) return false;
+      if (teacherFilter !== ALL && !(r.collector ?? []).includes(teacherFilter)) return false;
       if (q) {
         const hay = [r.student_name, r.notes].some((v) => (v ?? "").toLowerCase().includes(q));
         if (!hay) return false;
@@ -464,7 +473,7 @@ function AdminLedgerPage() {
         return a.i - b.i;
       })
       .map(({ r }) => r);
-  }, [rows, search, statusFilter, methodFilter, categoryFilter, monthFilter, sort]);
+  }, [rows, search, statusFilter, methodFilter, categoryFilter, monthFilter, teacherFilter, sort]);
 
   const totals = useMemo(() => {
     let cobrado = 0;
@@ -590,7 +599,7 @@ function AdminLedgerPage() {
       )}
 
       <Card className="shadow-card">
-        <CardContent className="grid gap-3 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+        <CardContent className="grid gap-3 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
           <div className="space-y-1.5">
             <Label htmlFor="search">Buscar</Label>
             <div className="relative">
@@ -661,6 +670,22 @@ function AdminLedgerPage() {
                 {months.map((m) => (
                   <SelectItem key={m} value={m}>
                     {m}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="f-teacher">Profesora</Label>
+            <Select value={teacherFilter} onValueChange={setTeacherFilter}>
+              <SelectTrigger id="f-teacher">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>Todas</SelectItem>
+                {teachers.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
                   </SelectItem>
                 ))}
               </SelectContent>
