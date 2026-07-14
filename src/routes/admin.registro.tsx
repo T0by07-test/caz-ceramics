@@ -59,6 +59,7 @@ import { MultiTeacherSelect } from "@/components/finance/MultiTeacherSelect";
 import { RouteGuard } from "@/components/RouteGuard";
 import { monthOrder } from "@/lib/finance/dates";
 import { ExportDialog } from "@/components/finance/ExportDialog";
+import { tbl, type CommissionRateRow } from "@/lib/finance/db";
 
 export const Route = createFileRoute("/admin/registro")({
   head: () => ({ meta: [{ title: "Registro — Admin" }] }),
@@ -333,6 +334,16 @@ function AdminLedgerPage() {
   const [sort, setSort] = useState<SortState>({ key: "fecha", dir: "desc" });
   const [visibleCols, setVisibleCols] = useState<Set<ColumnKey>>(new Set(DEFAULT_VISIBLE));
   const [exportOpen, setExportOpen] = useState(false);
+  const [rates, setRates] = useState<CommissionRateRow[]>([]);
+
+  useEffect(() => {
+    void tbl("commission_rates")
+      .select("*")
+      .order("teacher")
+      .then(({ data }: { data: CommissionRateRow[] | null }) => {
+        setRates(data ?? []);
+      });
+  }, []);
 
   const handleSort = (key: string) => {
     setSort((prev) => {
@@ -464,6 +475,27 @@ function AdminLedgerPage() {
     return { cobrado, pendiente, count: filtered.length };
   }, [filtered]);
 
+  // Per-teacher commission on filtered PAID rows (owner "Cande" excluded).
+  // Matches computeMonth() logic: split amount equally across collectors,
+  // then apply per-entry override or teacher default rate.
+  const teacherPayouts = useMemo(() => {
+    const rateMap = new Map(rates.map((r) => [r.teacher, r.default_pct]));
+    const acc: Record<string, number> = {};
+    for (const r of filtered) {
+      if (r.status !== "Pagado") continue;
+      const teachers = (r.collector ?? []).filter((t) => t && t !== "Cande");
+      if (teachers.length === 0) continue;
+      const share = (r.amount_cents ?? 0) / teachers.length;
+      for (const t of teachers) {
+        const rate = r.commission_pct_override ?? rateMap.get(t) ?? 0;
+        acc[t] = (acc[t] ?? 0) + share * rate;
+      }
+    }
+    return Object.entries(acc)
+      .map(([teacher, cents]) => ({ teacher, cents: Math.round(cents) }))
+      .sort((a, b) => b.cents - a.cents);
+  }, [filtered, rates]);
+
   const col = (key: ColumnKey) => visibleCols.has(key);
 
   return (
@@ -515,6 +547,45 @@ function AdminLedgerPage() {
           </CardContent>
         </Card>
       </div>
+
+      {teacherPayouts.length > 0 && (
+        <Card className="shadow-card">
+          <CardContent className="p-4">
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="text-label uppercase text-muted-foreground">
+                A pagar a profesoras
+                {monthFilter !== ALL && (
+                  <span className="ml-1 normal-case text-muted-foreground/70">
+                    · {monthFilter.toLowerCase()}
+                  </span>
+                )}
+              </p>
+              <span className="text-xs text-muted-foreground">
+                según filtros · sólo Pagado
+              </span>
+            </div>
+            <ul className="mt-2 divide-y divide-border">
+              {teacherPayouts.map((p) => {
+                const rate = rates.find((r) => r.teacher === p.teacher)?.default_pct ?? 0;
+                return (
+                  <li
+                    key={p.teacher}
+                    className="flex items-center justify-between py-1.5 text-sm"
+                  >
+                    <span className="font-medium">
+                      {p.teacher}
+                      <span className="ml-1.5 text-xs text-muted-foreground">
+                        {Math.round(rate * 100)}%
+                      </span>
+                    </span>
+                    <span className="font-semibold">{formatEur(p.cents)}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="shadow-card">
         <CardContent className="grid gap-3 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
