@@ -203,7 +203,9 @@ function formatDateOrMonth(entryDate: string | null, month: string | null): stri
   return "—";
 }
 
-function rowBg(status: string | null): string {
+function rowBg(status: string | null, collector: string[] | null): string {
+  const isSofi = (collector ?? []).some((c) => c?.toLowerCase() === "sofi");
+  if (status === "Pagado" && isSofi) return "bg-sky-50 hover:bg-sky-100/60";
   if (status === "Pagado") return "bg-green-50 hover:bg-green-100/60";
   if (status === "Pendiente") return "bg-amber-50 hover:bg-amber-100/60";
   if (status === "ausente") return "bg-muted/40 opacity-70 hover:opacity-100";
@@ -766,7 +768,7 @@ function AdminLedgerPage() {
                 {filtered.map((r) => (
                   <TableRow
                     key={r.id}
-                    className={`cursor-pointer ${rowBg(r.status)}`}
+                    className={`cursor-pointer ${rowBg(r.status, r.collector)}`}
                     onClick={() => setEditing(r)}
                   >
                     {col("fecha") && (
