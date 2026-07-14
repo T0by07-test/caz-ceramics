@@ -492,19 +492,30 @@ function AdminLedgerPage() {
   const teacherPayouts = useMemo(() => {
     const rateMap = new Map(rates.map((r) => [r.teacher, r.default_pct]));
     const acc: Record<string, number> = {};
+    let grossWithTeachers = 0;
+    let totalCommission = 0;
     for (const r of filtered) {
       if (r.status !== "Pagado") continue;
       const teachers = (r.collector ?? []).filter((t) => t && t !== "Cande");
       if (teachers.length === 0) continue;
-      const share = (r.amount_cents ?? 0) / teachers.length;
+      const amount = r.amount_cents ?? 0;
+      grossWithTeachers += amount;
+      const share = amount / teachers.length;
       for (const t of teachers) {
         const rate = r.commission_pct_override ?? rateMap.get(t) ?? 0;
-        acc[t] = (acc[t] ?? 0) + share * rate;
+        const c = share * rate;
+        acc[t] = (acc[t] ?? 0) + c;
+        totalCommission += c;
       }
     }
-    return Object.entries(acc)
+    const perTeacher = Object.entries(acc)
       .map(([teacher, cents]) => ({ teacher, cents: Math.round(cents) }))
       .sort((a, b) => b.cents - a.cents);
+    return {
+      perTeacher,
+      totalGross: Math.round(grossWithTeachers),
+      candeShare: Math.round(grossWithTeachers - totalCommission),
+    };
   }, [filtered, rates]);
 
   const col = (key: ColumnKey) => visibleCols.has(key);
@@ -559,12 +570,12 @@ function AdminLedgerPage() {
         </Card>
       </div>
 
-      {teacherPayouts.length > 0 && (
+      {teacherPayouts.perTeacher.length > 0 && (
         <Card className="shadow-card">
           <CardContent className="p-4">
             <div className="flex items-baseline justify-between gap-3">
               <p className="text-label uppercase text-muted-foreground">
-                A pagar a profesoras
+                Reparto de ingresos
                 {monthFilter !== ALL && (
                   <span className="ml-1 normal-case text-muted-foreground/70">
                     · {monthFilter.toLowerCase()}
@@ -576,7 +587,20 @@ function AdminLedgerPage() {
               </span>
             </div>
             <ul className="mt-2 divide-y divide-border">
-              {teacherPayouts.map((p) => {
+              <li className="flex items-center justify-between py-1.5 text-sm">
+                <span className="font-medium">Total</span>
+                <span className="font-semibold">{formatEur(teacherPayouts.totalGross)}</span>
+              </li>
+              <li className="flex items-center justify-between py-1.5 text-sm">
+                <span className="font-medium">
+                  Cande
+                  <span className="ml-1.5 text-xs text-muted-foreground">se queda</span>
+                </span>
+                <span className="font-semibold text-success">
+                  {formatEur(teacherPayouts.candeShare)}
+                </span>
+              </li>
+              {teacherPayouts.perTeacher.map((p) => {
                 const rate = rates.find((r) => r.teacher === p.teacher)?.default_pct ?? 0;
                 return (
                   <li
@@ -586,10 +610,10 @@ function AdminLedgerPage() {
                     <span className="font-medium">
                       {p.teacher}
                       <span className="ml-1.5 text-xs text-muted-foreground">
-                        {Math.round(rate * 100)}%
+                        a pagar · {Math.round(rate * 100)}%
                       </span>
                     </span>
-                    <span className="font-semibold">{formatEur(p.cents)}</span>
+                    <span className="font-semibold text-sky-700">{formatEur(p.cents)}</span>
                   </li>
                 );
               })}
