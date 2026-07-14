@@ -492,19 +492,30 @@ function AdminLedgerPage() {
   const teacherPayouts = useMemo(() => {
     const rateMap = new Map(rates.map((r) => [r.teacher, r.default_pct]));
     const acc: Record<string, number> = {};
+    let grossWithTeachers = 0;
+    let totalCommission = 0;
     for (const r of filtered) {
       if (r.status !== "Pagado") continue;
       const teachers = (r.collector ?? []).filter((t) => t && t !== "Cande");
       if (teachers.length === 0) continue;
-      const share = (r.amount_cents ?? 0) / teachers.length;
+      const amount = r.amount_cents ?? 0;
+      grossWithTeachers += amount;
+      const share = amount / teachers.length;
       for (const t of teachers) {
         const rate = r.commission_pct_override ?? rateMap.get(t) ?? 0;
-        acc[t] = (acc[t] ?? 0) + share * rate;
+        const c = share * rate;
+        acc[t] = (acc[t] ?? 0) + c;
+        totalCommission += c;
       }
     }
-    return Object.entries(acc)
+    const perTeacher = Object.entries(acc)
       .map(([teacher, cents]) => ({ teacher, cents: Math.round(cents) }))
       .sort((a, b) => b.cents - a.cents);
+    return {
+      perTeacher,
+      totalGross: Math.round(grossWithTeachers),
+      candeShare: Math.round(grossWithTeachers - totalCommission),
+    };
   }, [filtered, rates]);
 
   const col = (key: ColumnKey) => visibleCols.has(key);
