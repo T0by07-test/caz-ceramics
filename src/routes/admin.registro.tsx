@@ -599,7 +599,7 @@ function AdminLedgerPage() {
       )}
 
       <Card className="shadow-card">
-        <CardContent className="grid gap-3 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+        <CardContent className="grid gap-3 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
           <div className="space-y-1.5">
             <Label htmlFor="search">Buscar</Label>
             <div className="relative">
@@ -670,6 +670,22 @@ function AdminLedgerPage() {
                 {months.map((m) => (
                   <SelectItem key={m} value={m}>
                     {m}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="f-teacher">Profesora</Label>
+            <Select value={teacherFilter} onValueChange={setTeacherFilter}>
+              <SelectTrigger id="f-teacher">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>Todas</SelectItem>
+                {teachers.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
                   </SelectItem>
                 ))}
               </SelectContent>
