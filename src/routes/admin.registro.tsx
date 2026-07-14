@@ -570,12 +570,12 @@ function AdminLedgerPage() {
         </Card>
       </div>
 
-      {teacherPayouts.length > 0 && (
+      {teacherPayouts.perTeacher.length > 0 && (
         <Card className="shadow-card">
           <CardContent className="p-4">
             <div className="flex items-baseline justify-between gap-3">
               <p className="text-label uppercase text-muted-foreground">
-                A pagar a profesoras
+                Reparto de ingresos
                 {monthFilter !== ALL && (
                   <span className="ml-1 normal-case text-muted-foreground/70">
                     · {monthFilter.toLowerCase()}
@@ -587,7 +587,20 @@ function AdminLedgerPage() {
               </span>
             </div>
             <ul className="mt-2 divide-y divide-border">
-              {teacherPayouts.map((p) => {
+              <li className="flex items-center justify-between py-1.5 text-sm">
+                <span className="font-medium">Total</span>
+                <span className="font-semibold">{formatEur(teacherPayouts.totalGross)}</span>
+              </li>
+              <li className="flex items-center justify-between py-1.5 text-sm">
+                <span className="font-medium">
+                  Cande
+                  <span className="ml-1.5 text-xs text-muted-foreground">se queda</span>
+                </span>
+                <span className="font-semibold text-success">
+                  {formatEur(teacherPayouts.candeShare)}
+                </span>
+              </li>
+              {teacherPayouts.perTeacher.map((p) => {
                 const rate = rates.find((r) => r.teacher === p.teacher)?.default_pct ?? 0;
                 return (
                   <li
@@ -597,10 +610,10 @@ function AdminLedgerPage() {
                     <span className="font-medium">
                       {p.teacher}
                       <span className="ml-1.5 text-xs text-muted-foreground">
-                        {Math.round(rate * 100)}%
+                        a pagar · {Math.round(rate * 100)}%
                       </span>
                     </span>
-                    <span className="font-semibold">{formatEur(p.cents)}</span>
+                    <span className="font-semibold text-sky-700">{formatEur(p.cents)}</span>
                   </li>
                 );
               })}
