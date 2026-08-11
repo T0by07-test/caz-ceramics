@@ -26,8 +26,14 @@ import {
   toIsoDate,
 } from "@/lib/calendar";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { z } from "zod";
+
+const searchSchema = z.object({
+  intent: z.enum(["prueba", "regular"]).optional().catch(undefined),
+});
 
 export const Route = createFileRoute("/solicitar")({
+  validateSearch: searchSchema,
   head: () => ({
     meta: [
       { title: "Solicitar plaza — Cazú Ceramics" },
@@ -49,7 +55,17 @@ type UpcomingClass = {
   audience: "adults" | "kids";
 };
 
+const PLAN_LINES = [
+  "1 clase / mes — 30 €",
+  "2 clases / mes — 55 €",
+  "3 clases / mes — 70 €",
+  "4 clases / mes — 85 €",
+];
+
 function SolicitarPage() {
+  const { intent } = Route.useSearch();
+  const isTrial = intent === "prueba";
+  const isRegular = intent === "regular";
   const [name, setName] = useState("");
   const [surname, setSurname] = useState("");
   const [email, setEmail] = useState("");
@@ -165,11 +181,44 @@ function SolicitarPage() {
         </div>
         <Card className="shadow-card">
           <CardHeader>
-            <CardTitle className="text-h2">Solicitar plaza</CardTitle>
+            <CardTitle className="text-h2">
+              {isTrial
+                ? "Reserva tu clase de prueba"
+                : isRegular
+                  ? "Elige tu plan"
+                  : "Solicitar plaza"}
+            </CardTitle>
             <CardDescription>
-              En Cazú Ceramics trabajamos en grupos reducidos, con atención personalizada y&nbsp;
-              con la calma que pide la cerámica. Solicita tu plaza y te confirmaremos.
+              {isTrial ? (
+                <>
+                  Clase de prueba · 2 horas · 30 €
+                  <br />
+                  Todos los materiales y cocciones incluidos.
+                  <br />
+                  No necesitas experiencia previa.
+                </>
+              ) : isRegular ? (
+                <>
+                  Elige el plan que mejor se adapte a tu ritmo, consulta los horarios y
+                  reserva tus clases.
+                </>
+              ) : (
+                <>
+                  En Cazú Ceramics trabajamos en grupos reducidos, con atención
+                  personalizada y&nbsp; con la calma que pide la cerámica. Solicita tu
+                  plaza y te confirmaremos.
+                </>
+              )}
             </CardDescription>
+            {isRegular ? (
+              <ul className="mt-3 grid gap-1.5 rounded-xl border border-border bg-background p-3 text-sm sm:grid-cols-2">
+                {PLAN_LINES.map((p) => (
+                  <li key={p} className="tabular-nums">
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </CardHeader>
           <CardContent>
             <form className="space-y-5" onSubmit={handleSubmit}>
