@@ -25,18 +25,18 @@ export const Route = createFileRoute("/")({
 const STEPS = [
   {
     n: "01",
-    title: "Elige tu plan",
-    body: "Encuentra el ritmo que mejor se adapta a ti y consulta los horarios disponibles.",
+    title: "Cuéntanos qué buscas",
+    body: "Completa el formulario y dinos qué días y horarios te vienen bien. También puedes contarnos si tienes experiencia previa o si es tu primera vez.",
   },
   {
     n: "02",
-    title: "Reserva tu plaza",
-    body: "Solicita tu plaza y te confirmaremos la disponibilidad para empezar.",
+    title: "Buscamos el grupo para ti",
+    body: "Revisamos los horarios disponibles y buscamos la opción que mejor encaje contigo.",
   },
   {
     n: "03",
-    title: "Ven a crear",
-    body: "Una vez dentro, podrás reservar tus clases desde el calendario y disfrutar del estudio a tu ritmo.",
+    title: "Empieza a crear",
+    body: "Te confirmamos tu horario y recibirás acceso a tu cuenta para gestionar tus clases y reservas desde el calendario.",
   },
 ];
 
@@ -128,8 +128,8 @@ function Index() {
             </Button>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
-            Las plazas son limitadas: solicita la tuya y te confirmaremos la
-            disponibilidad antes de comenzar.
+            Cuéntanos qué días y horarios te vienen bien y te contactaremos para
+            encontrar el grupo adecuado para ti.
           </p>
         </section>
 
@@ -137,7 +137,7 @@ function Index() {
         <section className="mt-20 sm:mt-28">
           <div className="text-center">
             <span className="text-label uppercase">¿CÓMO FUNCIONA?</span>
-            <h2 className="text-h2 mt-2">Empieza por aquí</h2>
+            <h2 className="text-h2 mt-2">Encontramos tu lugar en el estudio</h2>
           </div>
           <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {STEPS.map((s) => (
@@ -161,8 +161,9 @@ function Index() {
             <span className="text-label uppercase">Planes mensuales</span>
             <h2 className="text-h2 mt-2">Elige cuánto quieres crear</h2>
             <p className="text-body mx-auto mt-3 max-w-xl text-muted-foreground">
-              Encuentra el plan que mejor se adapte a tu ritmo. Tus clases se renuevan
-              cada mes y puedes reservar tus horarios desde el calendario.
+              Elige cuántas clases quieres hacer al mes y cuéntanos qué días y
+              horarios te vienen bien. Te ayudaremos a encontrar el grupo que mejor
+              encaje contigo.
             </p>
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -288,9 +289,10 @@ function Index() {
 
         {/* Closing CTA */}
         <section className="mt-20 text-center sm:mt-28">
-          <h2 className="text-h2">¿Todo listo para empezar?</h2>
+          <h2 className="text-h2">¿List@ para empezar?</h2>
           <p className="text-body mx-auto mt-3 max-w-md text-muted-foreground">
-            Encuentra tu horario, elige tu plan y empieza a crear.
+            Cuéntanos qué horarios te vienen bien y encontraremos la opción que
+            mejor encaje contigo.
           </p>
           <div className="mt-6">
             <Button asChild size="lg">
