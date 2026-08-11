@@ -216,6 +216,54 @@ function Index() {
           </div>
         </section>
 
+        {/* Política de cancelación */}
+        <section className="mt-20 sm:mt-28">
+          <div className="text-center">
+            <span className="text-label uppercase">Cosas a tener en cuenta</span>
+            <h2 className="text-h2 mt-2">Cancelaciones y recuperaciones</h2>
+            <p className="text-body mx-auto mt-3 max-w-xl text-muted-foreground">
+              Pagas por las clases del plan que elijas (1, 2, 3 o 4 al mes). Si no puedes
+              asistir a alguna, esto es lo que necesitas saber.
+            </p>
+          </div>
+          <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <li className="rounded-2xl border border-border bg-surface p-5 shadow-card">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                01
+              </span>
+              <h3 className="mt-4 text-base font-semibold">Avisa con tiempo</h3>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                Cancela tu clase con al menos 24 horas de antelación (el día anterior)
+                para no perderla. Así podemos ofrecer tu plaza a alguien más.
+              </p>
+            </li>
+            <li className="rounded-2xl border border-border bg-surface p-5 shadow-card">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                02
+              </span>
+              <h3 className="mt-4 text-base font-semibold">Recupera tu clase</h3>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                Si cancelas a tiempo, puedes reservar otro horario disponible dentro del
+                mismo mes a través del calendario.
+              </p>
+            </li>
+            <li className="rounded-2xl border border-border bg-surface p-5 shadow-card">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                03
+              </span>
+              <h3 className="mt-4 text-base font-semibold">Si no avisas</h3>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                Si cancelas con menos de 24 horas o no asistes sin avisar, esa clase se
+                cuenta como utilizada y no se puede recuperar.
+              </p>
+            </li>
+          </ol>
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            Las clases recuperadas deben usarse dentro del mismo mes natural. No se
+            acumulan ni se trasladan al mes siguiente.
+          </p>
+        </section>
+
         {/* Tienda / shop */}
         <section className="mt-20 sm:mt-28">
           <div className="rounded-2xl border border-border bg-surface p-7 shadow-card sm:flex sm:items-center sm:justify-between sm:gap-6">
