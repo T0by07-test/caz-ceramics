@@ -78,7 +78,8 @@ function Index() {
         <section className="mx-auto max-w-2xl pt-10 text-center sm:pt-16 lg:pt-24">
           <span className="text-label uppercase">Estudio de cerámica</span>
           <h1 className="text-h1 mt-3 text-foreground">
-            Crea, aprende y disfruta del barro a tu ritmo.
+            Crea, aprende y disfruta del barro&nbsp;
+            <br />a tu ritmo.
           </h1>
           <p className="text-body mt-5 text-muted-foreground">
             Un espacio para descubrir la cerámica, aprender nuevas técnicas y crear con tus propias manos. Clases para todos los niveles, grupos reducidos y acompañamiento durante todo el proceso.
