@@ -25,18 +25,18 @@ export const Route = createFileRoute("/")({
 const STEPS = [
   {
     n: "01",
-    title: "¿Es tu primera vez?",
-    body: "Consulta las clases, horarios y precios y solicita tu plaza para empezar.",
+    title: "Elige tu plan",
+    body: "Encuentra el ritmo que mejor se adapta a ti y consulta los horarios disponibles.",
   },
   {
     n: "02",
-    title: "¿Ya eres alumno/a?",
-    body: "Accede a tu cuenta para consultar tus clases, reservar tus horarios y gestionar tus reservas.",
+    title: "Reserva tu plaza",
+    body: "Solicita tu plaza y te confirmaremos la disponibilidad para empezar.",
   },
   {
     n: "03",
-    title: "Ven al estudio y crea",
-    body: "Trabaja con el barro a tu ritmo, aprende nuevas técnicas y disfruta del proceso.",
+    title: "Ven a crear",
+    body: "Una vez dentro, podrás reservar tus clases desde el calendario y disfrutar del estudio a tu ritmo.",
   },
 ];
 
@@ -124,11 +124,12 @@ function Index() {
               <Link to="/solicitar">Quiero empezar</Link>
             </Button>
             <Button asChild size="lg" variant="secondary" className="w-full sm:w-auto">
-              <Link to="/login">Ya soy alumn@</Link>
+              <Link to="/login">Ya soy alumno/a</Link>
             </Button>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
-            El acceso es por invitación. Solicita tu plaza y te confirmaremos.
+            Las plazas son limitadas: solicita la tuya y te confirmaremos la
+            disponibilidad antes de comenzar.
           </p>
         </section>
 
@@ -175,10 +176,8 @@ function Index() {
               >
                 {p.featured ? (
                   <span className="text-label uppercase text-primary">⭐ {p.featuredLabel}</span>
-                ) : (
-                  <span className="text-label uppercase text-muted-foreground">Plan</span>
-                )}
-                <div className="mt-2 flex items-baseline gap-1.5">
+                ) : null}
+                <div className={`flex items-baseline gap-1.5 ${p.featured ? "mt-2" : ""}`}>
                   <span className="text-h3">{p.classes}</span>
                   <span className="text-sm text-muted-foreground">{p.detail}</span>
                 </div>
@@ -194,10 +193,14 @@ function Index() {
             ))}
           </div>
 
-          <p className="mt-5 text-center text-sm text-muted-foreground">
-            En caso de querer venir más de 4 clases al mes, el precio de cada clase
-            extra es de 20 €.
-          </p>
+          <div className="mt-6 text-center">
+            <p className="text-body text-foreground">
+              ¿Quieres venir más de 4 veces al mes?
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Puedes añadir clases extra por 20 € cada una.
+            </p>
+          </div>
 
           <div className="mt-8 rounded-2xl border border-border bg-surface p-6 text-center shadow-card sm:p-8">
             <p className="text-body text-foreground">
@@ -251,7 +254,9 @@ function Index() {
               <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                 03
               </span>
-              <h3 className="mt-4 text-base font-semibold">Si no avisas</h3>
+              <h3 className="mt-4 text-base font-semibold">
+                Si cancelas tarde o no vienes
+              </h3>
               <p className="mt-1.5 text-sm text-muted-foreground">
                 Si cancelas con menos de 24 horas o no asistes sin avisar, esa clase se
                 cuenta como utilizada y no se puede recuperar.
@@ -266,16 +271,14 @@ function Index() {
 
         {/* Tienda / shop */}
         <section className="mt-20 sm:mt-28">
-          <div className="rounded-2xl border border-border bg-surface p-7 shadow-card sm:flex sm:items-center sm:justify-between sm:gap-6">
+          <div className="mx-auto max-w-3xl rounded-xl border border-border bg-surface px-5 py-4 sm:flex sm:items-center sm:justify-between sm:gap-6">
             <div>
-              <span className="text-label uppercase">Tienda</span>
-              <h2 className="text-h3 mt-1">¿Buscas piezas hechas a mano?</h2>
-              <p className="text-body mt-2 max-w-xl text-muted-foreground">
-                Descubre nuestra cerámica artesanal y la selección de materiales en la
-                tienda online.
+              <h2 className="text-base font-semibold">¿Te gusta la cerámica de Cazú?</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Descubre nuestras piezas hechas a mano en la tienda.
               </p>
             </div>
-            <Button asChild size="lg" variant="secondary" className="mt-5 w-full sm:mt-0 sm:w-auto">
+            <Button asChild variant="secondary" className="mt-4 w-full sm:mt-0 sm:w-auto">
               <a href={SHOP_URL} target="_blank" rel="noopener noreferrer">
                 Visitar la tienda
               </a>
@@ -285,13 +288,13 @@ function Index() {
 
         {/* Closing CTA */}
         <section className="mt-20 text-center sm:mt-28">
-          <h2 className="text-h2">¿List@ para empezar?</h2>
+          <h2 className="text-h2">¿Todo listo para empezar?</h2>
           <p className="text-body mx-auto mt-3 max-w-md text-muted-foreground">
-            Solicita tu plaza hoy y te avisamos en cuanto haya hueco para ti.
+            Encuentra tu horario, elige tu plan y empieza a crear.
           </p>
           <div className="mt-6">
             <Button asChild size="lg">
-              <Link to="/solicitar">Solicitar plaza</Link>
+              <Link to="/solicitar">Ver clases y horarios</Link>
             </Button>
           </div>
         </section>
