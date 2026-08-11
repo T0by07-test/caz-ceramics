@@ -315,3 +315,83 @@ function Index() {
     </div>
   );
 }
+
+function InfoDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[85vh] overflow-y-auto text-left sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="text-h3">Clases regulares de cerámica</DialogTitle>
+          <DialogDescription>
+            Son clases de modelado en cerámica, en grupos reducidos y para todos los
+            niveles. No necesitas experiencia previa. 🤎
+          </DialogDescription>
+        </DialogHeader>
+
+        <p className="text-sm text-muted-foreground">
+          En las clases exploramos diferentes técnicas e ideas para crear tus propias
+          piezas. Trabajamos con arcilla gres, un material resistente y duradero, y
+          puedes crear tanto piezas funcionales como piezas decorativas.
+        </p>
+
+        <ul className="space-y-2 rounded-xl border border-border bg-surface p-4 text-sm">
+          <li>
+            <span aria-hidden>📍</span> <strong>Dónde:</strong> Taller Cazú Ceramics,
+            Ruzafa, Valencia
+          </li>
+          <li>
+            <span aria-hidden>⏰</span> <strong>Duración:</strong> 2 horas por clase
+          </li>
+          <li>
+            <span aria-hidden>📅</span> <strong>Frecuencia:</strong> puedes elegir entre
+            diferentes planes de 1 a 4 clases al mes, según el ritmo que quieras llevar.
+          </li>
+        </ul>
+
+        <p className="text-sm text-muted-foreground">
+          Todos los materiales y las cocciones en horno cerámico están incluidos.
+        </p>
+
+        <div className="mt-2 space-y-3">
+          <h3 className="text-base font-semibold">¿Qué te gustaría hacer?</h3>
+
+          <div className="rounded-xl border border-border bg-surface p-4">
+            <p className="text-sm font-semibold">
+              <span aria-hidden>👐</span> Quiero probar una clase
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Ven a conocer el estudio, experimentar con el barro y descubrir si la
+              cerámica es para ti.
+            </p>
+            <Button asChild className="mt-3 w-full">
+              <Link to="/solicitar" search={{ intent: "prueba" }}>
+                Reservar clase de prueba
+              </Link>
+            </Button>
+          </div>
+
+          <div className="rounded-xl border border-primary/40 bg-surface p-4">
+            <p className="text-sm font-semibold">
+              <span aria-hidden>🏺</span> Quiero empezar con clases regulares
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Elige el plan que mejor se adapte a tu ritmo y reserva tus clases según tu
+              disponibilidad.
+            </p>
+            <Button asChild className="mt-3 w-full">
+              <Link to="/solicitar" search={{ intent: "regular" }}>
+                Ver horarios y reservar
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
