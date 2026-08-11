@@ -100,10 +100,10 @@ function Index() {
         {/* Cómo funciona */}
         <section className="mt-20 sm:mt-28">
           <div className="text-center">
-            <span className="text-label uppercase">¿Cómo funciona?</span>
-            <h2 className="text-h2 mt-2">De la solicitud a tu primera clase</h2>
+            <span className="text-label uppercase">¿CÓMO FUNCIONA?</span>
+            <h2 className="text-h2 mt-2">Tu espacio para crear, a tu manera.</h2>
           </div>
-          <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {STEPS.map((s) => (
               <li
                 key={s.n}
