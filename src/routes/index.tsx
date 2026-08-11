@@ -1,5 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const SHOP_URL = "https://cazuceramics.com";
 
@@ -81,6 +89,7 @@ const PLANS = [
 ];
 
 function Index() {
+  const [infoOpen, setInfoOpen] = useState(false);
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
@@ -120,13 +129,15 @@ function Index() {
           </p>
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button asChild size="lg" className="w-full sm:w-auto">
-              <Link to="/solicitar">Quiero empezar</Link>
+            <Button size="lg" className="w-full sm:w-auto" onClick={() => setInfoOpen(true)}>
+              Quiero información
             </Button>
             <Button asChild size="lg" variant="secondary" className="w-full sm:w-auto">
               <Link to="/login">Ya soy alumno/a</Link>
             </Button>
           </div>
+
+          <InfoDialog open={infoOpen} onOpenChange={setInfoOpen} />
           <p className="mt-4 text-xs text-muted-foreground">
             Cuéntanos qué días y horarios te vienen bien y te contactaremos para
             encontrar el grupo adecuado para ti.
