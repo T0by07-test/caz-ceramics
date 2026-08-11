@@ -82,7 +82,8 @@ function Index() {
             <br />a tu ritmo.
           </h1>
           <p className="text-body mt-5 text-muted-foreground">
-            Un espacio para descubrir la cerámica, aprender nuevas técnicas y crear con tus propias manos. Clases para todos los niveles, grupos reducidos y acompañamiento durante todo el proceso.
+            Un espacio para descubrir la cerámica, aprender nuevas técnicas y crear con tus propias manos. Clases para todos los niveles, grupos reducidos y&nbsp;
+            <br />acompañamiento durante todo el proceso.
           </p>
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
