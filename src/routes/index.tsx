@@ -83,18 +83,18 @@ function Index() {
         <section className="mx-auto max-w-2xl pt-10 text-center sm:pt-16 lg:pt-24">
           <span className="text-label uppercase">Estudio de cerámica</span>
           <h1 className="text-h1 mt-3 text-foreground">
-            Crea, modela y disfruta del barro a tu ritmo.
+            Crea, aprende y disfruta del barro a tu ritmo.
           </h1>
           <p className="text-body mt-5 text-muted-foreground">
-            En Cazú Ceramics trabajamos con grupos reducidos, atención personalizada y con la calma que pide la cerámica. Solicita tu plaza y te escribimos para empezar.
+            Un espacio para descubrir la cerámica, aprender nuevas técnicas y crear con tus propias manos. Clases para todos los niveles, grupos reducidos y acompañamiento durante todo el proceso.
           </p>
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button asChild size="lg" className="w-full sm:w-auto">
-              <Link to="/solicitar">Solicitar plaza</Link>
+              <Link to="/solicitar">Quiero empezar</Link>
             </Button>
             <Button asChild size="lg" variant="secondary" className="w-full sm:w-auto">
-              <Link to="/login">Iniciar sesión</Link>
+              <Link to="/login">Ya soy alumn@</Link>
             </Button>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
