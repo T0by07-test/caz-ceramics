@@ -41,10 +41,43 @@ const STEPS = [
 ];
 
 const PLANS = [
-  { name: "1 clase", detail: "al mes", note: "Para empezar a tu ritmo" },
-  { name: "2 clases", detail: "al mes", note: "El plan más elegido", featured: true },
-  { name: "3 clases", detail: "al mes", note: "Para coger soltura" },
-  { name: "4 clases", detail: "al mes", note: "Cerámica cada semana" },
+  {
+    classes: "1 clase",
+    detail: "al mes",
+    tagline: "Para empezar",
+    description:
+      "Una clase al mes para descubrir la cerámica y disfrutar del proceso sin compromiso.",
+    price: "30 €",
+    period: "/ mes",
+  },
+  {
+    classes: "2 clases",
+    detail: "al mes",
+    description:
+      "El equilibrio perfecto para mantener la cerámica en tu rutina.",
+    price: "55 €",
+    period: "/ mes",
+  },
+  {
+    classes: "3 clases",
+    detail: "al mes",
+    tagline: "Para crear con más libertad",
+    description:
+      "Más tiempo para experimentar, avanzar en tus proyectos y aprender nuevas técnicas.",
+    price: "70 €",
+    period: "/ mes",
+  },
+  {
+    classes: "4 clases",
+    detail: "al mes",
+    tagline: "Una clase cada semana",
+    description:
+      "La opción ideal si quieres hacer de la cerámica parte de tu rutina.",
+    price: "85 €",
+    period: "/ mes",
+    featured: true,
+    featuredLabel: "El más elegido",
+  },
 ];
 
 function Index() {
