@@ -24,24 +24,19 @@ export const Route = createFileRoute("/")({
 
 const STEPS = [
   {
-    n: "1",
-    title: "Solicitas tu plaza",
-    body: "Rellena el formulario y elige las clases que te interesan. Sin compromiso.",
+    n: "01",
+    title: "¿Es tu primera vez?",
+    body: "Consulta las clases, horarios y precios y solicita tu plaza para empezar.",
   },
   {
-    n: "2",
-    title: "Revisaremos tu solicitud",
-    body: "Confirma la disponibilidad y aprueba las clases que mejor encajan contigo.",
+    n: "02",
+    title: "¿Ya eres alumno/a?",
+    body: "Accede a tu cuenta para consultar tus clases, reservar tus horarios y gestionar tus reservas.",
   },
   {
-    n: "3",
-    title: "Recibiremos tu invitación",
-    body: "Te llega un enlace por correo para crear tu cuenta en el estudio.",
-  },
-  {
-    n: "4",
-    title: "Reservas y modelas",
-    body: "Entras al calendario, gestionas tus reservas y disfrutas del barro.",
+    n: "03",
+    title: "Ven al estudio y crea",
+    body: "Trabaja con el barro a tu ritmo, aprende nuevas técnicas y disfruta del proceso.",
   },
 ];
 
@@ -105,10 +100,10 @@ function Index() {
         {/* Cómo funciona */}
         <section className="mt-20 sm:mt-28">
           <div className="text-center">
-            <span className="text-label uppercase">¿Cómo funciona?</span>
-            <h2 className="text-h2 mt-2">De la solicitud a tu primera clase</h2>
+            <span className="text-label uppercase">¿CÓMO FUNCIONA?</span>
+            <h2 className="text-h2 mt-2">Tu espacio para crear, a tu manera.</h2>
           </div>
-          <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {STEPS.map((s) => (
               <li
                 key={s.n}
