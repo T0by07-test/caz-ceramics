@@ -154,37 +154,65 @@ function Index() {
           </ol>
         </section>
 
-        {/* Planes / precios teaser */}
+        {/* Planes / precios */}
         <section className="mt-20 sm:mt-28">
           <div className="text-center">
             <span className="text-label uppercase">Planes mensuales</span>
-            <h2 className="text-h2 mt-2">Elige cuanto quieres crear</h2>
+            <h2 className="text-h2 mt-2">Elige cuánto quieres crear</h2>
             <p className="text-body mx-auto mt-3 max-w-xl text-muted-foreground">
-              Tras tu admisión podrás contratar un plan mensual. Los créditos se
-              reinician cada mes; reservas las clases que quieras desde el calendario.
+              Encuentra el plan que mejor se adapte a tu ritmo. Tus clases se renuevan
+              cada mes y puedes reservar tus horarios desde el calendario.
             </p>
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {PLANS.map((p) => (
               <div
-                key={p.name}
+                key={p.classes}
                 className={[
-                  "rounded-2xl border bg-surface p-5 shadow-card",
+                  "flex flex-col rounded-2xl border bg-surface p-5 shadow-card",
                   p.featured ? "border-primary ring-1 ring-primary/30" : "border-border",
                 ].join(" ")}
               >
                 {p.featured ? (
-                  <span className="text-label uppercase text-primary">Más popular</span>
+                  <span className="text-label uppercase text-primary">⭐ {p.featuredLabel}</span>
                 ) : (
                   <span className="text-label uppercase text-muted-foreground">Plan</span>
                 )}
                 <div className="mt-2 flex items-baseline gap-1.5">
-                  <span className="text-h3">{p.name}</span>
+                  <span className="text-h3">{p.classes}</span>
                   <span className="text-sm text-muted-foreground">{p.detail}</span>
                 </div>
-                <p className="mt-2 text-sm text-muted-foreground">{p.note}</p>
+                {p.tagline ? (
+                  <p className="mt-1 text-sm font-medium text-foreground">{p.tagline}</p>
+                ) : null}
+                <p className="mt-2 text-sm text-muted-foreground">{p.description}</p>
+                <div className="mt-4 flex items-baseline gap-1.5">
+                  <span className="text-2xl font-semibold tabular-nums">{p.price}</span>
+                  <span className="text-sm text-muted-foreground">{p.period}</span>
+                </div>
               </div>
             ))}
+          </div>
+
+          <p className="mt-5 text-center text-sm text-muted-foreground">
+            En caso de querer venir más de 4 clases al mes, el precio de cada clase
+            extra es de 20 €.
+          </p>
+
+          <div className="mt-8 rounded-2xl border border-border bg-surface p-6 text-center shadow-card sm:p-8">
+            <p className="text-body text-foreground">
+              Tú eliges cuándo venir. Cada mes tienes un número de clases según el plan
+              que elijas y puedes reservarlas desde el calendario según la disponibilidad.
+            </p>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Las clases no se acumulan de un mes a otro. Si no las usas, se reinician al
+              comienzo del siguiente mes.
+            </p>
+            <div className="mt-6">
+              <Button asChild size="lg">
+                <Link to="/solicitar">Ver clases y horarios</Link>
+              </Button>
+            </div>
           </div>
         </section>
 
