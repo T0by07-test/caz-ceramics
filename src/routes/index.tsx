@@ -125,7 +125,7 @@ function Index() {
         <section className="mt-20 sm:mt-28">
           <div className="text-center">
             <span className="text-label uppercase">Planes mensuales</span>
-            <h2 className="text-h2 mt-2">Elige el ritmo que te encaja</h2>
+            <h2 className="text-h2 mt-2">Elige cuanto quieres crear</h2>
             <p className="text-body mx-auto mt-3 max-w-xl text-muted-foreground">
               Tras tu admisión podrás contratar un plan mensual. Los créditos se
               reinician cada mes; reservas las clases que quieras desde el calendario.
