@@ -14,11 +14,74 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
+const TRIAL_AMOUNT_CENTS = 3000;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405, headers: corsHeaders });
 
   try {
+    const rawBody = await req.json();
+
+    // Public (no account) hosted Checkout for a single trial class booked from the landing page.
+    if (rawBody?.purpose === "public_trial") {
+      const { classId, email, name, environment, returnUrl } = rawBody as {
+        classId?: string;
+        email?: string;
+        name?: string;
+        environment?: StripeEnv;
+        returnUrl?: string;
+      };
+      if (environment !== "sandbox" && environment !== "live") {
+        return jsonResponse({ error: "Invalid environment" }, 400);
+      }
+      if (typeof returnUrl !== "string" || !returnUrl.startsWith("http")) {
+        return jsonResponse({ error: "Invalid returnUrl" }, 400);
+      }
+      if (!classId || !/^[0-9a-f-]{36}$/i.test(classId)) {
+        return jsonResponse({ error: "Invalid classId" }, 400);
+      }
+      if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        return jsonResponse({ error: "Invalid email" }, 400);
+      }
+
+      const adminPublic = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      );
+      const { data: klass, error: cErr } = await adminPublic
+        .from("classes")
+        .select("id, date, start_time, status")
+        .eq("id", classId)
+        .single();
+      if (cErr || !klass || klass.status !== "scheduled") {
+        return jsonResponse({ error: "Class not available" }, 404);
+      }
+
+      const publicStripe = createStripeClient(environment);
+      const publicSession = await publicStripe.checkout.sessions.create({
+        mode: "payment",
+        line_items: [
+          {
+            quantity: 1,
+            price_data: {
+              currency: "eur",
+              unit_amount: TRIAL_AMOUNT_CENTS,
+              product_data: {
+                name: "Clase de prueba de cerámica (2 h)",
+                description: `Cazú Ceramics · ${klass.date} ${String(klass.start_time).slice(0, 5)}`,
+              },
+            },
+          },
+        ],
+        customer_email: email,
+        success_url: `${returnUrl}?pago=ok`,
+        cancel_url: `${returnUrl}?pago=cancelado`,
+        metadata: { purpose: "public_trial", classId, email, name: name ?? "" },
+      });
+      return jsonResponse({ url: publicSession.url, sessionId: publicSession.id });
+    }
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return jsonResponse({ error: "Authentication required" }, 401);
 
@@ -36,7 +99,7 @@ Deno.serve(async (req) => {
     if (authError || !userData?.user) return jsonResponse({ error: "Authentication required" }, 401);
     const user = userData.user;
 
-    const body = await req.json();
+    const body = rawBody;
     const { purpose, environment, returnUrl, paymentMethod } = body as {
       purpose: "drop_in" | "plan";
       environment: StripeEnv;
