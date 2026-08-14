@@ -1,6 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { createTrialCheckout } from "@/lib/checkout";
+import { startOfMonth, toIsoDate } from "@/lib/calendar";
+import {
+  PublicClassCalendar,
+  type UpcomingClass,
+} from "@/components/PublicClassCalendar";
 import {
   Dialog,
   DialogContent,
@@ -369,11 +379,7 @@ function InfoDialog({
               Ven a conocer el estudio, experimentar con el barro y descubrir si la
               cerámica es para ti.
             </p>
-            <Button asChild className="mt-3 w-full">
-              <Link to="/solicitar" search={{ intent: "prueba" }}>
-                Reservar clase de prueba
-              </Link>
-            </Button>
+            <TrialBooking />
           </div>
 
           <div className="rounded-xl border border-primary/40 bg-surface p-4">
@@ -393,5 +399,122 @@ function InfoDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function TrialBooking() {
+  const [classes, setClasses] = useState<UpcomingClass[] | null>(null);
+  const [monthRef, setMonthRef] = useState<Date>(() => startOfMonth(new Date()));
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [loadingPay, setLoadingPay] = useState(false);
+
+  useEffect(() => {
+    void (async () => {
+      const { data, error } = await supabase
+        .from("classes")
+        .select("id, date, start_time, end_time, audience")
+        .eq("status", "scheduled")
+        .gte("date", toIsoDate(new Date()))
+        .order("date", { ascending: true })
+        .order("start_time", { ascending: true })
+        .limit(80);
+      if (error) {
+        toast.error("No se pudieron cargar las clases", { description: error.message });
+        setClasses([]);
+        return;
+      }
+      setClasses((data ?? []) as UpcomingClass[]);
+    })();
+  }, []);
+
+  const byDate = useMemo(() => {
+    const map = new Map<string, UpcomingClass[]>();
+    for (const c of classes ?? []) {
+      const arr = map.get(c.date) ?? [];
+      arr.push(c);
+      map.set(c.date, arr);
+    }
+    return map;
+  }, [classes]);
+
+  const selectedIds = useMemo(
+    () => new Set(selectedId ? [selectedId] : []),
+    [selectedId],
+  );
+
+  const handlePay = async () => {
+    if (!selectedId) {
+      toast.error("Elige un día y un horario para tu clase de prueba");
+      return;
+    }
+    if (!name.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) {
+      toast.error("Completa tu nombre y un correo válido");
+      return;
+    }
+    setLoadingPay(true);
+    try {
+      const { url } = await createTrialCheckout({
+        classId: selectedId,
+        email: email.trim(),
+        name: name.trim(),
+        returnUrl: `${window.location.origin}/`,
+      });
+      window.location.href = url;
+    } catch (err) {
+      toast.error("No se pudo iniciar el pago", {
+        description: err instanceof Error ? err.message : undefined,
+      });
+    } finally {
+      setLoadingPay(false);
+    }
+  };
+
+  return (
+    <div className="mt-3 space-y-3">
+      <p className="text-xs text-muted-foreground">
+        Elige el día y la hora que te vengan bien (30 € · 2 h).
+      </p>
+      <PublicClassCalendar
+        monthRef={monthRef}
+        onMonthChange={(d) => {
+          setMonthRef(d);
+          setSelectedDay(null);
+        }}
+        byDate={byDate}
+        loading={classes === null}
+        selectedIds={selectedIds}
+        selectedDay={selectedDay}
+        onSelectDay={setSelectedDay}
+        onToggle={(id) => setSelectedId((prev) => (prev === id ? null : id))}
+      />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="trial-name">Nombre</Label>
+          <Input
+            id="trial-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="trial-email">Correo electrónico</Label>
+          <Input
+            id="trial-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+      </div>
+      <Button className="w-full" disabled={loadingPay} onClick={handlePay}>
+        {loadingPay ? "Abriendo el pago…" : "Reservar y pagar 30 €"}
+      </Button>
+      <p className="text-center text-xs text-muted-foreground">
+        Pago seguro con Stripe. Recibirás la confirmación por correo.
+      </p>
+    </div>
   );
 }

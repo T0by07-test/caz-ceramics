@@ -34,3 +34,22 @@ export async function createPlanCheckout({ planId, returnUrl, paymentMethod }: C
   if (!data?.clientSecret) throw new Error(data?.error ?? "No clientSecret returned");
   return data as { clientSecret: string; sessionId: string };
 }
+
+type CreateTrialArgs = { classId: string; email: string; name?: string; returnUrl: string };
+
+/** Public (no account needed) hosted Stripe Checkout for a single trial class. */
+export async function createTrialCheckout({ classId, email, name, returnUrl }: CreateTrialArgs) {
+  const { data, error } = await supabase.functions.invoke("create-checkout", {
+    body: {
+      purpose: "public_trial",
+      classId,
+      email,
+      name,
+      returnUrl,
+      environment: getStripeEnvironment(),
+    },
+  });
+  if (error) throw new Error(error.message);
+  if (!data?.url) throw new Error(data?.error ?? "No checkout URL returned");
+  return data as { url: string; sessionId: string };
+}
