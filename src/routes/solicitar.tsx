@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
   CardContent,
@@ -15,17 +14,11 @@ import {
 } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { createEnrollmentRequest } from "@/lib/requests";
+import { startOfMonth, toIsoDate } from "@/lib/calendar";
 import {
-  ES_WEEKDAYS_SHORT,
-  addMonths,
-  buildMonthGrid,
-  formatLongDate,
-  formatMonthTitle,
-  formatTimeRange,
-  startOfMonth,
-  toIsoDate,
-} from "@/lib/calendar";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+  PublicClassCalendar,
+  type UpcomingClass,
+} from "@/components/PublicClassCalendar";
 import { z } from "zod";
 
 const searchSchema = z.object({
@@ -46,14 +39,6 @@ export const Route = createFileRoute("/solicitar")({
   }),
   component: SolicitarPage,
 });
-
-type UpcomingClass = {
-  id: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-  audience: "adults" | "kids";
-};
 
 const PLAN_LINES = [
   "1 clase / mes — 30 €",
@@ -269,7 +254,7 @@ function SolicitarPage() {
                 <p className="text-xs text-muted-foreground">
                   Marca al menos una. Cande confirmará la disponibilidad final.
                 </p>
-                <CalendarPicker
+                <PublicClassCalendar
                   monthRef={monthRef}
                   onMonthChange={(d) => {
                     setMonthRef(d);
@@ -307,164 +292,6 @@ function SolicitarPage() {
             </form>
           </CardContent>
         </Card>
-      </div>
-    </div>
-  );
-}
-
-function CalendarPicker({
-  monthRef,
-  onMonthChange,
-  byDate,
-  loading,
-  selectedIds,
-  selectedDay,
-  onSelectDay,
-  onToggle,
-}: {
-  monthRef: Date;
-  onMonthChange: (d: Date) => void;
-  byDate: Map<string, UpcomingClass[]>;
-  loading: boolean;
-  selectedIds: Set<string>;
-  selectedDay: string | null;
-  onSelectDay: (iso: string | null) => void;
-  onToggle: (id: string) => void;
-}) {
-  const cells = useMemo(() => buildMonthGrid(monthRef), [monthRef]);
-  const todayIso = toIsoDate(new Date());
-  const daySlots = selectedDay ? (byDate.get(selectedDay) ?? []) : [];
-
-  return (
-    <div className="rounded-lg border border-border bg-surface p-3">
-      <div className="mb-3 flex items-center justify-between">
-        <button
-          type="button"
-          aria-label="Mes anterior"
-          onClick={() => onMonthChange(addMonths(monthRef, -1))}
-          className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <div className="text-sm font-semibold capitalize">
-          {formatMonthTitle(monthRef)}
-        </div>
-        <button
-          type="button"
-          aria-label="Mes siguiente"
-          onClick={() => onMonthChange(addMonths(monthRef, 1))}
-          className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
-      </div>
-
-      <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-        {ES_WEEKDAYS_SHORT.map((d) => (
-          <div key={d} className="py-1">{d}</div>
-        ))}
-      </div>
-
-      {loading ? (
-        <div className="mt-1 grid grid-cols-7 gap-1">
-          {Array.from({ length: 42 }).map((_, i) => (
-            <div key={i} className="h-12 animate-pulse rounded-md bg-muted/40" />
-          ))}
-        </div>
-      ) : (
-        <div className="mt-1 grid grid-cols-7 gap-1">
-          {cells.map((cell) => {
-            const slots = byDate.get(cell.iso) ?? [];
-            const has = slots.length > 0;
-            const isPast = cell.iso < todayIso;
-            const isSelected = selectedDay === cell.iso;
-            const hasSelected = slots.some((s) => selectedIds.has(s.id));
-            const disabled = !has || isPast;
-            return (
-              <button
-                type="button"
-                key={cell.iso}
-                disabled={disabled}
-                onClick={() => onSelectDay(isSelected ? null : cell.iso)}
-                className={[
-                  "relative flex h-12 flex-col items-center justify-center rounded-md border text-sm transition-colors",
-                  !cell.inMonth ? "text-muted-foreground/50" : "",
-                  disabled
-                    ? "cursor-not-allowed border-transparent bg-transparent text-muted-foreground/40"
-                    : isSelected
-                      ? "border-primary bg-primary/10 text-foreground"
-                      : hasSelected
-                        ? "border-primary/40 bg-primary/5 text-foreground hover:bg-primary/10"
-                        : "border-border bg-background hover:bg-muted/40",
-                  cell.isToday && !isSelected ? "ring-1 ring-primary/40" : "",
-                ].join(" ")}
-              >
-                <span className="tabular-nums leading-none">{cell.date.getDate()}</span>
-                {has && !disabled ? (
-                  <span
-                    className={[
-                      "mt-1 h-1.5 w-1.5 rounded-full",
-                      hasSelected ? "bg-primary" : "bg-success",
-                    ].join(" ")}
-                    aria-hidden
-                  />
-                ) : null}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      <div className="mt-3 border-t border-border pt-3">
-        {!selectedDay ? (
-          <p className="text-xs text-muted-foreground">
-            Toca un día con disponibilidad para ver los horarios.
-          </p>
-        ) : daySlots.length === 0 ? (
-          <p className="text-xs text-muted-foreground">
-            No hay horarios disponibles ese día.
-          </p>
-        ) : (
-          <div>
-            <div className="mb-2 text-xs font-semibold capitalize text-muted-foreground">
-              {formatLongDate(selectedDay)}
-            </div>
-            <ul className="space-y-1.5">
-              {daySlots.map((c) => {
-                const checked = selectedIds.has(c.id);
-                return (
-                  <li key={c.id}>
-                    <label
-                      className={[
-                        "flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors",
-                        checked
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:bg-muted/40",
-                      ].join(" ")}
-                    >
-                      <Checkbox
-                        checked={checked}
-                        onCheckedChange={() => onToggle(c.id)}
-                      />
-                      <span className="tabular-nums">
-                        {formatTimeRange(c.start_time, c.end_time)}
-                      </span>
-                      {c.audience === "kids" ? (
-                        <span className="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                          Niños
-                        </span>
-                      ) : (
-                        <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                          Adultos
-                        </span>
-                      )}
-                    </label>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        )}
       </div>
     </div>
   );
