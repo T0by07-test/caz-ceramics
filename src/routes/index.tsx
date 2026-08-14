@@ -1,6 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { createTrialCheckout } from "@/lib/checkout";
+import { startOfMonth, toIsoDate } from "@/lib/calendar";
+import {
+  PublicClassCalendar,
+  type UpcomingClass,
+} from "@/components/PublicClassCalendar";
 import {
   Dialog,
   DialogContent,
