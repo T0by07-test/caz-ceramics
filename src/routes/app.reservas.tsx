@@ -293,11 +293,11 @@ function CancelDialog({
       const res = await cancelBooking(row.id);
       if (res.status === "cancelled_recoverable") {
         toast.success("Reserva cancelada", {
-          description: "Se ha añadido un crédito de recuperación válido este mes.",
+          description: "Podrás recuperar esta clase otro día del mismo mes.",
         });
       } else {
         toast.success("Reserva cancelada", {
-          description: "La cancelación se realizó dentro de las 3 horas previas: el crédito se ha perdido.",
+          description: "La cancelación se realizó dentro de las 12 horas previas: la clase cuenta como usada.",
         });
       }
       onCancelled();
@@ -318,12 +318,12 @@ function CancelDialog({
           <AlertDialogDescription asChild>
             <div className="space-y-2 text-sm">
               <p>
-                Si cancelas con <strong>más de 3 horas</strong> de antelación,
-                conservas el crédito como recuperación válida durante el mismo mes.
+                Si cancelas con <strong>más de 12 horas</strong> de antelación,
+                podrás recuperar la clase otro día del mismo mes.
               </p>
               <p>
-                Si cancelas con <strong>menos de 3 horas</strong> de antelación,
-                el crédito se pierde.
+                Si cancelas con <strong>menos de 12 horas</strong> de antelación,
+                la clase cuenta como usada.
               </p>
               <p
                 className={
