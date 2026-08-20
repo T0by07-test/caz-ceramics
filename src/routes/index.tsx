@@ -188,6 +188,11 @@ function Index() {
                   <span className="text-2xl font-semibold tabular-nums">{p.price}</span>
                   <span className="text-sm text-muted-foreground">{p.period}</span>
                 </div>
+                {p.classes === "1 clase" ? (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    La clase de prueba de un solo día son 35 €.
+                  </p>
+                ) : null}
               </div>
             ))}
           </div>
