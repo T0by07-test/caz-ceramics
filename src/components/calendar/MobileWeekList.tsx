@@ -65,6 +65,8 @@ export function MobileWeekList({ reference, classes, onSelectClass }: Props) {
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {cancelled ? "Cancelada" : capacityLabel(level)}
+                        {c.teacher ? ` · Profe ${c.teacher}` : ""}
+                        {c.audience === "kids" ? " · Clase infantil" : ""}
                       </div>
                     </div>
                     <div className="text-xs tabular-nums text-muted-foreground">

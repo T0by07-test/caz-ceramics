@@ -83,10 +83,15 @@ export function MonthGrid({ reference, classes, onSelectClass }: Props) {
                           ].join(" ")}
                           aria-hidden
                         />
-                        <span className="truncate font-medium">
+                        <span className="min-w-0 truncate font-medium">
                           {formatTime(c.start_time)}
+                          {c.teacher ? (
+                            <span className="ml-1 font-normal text-muted-foreground">
+                              {c.audience === "kids" ? `${c.teacher} · niños` : c.teacher}
+                            </span>
+                          ) : null}
                         </span>
-                        <span className="ml-auto tabular-nums text-muted-foreground">
+                        <span className="ml-auto shrink-0 tabular-nums text-muted-foreground">
                           {c.booked_count}/{c.capacity_max}
                         </span>
                       </button>
