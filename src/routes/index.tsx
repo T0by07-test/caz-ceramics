@@ -416,7 +416,7 @@ function TrialBooking() {
         .gte("date", toIsoDate(new Date()))
         .order("date", { ascending: true })
         .order("start_time", { ascending: true })
-        .limit(80);
+        .limit(500);
       if (error) {
         toast.error("No se pudieron cargar las clases", { description: error.message });
         setClasses([]);

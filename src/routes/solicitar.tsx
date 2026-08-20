@@ -74,7 +74,7 @@ function SolicitarPage() {
         .gte("date", todayIso)
         .order("date", { ascending: true })
         .order("start_time", { ascending: true })
-        .limit(60);
+        .limit(500);
       if (error) {
         toast.error("No se pudieron cargar las clases", { description: error.message });
         setClasses([]);
