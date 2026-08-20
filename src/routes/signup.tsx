@@ -68,7 +68,12 @@ function SignupPage() {
     });
     setSubmitting(false);
     if (error) {
-      toast.error("No se pudo crear la cuenta", { description: error.message });
+      const msg = /weak|pwned/i.test(error.message)
+        ? "Esa contraseña es demasiado común. Prueba con otra más difícil de adivinar."
+        : /already registered|already exists/i.test(error.message)
+          ? "Ese correo ya tiene cuenta. Inicia sesión."
+          : error.message;
+      toast.error("No se pudo crear la cuenta", { description: msg });
       return;
     }
     if (data.session) {
