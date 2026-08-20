@@ -12,13 +12,28 @@ type Props = {
   classes: ClassWithCount[];
   loading: boolean;
   onSelectClass: (c: ClassWithCount) => void;
+  selectedIds?: Set<string>;
 };
 
-export function CalendarBoard({ view, reference, classes, loading, onSelectClass }: Props) {
+export function CalendarBoard({
+  view,
+  reference,
+  classes,
+  loading,
+  onSelectClass,
+  selectedIds,
+}: Props) {
   if (loading) return <BoardSkeleton view={view} />;
 
   if (view === "day") {
-    return <DayView reference={reference} classes={classes} onSelectClass={onSelectClass} />;
+    return (
+      <DayView
+        reference={reference}
+        classes={classes}
+        onSelectClass={onSelectClass}
+        selectedIds={selectedIds}
+      />
+    );
   }
 
   if (view === "week") {
@@ -29,10 +44,16 @@ export function CalendarBoard({ view, reference, classes, loading, onSelectClass
             classes={classes}
             onSelectClass={onSelectClass}
             emptyLabel="No hay clases esta semana."
+            selectedIds={selectedIds}
           />
         </div>
         <div className="hidden lg:block">
-          <WeekGrid reference={reference} classes={classes} onSelectClass={onSelectClass} />
+          <WeekGrid
+            reference={reference}
+            classes={classes}
+            onSelectClass={onSelectClass}
+            selectedIds={selectedIds}
+          />
         </div>
       </>
     );
@@ -42,10 +63,20 @@ export function CalendarBoard({ view, reference, classes, loading, onSelectClass
   return (
     <>
       <div className="lg:hidden">
-        <MobileWeekList reference={reference} classes={classes} onSelectClass={onSelectClass} />
+        <MobileWeekList
+          reference={reference}
+          classes={classes}
+          onSelectClass={onSelectClass}
+          selectedIds={selectedIds}
+        />
       </div>
       <div className="hidden lg:block">
-        <MonthGrid reference={reference} classes={classes} onSelectClass={onSelectClass} />
+        <MonthGrid
+          reference={reference}
+          classes={classes}
+          onSelectClass={onSelectClass}
+          selectedIds={selectedIds}
+        />
       </div>
     </>
   );

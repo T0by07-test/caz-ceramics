@@ -11,9 +11,10 @@ type Props = {
   reference: Date;
   classes: ClassWithCount[];
   onSelectClass: (c: ClassWithCount) => void;
+  selectedIds?: Set<string>;
 };
 
-export function MonthGrid({ reference, classes, onSelectClass }: Props) {
+export function MonthGrid({ reference, classes, onSelectClass, selectedIds }: Props) {
   const cells = buildMonthGrid(reference);
   const byDay = new Map<string, ClassWithCount[]>();
   for (const c of classes) {
@@ -64,6 +65,7 @@ export function MonthGrid({ reference, classes, onSelectClass }: Props) {
                 {dayClasses.map((c) => {
                   const level = capacityLevel(c.booked_count, c.capacity_max);
                   const cancelled = c.status !== "scheduled";
+                  const picked = selectedIds?.has(c.id) ?? false;
                   return (
                     <li key={c.id}>
                       <button
@@ -73,7 +75,9 @@ export function MonthGrid({ reference, classes, onSelectClass }: Props) {
                           "flex w-full items-center gap-1.5 rounded-md border border-border px-1.5 py-1 text-left text-xs transition-colors",
                           cancelled
                             ? "bg-muted text-muted-foreground line-through"
-                            : "bg-background hover:bg-accent hover:text-foreground",
+                            : picked
+                              ? "border-primary bg-primary/10 text-foreground"
+                              : "bg-background hover:bg-accent hover:text-foreground",
                         ].join(" ")}
                       >
                         <span

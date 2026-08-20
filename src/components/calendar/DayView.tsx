@@ -6,13 +6,19 @@ type Props = {
   reference: Date;
   classes: ClassWithCount[];
   onSelectClass: (c: ClassWithCount) => void;
+  selectedIds?: Set<string>;
 };
 
-export function DayView({ reference, classes, onSelectClass }: Props) {
+export function DayView({ reference, classes, onSelectClass, selectedIds }: Props) {
   return (
     <div className="space-y-3">
       <h2 className="text-h2 capitalize">{formatDayTitle(reference)}</h2>
-      <AgendaList classes={classes} onSelectClass={onSelectClass} emptyLabel="No hay clases este día." />
+      <AgendaList
+        classes={classes}
+        onSelectClass={onSelectClass}
+        emptyLabel="No hay clases este día."
+        selectedIds={selectedIds}
+      />
     </div>
   );
 }

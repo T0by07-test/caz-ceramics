@@ -11,9 +11,10 @@ type Props = {
   reference: Date;
   classes: ClassWithCount[];
   onSelectClass: (c: ClassWithCount) => void;
+  selectedIds?: Set<string>;
 };
 
-export function MobileWeekList({ reference, classes, onSelectClass }: Props) {
+export function MobileWeekList({ reference, classes, onSelectClass, selectedIds }: Props) {
   // Show all classes within the visible month (matches month grid range).
   const monthOnly = classes.filter((c) => {
     const [, m] = c.date.split("-").map(Number);
@@ -45,12 +46,18 @@ export function MobileWeekList({ reference, classes, onSelectClass }: Props) {
             {(grouped.get(day) ?? []).map((c) => {
               const level = capacityLevel(c.booked_count, c.capacity_max);
               const cancelled = c.status !== "scheduled";
+              const picked = selectedIds?.has(c.id) ?? false;
               return (
                 <li key={c.id}>
                   <button
                     type="button"
                     onClick={() => onSelectClass(c)}
-                    className="flex w-full items-center gap-3 rounded-xl border border-border bg-surface p-3 text-left shadow-card transition-colors hover:bg-accent"
+                    className={[
+                      "flex w-full items-center gap-3 rounded-xl border p-3 text-left shadow-card transition-colors",
+                      picked
+                        ? "border-primary bg-primary/10"
+                        : "border-border bg-surface hover:bg-accent",
+                    ].join(" ")}
                   >
                     <span
                       className={[
