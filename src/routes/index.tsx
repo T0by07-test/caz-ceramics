@@ -41,18 +41,13 @@ export const Route = createFileRoute("/")({
 const STEPS = [
   {
     n: "01",
-    title: "Cuéntanos qué buscas",
-    body: "Completa el formulario y dinos qué días y horarios te vienen bien. También puedes contarnos si tienes experiencia previa o si es tu primera vez.",
+    title: "Si es tu primera vez",
+    body: "Te explicamos cómo funcionan las clases y podrás elegir entre una clase de prueba o clases regulares. Si ya eres alumno/a regular, podrás elegir clases en los días y horarios que mejor se adapten a ti.",
   },
   {
     n: "02",
-    title: "Buscamos el grupo para ti",
-    body: "Revisamos los horarios disponibles y buscamos la opción que mejor encaje contigo.",
-  },
-  {
-    n: "03",
-    title: "Empieza a crear",
-    body: "Te confirmamos tu horario y recibirás acceso a tu cuenta. Desde ahí, cada mes reservas, cambias o cancelas tus clases en el calendario: igual para quien empieza y para quien ya viene al estudio.",
+    title: "Reserva desde la plataforma",
+    body: "Cada mes podrás reservar, cambiar o cancelar tus clases en el calendario. Igual para quien empieza como para quien ya es alumno/a regular.",
   },
 ];
 
