@@ -889,6 +889,10 @@ export type Database = {
         Args: { p_granted_class_ids: string[]; p_request_id: string }
         Returns: string
       }
+      accept_paid_enrollment_request: {
+        Args: { p_request_id: string }
+        Returns: string
+      }
       admin_grant_makeup: {
         Args: { p_reason: string; p_student_id: string }
         Returns: string
