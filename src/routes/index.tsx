@@ -148,10 +148,6 @@ function Index() {
           </div>
 
           <InfoDialog open={infoOpen} onOpenChange={setInfoOpen} />
-          <p className="mt-4 text-xs text-muted-foreground">
-            Cuéntanos qué días y horarios te vienen bien y te contactaremos para
-            encontrar el grupo adecuado para ti.
-          </p>
         </section>
 
         {/* Cómo funciona */}
@@ -415,12 +411,12 @@ function TrialBooking() {
     void (async () => {
       const { data, error } = await supabase
         .from("classes")
-        .select("id, date, start_time, end_time, audience")
+        .select("id, date, start_time, end_time, audience, teacher")
         .eq("status", "scheduled")
         .gte("date", toIsoDate(new Date()))
         .order("date", { ascending: true })
         .order("start_time", { ascending: true })
-        .limit(80);
+        .limit(500);
       if (error) {
         toast.error("No se pudieron cargar las clases", { description: error.message });
         setClasses([]);
