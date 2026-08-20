@@ -45,10 +45,7 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: "Invalid email" }, 400);
       }
 
-      const adminPublic = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-      );
+      const adminPublic = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
       const { data: klass, error: cErr } = await adminPublic
         .from("classes")
         .select("id, date, start_time, status, capacity_max")
@@ -103,10 +100,7 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: authHeader } } },
     );
-    const admin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
     const { data: userData, error: authError } = await supabase.auth.getUser();
     if (authError || !userData?.user) return jsonResponse({ error: "Authentication required" }, 401);
@@ -146,24 +140,33 @@ Deno.serve(async (req) => {
       purpose,
     };
 
+    let bookingIds: string[] = [];
     if (purpose === "drop_in") {
-      const bookingId = body.bookingId as string | undefined;
-      if (!bookingId || !/^[0-9a-f-]{36}$/i.test(bookingId)) {
-        return jsonResponse({ error: "Invalid bookingId" }, 400);
+      const rawIds = body.bookingIds as string[] | undefined;
+      if (!Array.isArray(rawIds) || rawIds.length === 0) {
+        return jsonResponse({ error: "Invalid bookingIds" }, 400);
       }
-      // Verify the booking belongs to this user and is reserved drop-in
-      const { data: booking, error: bErr } = await admin
+      bookingIds = Array.from(new Set(rawIds));
+      if (bookingIds.some((id) => !/^[0-9a-f-]{36}$/i.test(id))) {
+        return jsonResponse({ error: "Invalid bookingIds" }, 400);
+      }
+      // Verify every booking belongs to this user and is reserved drop-in
+      const { data: bookings, error: bErr } = await admin
         .from("bookings")
         .select("id, student_id, source, status")
-        .eq("id", bookingId)
-        .single();
-      if (bErr || !booking) return jsonResponse({ error: "Booking not found" }, 404);
-      if (booking.student_id !== user.id) return jsonResponse({ error: "Not your booking" }, 403);
-      if (booking.source !== "drop_in" || booking.status !== "reserved") {
-        return jsonResponse({ error: "Booking is not pending payment" }, 400);
+        .in("id", bookingIds);
+      if (bErr || !bookings || bookings.length !== bookingIds.length) {
+        return jsonResponse({ error: "Booking not found" }, 404);
+      }
+      for (const booking of bookings) {
+        if (booking.student_id !== user.id) return jsonResponse({ error: "Not your booking" }, 403);
+        if (booking.source !== "drop_in" || booking.status !== "reserved") {
+          return jsonResponse({ error: "Booking is not pending payment" }, 400);
+        }
       }
       priceId = "drop_in_class_single";
-      metadata.bookingId = bookingId;
+      metadata.bookingIds = bookingIds.join(",");
+      metadata.classCount = String(bookingIds.length);
     } else if (purpose === "plan") {
       const planId = body.planId as string | undefined;
       if (!planId || !/^[0-9a-f-]{36}$/i.test(planId)) {
@@ -188,7 +191,7 @@ Deno.serve(async (req) => {
     const stripePrice = prices.data[0];
 
     const sessionParams: Record<string, unknown> = {
-      line_items: [{ price: stripePrice.id, quantity: 1 }],
+      line_items: [{ price: stripePrice.id, quantity: purpose === "drop_in" ? bookingIds.length : 1 }],
       mode: "payment",
       customer_email: user.email ?? undefined,
       metadata,
@@ -208,16 +211,23 @@ Deno.serve(async (req) => {
     }
     const session = await stripe.checkout.sessions.create(sessionParams);
 
-    // Insert pending payment row (idempotency on stripe_session_id)
-    const paymentRow: Record<string, unknown> = {
+    // Insert pending payment row(s). Idempotency on (stripe_session_id, booking_id).
+    // A drop-in checkout gets one row per booked class so per-class amounts and
+    // attendance/refund records stay granular even though it's a single Stripe charge.
+    const basePaymentRow: Record<string, unknown> = {
       student_id: user.id,
       amount_cents: stripePrice.unit_amount ?? 0,
       status: "pending",
       stripe_session_id: session.id,
     };
-    if (paymentMethod) paymentRow.method = paymentMethod;
-    if (purpose === "drop_in") paymentRow.booking_id = metadata.bookingId;
-    await admin.from("payments").insert(paymentRow);
+    if (paymentMethod) basePaymentRow.method = paymentMethod;
+    if (purpose === "drop_in") {
+      await admin
+        .from("payments")
+        .insert(bookingIds.map((bookingId) => ({ ...basePaymentRow, booking_id: bookingId })));
+    } else {
+      await admin.from("payments").insert(basePaymentRow);
+    }
 
     return jsonResponse({
       clientSecret: session.client_secret,
