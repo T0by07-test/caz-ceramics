@@ -96,7 +96,7 @@ function PlanesPage() {
         <span className="text-label uppercase">Suscripciones</span>
         <h1 className="text-h1 mt-1">Planes mensuales</h1>
         <p className="text-body mt-2 text-muted-foreground">
-          Compra tu plan del mes. Los créditos se reinician cada mes y no se acumulan.
+          Compra tu plan del mes y reserva las clases que quieras según disponibilidad.
         </p>
       </div>
 

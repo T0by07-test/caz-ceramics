@@ -3,13 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
 /**
- * Returns the signed-in student's subscription for the given month
+ * Returns whether the signed-in student has a plan for the given month
  * (defaults to the current month). Refreshes when subscriptions change.
  */
 export function useMyPlan(month?: Date) {
   const { user } = useAuth();
-  const [creditsRemaining, setCreditsRemaining] = useState<number | null>(null);
-  const [creditsTotal, setCreditsTotal] = useState<number | null>(null);
+  const [hasPlan, setHasPlan] = useState(false);
+  const [planName, setPlanName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refMonth = month ?? new Date();
@@ -17,20 +17,21 @@ export function useMyPlan(month?: Date) {
 
   const fetchPlan = useCallback(async () => {
     if (!user) {
-      setCreditsRemaining(null);
-      setCreditsTotal(null);
+      setHasPlan(false);
+      setPlanName(null);
       setLoading(false);
       return;
     }
     setLoading(true);
     const { data } = await supabase
       .from("subscriptions")
-      .select("credits_remaining, credits_total")
+      .select("id, plans(name)")
       .eq("student_id", user.id)
       .eq("month", monthIso)
       .maybeSingle();
-    setCreditsRemaining(data?.credits_remaining ?? 0);
-    setCreditsTotal(data?.credits_total ?? 0);
+    setHasPlan(Boolean(data?.id));
+    const planRel = (data as { plans?: { name?: string | null } | null } | null)?.plans;
+    setPlanName(planRel?.name ?? null);
     setLoading(false);
   }, [user, monthIso]);
 
@@ -53,5 +54,5 @@ export function useMyPlan(month?: Date) {
     };
   }, [user, monthIso, fetchPlan]);
 
-  return { creditsRemaining, creditsTotal, loading, refresh: fetchPlan };
+  return { hasPlan, planName, loading, refresh: fetchPlan };
 }

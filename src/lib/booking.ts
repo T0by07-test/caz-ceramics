@@ -19,6 +19,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   NO_CREDITS_REMAINING: "No te quedan créditos en tu plan este mes.",
   BOOKING_NOT_FOUND: "La reserva no existe.",
   NOT_OWNER: "No puedes cancelar una reserva que no es tuya.",
+  ALREADY_BOOKED: "Ya tienes una reserva en esta clase.",
+  NO_MAKEUPS_AVAILABLE: "No tienes recuperaciones disponibles.",
 };
 
 export function friendlyError(raw: string | undefined | null): string {
@@ -36,6 +38,19 @@ export async function bookClass(classId: string, source: BookSource): Promise<Bo
   const row = Array.isArray(data) ? data[0] : data;
   if (!row) throw new Error("Respuesta vacía del servidor.");
   return row as BookResult;
+}
+
+export async function bookMakeup(classId: string): Promise<{ booking_id: string; makeup_id: string }> {
+  const { data, error } = await (supabase.rpc as unknown as (
+    fn: string,
+    args: Record<string, unknown>,
+  ) => Promise<{ data: unknown; error: { message: string } | null }>)("book_makeup", {
+    p_class_id: classId,
+  });
+  if (error) throw new Error(friendlyError(error.message));
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) throw new Error("Respuesta vacía del servidor.");
+  return row as { booking_id: string; makeup_id: string };
 }
 
 export async function cancelBooking(bookingId: string): Promise<CancelResult> {
