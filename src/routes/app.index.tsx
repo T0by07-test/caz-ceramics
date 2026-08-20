@@ -424,6 +424,17 @@ function ClassDetailsSheet({
           });
           return clientSecret;
         }}
+        fetchHostedUrl={async () => {
+          if (!pendingBookingId) throw new Error("No booking");
+          const returnUrl = `${window.location.origin}/app/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`;
+          const { url } = await createDropInCheckout({
+            bookingId: pendingBookingId,
+            returnUrl,
+            paymentMethod: dropInMethod,
+            hosted: true,
+          });
+          return url;
+        }}
       />
     </>
   );
