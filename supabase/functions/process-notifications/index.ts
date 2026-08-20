@@ -240,16 +240,14 @@ function buildContentVariables(
     case "reminder_24h":
       return { "1": name, "2": date, "3": start, "4": end };
     case "monthly_summary": {
-      const used = Number(payload.credits_used ?? 0);
-      const total = Number(payload.credits_total ?? 0);
-      const remaining = Number(payload.credits_remaining ?? 0);
       const makeups = Number(payload.makeups_pending ?? 0);
+      const booked = Number(payload.classes_booked ?? 0);
+      const attended = Number(payload.classes_attended ?? 0);
       return {
         "1": name,
-        "2": String(used),
-        "3": String(total),
-        "4": String(remaining),
-        "5": String(makeups),
+        "2": String(booked),
+        "3": String(attended),
+        "4": String(makeups),
       };
     }
     case "payment_reminder":
