@@ -38,10 +38,10 @@ export async function createDropInCheckout({
   if (error) throw new Error(error.message);
   if (hosted) {
     if (!data?.url) throw new Error(data?.error ?? "No checkout URL returned");
-    return data as { url: string; sessionId: string };
+  } else if (!data?.clientSecret) {
+    throw new Error(data?.error ?? "No clientSecret returned");
   }
-  if (!data?.clientSecret) throw new Error(data?.error ?? "No clientSecret returned");
-  return data as { clientSecret: string; sessionId: string; url?: string };
+  return data as { clientSecret: string; url: string; sessionId: string };
 }
 
 export async function createPlanCheckout({
@@ -65,10 +65,10 @@ export async function createPlanCheckout({
   if (error) throw new Error(error.message);
   if (hosted) {
     if (!data?.url) throw new Error(data?.error ?? "No checkout URL returned");
-    return data as { url: string; sessionId: string };
+  } else if (!data?.clientSecret) {
+    throw new Error(data?.error ?? "No clientSecret returned");
   }
-  if (!data?.clientSecret) throw new Error(data?.error ?? "No clientSecret returned");
-  return data as { clientSecret: string; sessionId: string; url?: string };
+  return data as { clientSecret: string; url: string; sessionId: string };
 }
 
 type CreateTrialArgs = { classId: string; email: string; name?: string; returnUrl: string };
