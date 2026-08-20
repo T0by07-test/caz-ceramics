@@ -101,6 +101,7 @@ export type Database = {
           instructor_id: string | null
           start_time: string
           status: string
+          teacher: string | null
           title: string | null
         }
         Insert: {
@@ -114,6 +115,7 @@ export type Database = {
           instructor_id?: string | null
           start_time: string
           status?: string
+          teacher?: string | null
           title?: string | null
         }
         Update: {
@@ -127,6 +129,7 @@ export type Database = {
           instructor_id?: string | null
           start_time?: string
           status?: string
+          teacher?: string | null
           title?: string | null
         }
         Relationships: [
