@@ -19,8 +19,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const SHOP_URL = "https://cazuceramics.com";
-
 export const Route = createFileRoute("/")({
   head: () => ({
       meta: [
@@ -108,14 +106,6 @@ function Index() {
           <span className="text-h3">Cazú Ceramics</span>
         </div>
         <nav className="flex items-center gap-5">
-          <a
-            href={SHOP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:inline"
-          >
-            Tienda
-          </a>
           <Link
             to="/login"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -154,7 +144,6 @@ function Index() {
         <section className="mt-20 sm:mt-28">
           <div className="text-center">
             <span className="text-label uppercase">¿CÓMO FUNCIONA?</span>
-            <h2 className="text-h2 mt-2">Encontramos tu lugar en el estudio</h2>
           </div>
           <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {STEPS.map((s) => (
@@ -176,7 +165,6 @@ function Index() {
         <section className="mt-20 sm:mt-28">
           <div className="text-center">
             <span className="text-label uppercase">Planes mensuales</span>
-            <h2 className="text-h2 mt-2">Elige cuánto quieres crear</h2>
             <p className="text-body mx-auto mt-3 max-w-xl text-muted-foreground">
               Elige cuántas clases quieres hacer al mes y cuéntanos qué días y
               horarios te vienen bien. Te ayudaremos a encontrar el grupo que mejor
@@ -254,8 +242,8 @@ function Index() {
               </span>
               <h3 className="mt-4 text-base font-semibold">Avisa con tiempo</h3>
               <p className="mt-1.5 text-sm text-muted-foreground">
-                Cancela tu clase con al menos 24 horas de antelación (el día anterior)
-                para no perderla. Así podemos ofrecer tu plaza a alguien más.
+                Cancela tu clase con al menos 12 horas de antelación para no perderla.
+                Así podemos ofrecer tu plaza a alguien más.
               </p>
             </li>
             <li className="rounded-2xl border border-border bg-surface p-5 shadow-card">
@@ -276,7 +264,7 @@ function Index() {
                 Si cancelas tarde o no vienes
               </h3>
               <p className="mt-1.5 text-sm text-muted-foreground">
-                Si cancelas con menos de 24 horas o no asistes sin avisar, esa clase se
+                Si cancelas con menos de 12 horas o no asistes sin avisar, esa clase se
                 cuenta como utilizada y no se puede recuperar.
               </p>
             </li>
@@ -285,23 +273,6 @@ function Index() {
             Las clases recuperadas deben usarse dentro del mismo mes natural. No se
             acumulan ni se trasladan al mes siguiente.
           </p>
-        </section>
-
-        {/* Tienda / shop */}
-        <section className="mt-20 sm:mt-28">
-          <div className="mx-auto max-w-3xl rounded-xl border border-border bg-surface px-5 py-4 sm:flex sm:items-center sm:justify-between sm:gap-6">
-            <div>
-              <h2 className="text-base font-semibold">¿Te gusta la cerámica de Cazú?</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Descubre nuestras piezas hechas a mano en la tienda.
-              </p>
-            </div>
-            <Button asChild variant="secondary" className="mt-4 w-full sm:mt-0 sm:w-auto">
-              <a href={SHOP_URL} target="_blank" rel="noopener noreferrer">
-                Visitar la tienda
-              </a>
-            </Button>
-          </div>
         </section>
 
         {/* Closing CTA */}
