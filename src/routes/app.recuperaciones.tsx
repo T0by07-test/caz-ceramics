@@ -145,7 +145,7 @@ function RecuperacionesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <span className="text-label uppercase">Tus créditos</span>
+        <span className="text-label uppercase">Clases por recuperar</span>
         <h1 className="text-h1 mt-1">Recuperaciones</h1>
         <p className="text-body mt-2 text-muted-foreground">
           Te quedan <strong>{loading ? "—" : remaining}</strong>{" "}
@@ -160,7 +160,7 @@ function RecuperacionesPage() {
               key={m.id}
               className="flex items-center justify-between rounded-xl border border-border bg-surface p-3 text-sm shadow-card"
             >
-              <span>Crédito de recuperación</span>
+              <span>Clase por recuperar</span>
               <Badge variant="outline">
                 Caduca {new Date(m.expires_at).toLocaleDateString("es-ES")}
               </Badge>
@@ -208,7 +208,7 @@ function RecuperacionesPage() {
           {selected ? (
             <div className="mt-6 space-y-4 px-4">
               <p className="text-sm text-muted-foreground">
-                Vas a usar uno de tus créditos de recuperación para esta clase.
+                Vas a usar una de tus clases por recuperar para esta clase.
               </p>
               <Button
                 className="w-full"
