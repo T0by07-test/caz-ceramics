@@ -52,7 +52,7 @@ const STEPS = [
   {
     n: "03",
     title: "Empieza a crear",
-    body: "Te confirmamos tu horario y recibirás acceso a tu cuenta para gestionar tus clases y reservas desde el calendario.",
+    body: "Te confirmamos tu horario y recibirás acceso a tu cuenta. Desde ahí, cada mes reservas, cambias o cancelas tus clases en el calendario: igual para quien empieza y para quien ya viene al estudio.",
   },
 ];
 
