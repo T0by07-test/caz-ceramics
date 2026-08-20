@@ -781,8 +781,6 @@ export type Database = {
       subscriptions: {
         Row: {
           created_at: string
-          credits_remaining: number
-          credits_total: number
           id: string
           month: string
           plan_id: string
@@ -790,8 +788,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          credits_remaining: number
-          credits_total: number
           id?: string
           month: string
           plan_id: string
@@ -799,8 +795,6 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          credits_remaining?: number
-          credits_total?: number
           id?: string
           month?: string
           plan_id?: string
