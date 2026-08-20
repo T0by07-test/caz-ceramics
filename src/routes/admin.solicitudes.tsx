@@ -347,6 +347,9 @@ function RequestDetailSheet({
                 <Badge variant={STATUS_BADGE[request.status].variant}>
                   {STATUS_BADGE[request.status].label}
                 </Badge>
+                {request.message?.includes("Clase de prueba pagada") ? (
+                  <Badge variant="outline">Pagada online</Badge>
+                ) : null}
                 <span className="text-xs text-muted-foreground">
                   Recibida el{" "}
                   {new Date(request.created_at).toLocaleDateString("es-ES", {
