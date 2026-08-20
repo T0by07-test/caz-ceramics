@@ -110,6 +110,19 @@ function PlanesPage() {
     return clientSecret;
   }, [activePlan, paymentMethod, month]);
 
+  const fetchHostedUrl = useCallback(async () => {
+    if (!activePlan) throw new Error("No plan selected");
+    const returnUrl = `${window.location.origin}/app/plan-exitoso?session_id={CHECKOUT_SESSION_ID}`;
+    const { url } = await createPlanCheckout({
+      planId: activePlan.id,
+      returnUrl,
+      paymentMethod,
+      month,
+      hosted: true,
+    });
+    return url;
+  }, [activePlan, paymentMethod, month]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -274,6 +287,7 @@ function PlanesPage() {
         }}
         title={activePlan ? `Comprar ${activePlan.name}` : "Comprar plan"}
         fetchClientSecret={fetchClientSecret}
+        fetchHostedUrl={fetchHostedUrl}
       />
     </div>
   );
