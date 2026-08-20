@@ -41,18 +41,13 @@ export const Route = createFileRoute("/")({
 const STEPS = [
   {
     n: "01",
-    title: "Cuéntanos qué buscas",
-    body: "Completa el formulario y dinos qué días y horarios te vienen bien. También puedes contarnos si tienes experiencia previa o si es tu primera vez.",
+    title: "Si es tu primera vez",
+    body: "Te explicamos cómo funcionan las clases y podrás elegir entre una clase de prueba o clases regulares. Si ya eres alumno/a regular, podrás elegir clases en los días y horarios que mejor se adapten a ti.",
   },
   {
     n: "02",
-    title: "Buscamos el grupo para ti",
-    body: "Revisamos los horarios disponibles y buscamos la opción que mejor encaje contigo.",
-  },
-  {
-    n: "03",
-    title: "Empieza a crear",
-    body: "Te confirmamos tu horario y recibirás acceso a tu cuenta. Desde ahí, cada mes reservas, cambias o cancelas tus clases en el calendario: igual para quien empieza y para quien ya viene al estudio.",
+    title: "Reserva desde la plataforma",
+    body: "Cada mes podrás reservar, cambiar o cancelar tus clases en el calendario. Igual para quien empieza como para quien ya es alumno/a regular.",
   },
 ];
 
@@ -143,13 +138,9 @@ function Index() {
         {/* Cómo funciona */}
         <section className="mt-20 sm:mt-28">
           <div className="text-center">
-            <span className="text-label uppercase">¿CÓMO FUNCIONA?</span>
-            <p className="text-body mx-auto mt-3 max-w-xl text-muted-foreground">
-              Si es tu primera vez, empieza por el paso 01. Si ya eres alumno/a, entra
-              con tu cuenta y ve directo al calendario para reservar tus clases del mes.
-            </p>
+            <h2 className="text-h2">¿Cómo funciona?</h2>
           </div>
-          <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ol className="mx-auto mt-8 grid max-w-3xl gap-4 sm:grid-cols-2">
             {STEPS.map((s) => (
               <li
                 key={s.n}
@@ -168,11 +159,9 @@ function Index() {
         {/* Planes / precios */}
         <section className="mt-20 sm:mt-28">
           <div className="text-center">
-            <span className="text-label uppercase">Planes mensuales</span>
+            <h2 className="text-h2">Planes mensuales</h2>
             <p className="text-body mx-auto mt-3 max-w-xl text-muted-foreground">
-              Elige cuántas clases quieres hacer al mes y cuéntanos qué días y
-              horarios te vienen bien. Te ayudaremos a encontrar el grupo que mejor
-              encaje contigo.
+              Elige cuántas clases quieres hacer en el mes.
             </p>
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -199,6 +188,11 @@ function Index() {
                   <span className="text-2xl font-semibold tabular-nums">{p.price}</span>
                   <span className="text-sm text-muted-foreground">{p.period}</span>
                 </div>
+                {p.classes === "1 clase" ? (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    La clase de prueba de un solo día son 35 €.
+                  </p>
+                ) : null}
               </div>
             ))}
           </div>
