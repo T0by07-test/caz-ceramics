@@ -14,7 +14,7 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
-const TRIAL_AMOUNT_CENTS = 3000;
+const TRIAL_PRICE_LOOKUP_KEY = "trial_class_single";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
@@ -59,25 +59,28 @@ Deno.serve(async (req) => {
       }
 
       const publicStripe = createStripeClient(environment);
+      const trialPrices = await publicStripe.prices.list({
+        lookup_keys: [TRIAL_PRICE_LOOKUP_KEY],
+        limit: 1,
+      });
+      if (!trialPrices.data.length) {
+        return jsonResponse({ error: `Price ${TRIAL_PRICE_LOOKUP_KEY} not found in Stripe` }, 500);
+      }
       const publicSession = await publicStripe.checkout.sessions.create({
         mode: "payment",
-        line_items: [
-          {
-            quantity: 1,
-            price_data: {
-              currency: "eur",
-              unit_amount: TRIAL_AMOUNT_CENTS,
-              product_data: {
-                name: "Clase de prueba de cerámica (2 h)",
-                description: `Cazú Ceramics · ${klass.date} ${String(klass.start_time).slice(0, 5)}`,
-              },
-            },
-          },
-        ],
+        line_items: [{ price: trialPrices.data[0].id, quantity: 1 }],
         customer_email: email,
         success_url: `${returnUrl}?pago=ok`,
         cancel_url: `${returnUrl}?pago=cancelado`,
-        metadata: { purpose: "public_trial", classId, email, name: name ?? "" },
+        payment_intent_data: { description: "Clase de prueba de cerámica (2 h)" },
+        metadata: {
+          purpose: "public_trial",
+          classId,
+          email,
+          name: name ?? "",
+          classDate: String(klass.date),
+          classTime: String(klass.start_time).slice(0, 5),
+        },
       });
       return jsonResponse({ url: publicSession.url, sessionId: publicSession.id });
     }

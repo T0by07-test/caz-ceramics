@@ -440,7 +440,7 @@ function TrialBooking() {
   return (
     <div className="mt-3 space-y-3">
       <p className="text-xs text-muted-foreground">
-        Elige el día y la hora que te vengan bien (30 € · 2 h).
+        Elige el día y la hora que te vengan bien (35 € · 2 h).
       </p>
       <PublicClassCalendar
         monthRef={monthRef}
@@ -475,7 +475,7 @@ function TrialBooking() {
         </div>
       </div>
       <Button className="w-full" disabled={loadingPay} onClick={handlePay}>
-        {loadingPay ? "Abriendo el pago…" : "Reservar y pagar 30 €"}
+        {loadingPay ? "Abriendo el pago…" : "Reservar y pagar 35 €"}
       </Button>
       <p className="text-center text-xs text-muted-foreground">
         Pago seguro con Stripe. Recibirás la confirmación por correo.
