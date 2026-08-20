@@ -918,6 +918,13 @@ export type Database = {
           status: string
         }[]
       }
+      book_makeup: {
+        Args: { p_class_id: string }
+        Returns: {
+          booking_id: string
+          makeup_id: string
+        }[]
+      }
       can_manage_classes: { Args: never; Returns: boolean }
       cancel_booking: {
         Args: { p_booking_id: string }
