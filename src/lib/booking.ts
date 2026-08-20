@@ -16,7 +16,6 @@ const ERROR_MESSAGES: Record<string, string> = {
   CLASS_NOT_SCHEDULED: "Esta clase no está disponible.",
   CLASS_FULL: "La clase está completa.",
   NO_PLAN_THIS_MONTH: "No tienes un plan activo este mes.",
-  NO_CREDITS_REMAINING: "No te quedan créditos en tu plan este mes.",
   BOOKING_NOT_FOUND: "La reserva no existe.",
   NOT_OWNER: "No puedes cancelar una reserva que no es tuya.",
   ALREADY_BOOKED: "Ya tienes una reserva en esta clase.",
@@ -63,12 +62,15 @@ export async function cancelBooking(bookingId: string): Promise<CancelResult> {
   return row as CancelResult;
 }
 
-/** Returns true iff cancellation right now would be recoverable (>3h before start). */
+/** Cancellation window (hours before class start) for a recoverable cancellation. */
+export const CANCELLATION_WINDOW_HOURS = 12;
+
+/** Returns true iff cancellation right now would be recoverable (>12h before start). */
 export function isRecoverableNow(classDateIso: string, startTime: string): boolean {
   const [y, m, d] = classDateIso.split("-").map(Number);
   const [hh, mm] = startTime.split(":").map(Number);
   // Treat the stored values as Europe/Madrid wall-clock — close enough for the
   // cutoff display (server enforces the real boundary).
   const start = new Date(y, m - 1, d, hh, mm, 0).getTime();
-  return Date.now() < start - 3 * 60 * 60 * 1000;
+  return Date.now() < start - CANCELLATION_WINDOW_HOURS * 60 * 60 * 1000;
 }
