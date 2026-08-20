@@ -12,10 +12,88 @@ function admin() {
   return _admin;
 }
 
+function monthKey(date: string): string {
+  return date.slice(0, 7);
+}
+
+// Mirrors a confirmed Stripe payment into the admin income ledger (/admin/registro).
+async function recordLedgerIncome(params: {
+  studentName: string;
+  item: string;
+  category: string;
+  amountCents: number;
+  notes?: string;
+}) {
+  const today = new Date().toISOString().slice(0, 10);
+  const { error } = await admin().from("ledger_entries").insert({
+    entry_date: today,
+    month: monthKey(today),
+    student_name: params.studentName,
+    item: params.item,
+    category: params.category,
+    amount_cents: params.amountCents,
+    method: "T",
+    status: "Pagado",
+    notes: params.notes ?? "Cobro automático con Stripe",
+  });
+  if (error) console.error("Failed to record ledger income", error);
+}
+
+// Public trial class paid from the landing page (buyer has no account yet):
+// register it as a pending enrollment request linked to the chosen class so the
+// studio owner can review it and send the invite.
+async function handlePublicTrial(session: any) {
+  const md = (session.metadata ?? {}) as Record<string, string>;
+  const email = md.email ?? session.customer_details?.email ?? null;
+  const fullName = (md.name ?? "").trim();
+  const [name, ...rest] = fullName.split(/\s+/);
+  const amount = (session.amount_total as number | null) ?? 0;
+
+  const { data: request, error: reqError } = await admin()
+    .from("enrollment_requests")
+    .insert({
+      name: name || "Sin nombre",
+      surname: rest.join(" ") || null,
+      email,
+      message: `Clase de prueba pagada (${(amount / 100).toFixed(2)} €) · ${md.classDate ?? ""} ${md.classTime ?? ""}`.trim(),
+      status: "pending",
+    })
+    .select("id")
+    .single();
+  if (reqError || !request) {
+    console.error("Failed to create trial enrollment request", reqError);
+    return;
+  }
+  if (md.classId) {
+    const { error: linkError } = await admin()
+      .from("enrollment_request_classes")
+      .insert({ request_id: request.id, class_id: md.classId, granted: false });
+    if (linkError) console.error("Failed to link trial class", linkError);
+  }
+  await recordLedgerIncome({
+    studentName: fullName || email || "Clase de prueba",
+    item: "Clase de prueba",
+    category: "Suelta",
+    amountCents: amount,
+    notes: `Clase de prueba pagada online · ${md.classDate ?? ""} ${md.classTime ?? ""}`.trim(),
+  });
+}
+
 async function handleSessionCompleted(session: any, _env: StripeEnv) {
   const md = (session.metadata ?? {}) as Record<string, string>;
   const sessionId = session.id as string;
   const purpose = md.purpose;
+
+  // Delayed-notification methods (e.g. SEPA) settle later; wait for the async event.
+  if (session.payment_status === "unpaid") {
+    console.log("Session not paid yet, waiting for settlement", { sessionId });
+    return;
+  }
+
+  if (purpose === "public_trial") {
+    await handlePublicTrial(session);
+    return;
+  }
 
   if (purpose === "drop_in") {
     await admin().rpc("confirm_drop_in_booking", { p_session_id: sessionId });
@@ -34,6 +112,25 @@ async function handleSessionCompleted(session: any, _env: StripeEnv) {
   } else {
     console.warn("Unknown purpose in metadata", { sessionId, purpose });
     return;
+  }
+
+  // Mirror the income into the admin ledger with the student's name.
+  const amountForLedger = (session.amount_total as number | null) ?? 0;
+  if (md.userId) {
+    const { data: profile } = await admin()
+      .from("profiles")
+      .select("name, surname")
+      .eq("id", md.userId)
+      .maybeSingle();
+    const studentName = [profile?.name, profile?.surname].filter(Boolean).join(" ")
+      || session.customer_details?.email
+      || "Alumna";
+    await recordLedgerIncome({
+      studentName,
+      item: purpose === "plan" ? "Plan mensual" : "Clase suelta",
+      category: purpose === "plan" ? "Clases" : "Suelta",
+      amountCents: amountForLedger,
+    });
   }
 
   // Record the real paid amount on the payment row (the confirming RPCs above
