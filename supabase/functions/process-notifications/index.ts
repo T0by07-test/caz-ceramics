@@ -203,6 +203,8 @@ function resolveContentSid(type: string, payload: Record<string, unknown>): stri
       return Deno.env.get("TWILIO_TEMPLATE_RESERVATION_CONFIRMED");
     case "plan_purchased":
       return Deno.env.get("TWILIO_TEMPLATE_PLAN_PURCHASED");
+    case "plan_renewal":
+      return Deno.env.get("TWILIO_TEMPLATE_PLAN_RENEWAL");
     case "reminder_24h":
       return Deno.env.get("TWILIO_TEMPLATE_REMINDER_24H");
     case "class_cancelled":
