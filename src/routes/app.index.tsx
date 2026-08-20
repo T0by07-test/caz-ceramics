@@ -243,6 +243,8 @@ function ClassDetailsSheet({
           </SheetTitle>
           <SheetDescription>
             {cls ? formatTimeRange(cls.start_time, cls.end_time) : ""}
+            {cls?.teacher ? ` · Profe ${cls.teacher}` : ""}
+            {cls?.audience === "kids" ? " · Clase infantil" : ""}
           </SheetDescription>
         </SheetHeader>
         {cls ? (
