@@ -12,9 +12,10 @@ type Props = {
   reference: Date;
   classes: ClassWithCount[];
   onSelectClass: (c: ClassWithCount) => void;
+  selectedIds?: Set<string>;
 };
 
-export function WeekGrid({ reference, classes, onSelectClass }: Props) {
+export function WeekGrid({ reference, classes, onSelectClass, selectedIds }: Props) {
   const days = buildWeekDays(reference);
   const [minH, maxH] = dayHourBounds(classes.map((c) => c.start_time));
   const hours: number[] = [];
@@ -63,6 +64,7 @@ export function WeekGrid({ reference, classes, onSelectClass }: Props) {
                   {cellClasses.map((c) => {
                     const level = capacityLevel(c.booked_count, c.capacity_max);
                     const cancelled = c.status !== "scheduled";
+                    const picked = selectedIds?.has(c.id) ?? false;
                     return (
                       <button
                         key={c.id}
@@ -72,7 +74,9 @@ export function WeekGrid({ reference, classes, onSelectClass }: Props) {
                           "flex w-full items-center gap-1.5 rounded-md border border-border px-1.5 py-1 text-left text-xs transition-colors",
                           cancelled
                             ? "bg-muted text-muted-foreground line-through"
-                            : "bg-background hover:bg-accent hover:text-foreground",
+                            : picked
+                              ? "border-primary bg-primary/10 text-foreground"
+                              : "bg-background hover:bg-accent hover:text-foreground",
                         ].join(" ")}
                       >
                         <span
