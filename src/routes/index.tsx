@@ -159,11 +159,9 @@ function Index() {
         {/* Planes / precios */}
         <section className="mt-20 sm:mt-28">
           <div className="text-center">
-            <span className="text-label uppercase">Planes mensuales</span>
+            <h2 className="text-h2">Planes mensuales</h2>
             <p className="text-body mx-auto mt-3 max-w-xl text-muted-foreground">
-              Elige cuántas clases quieres hacer al mes y cuéntanos qué días y
-              horarios te vienen bien. Te ayudaremos a encontrar el grupo que mejor
-              encaje contigo.
+              Elige cuántas clases quieres hacer en el mes.
             </p>
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
