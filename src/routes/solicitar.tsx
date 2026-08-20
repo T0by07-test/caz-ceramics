@@ -69,7 +69,7 @@ function SolicitarPage() {
       const todayIso = toIsoDate(new Date());
       const { data, error } = await supabase
         .from("classes")
-        .select("id, date, start_time, end_time, audience")
+        .select("id, date, start_time, end_time, audience, teacher")
         .eq("status", "scheduled")
         .gte("date", todayIso)
         .order("date", { ascending: true })

@@ -17,6 +17,7 @@ export type UpcomingClass = {
   start_time: string;
   end_time: string;
   audience: "adults" | "kids";
+  teacher?: string | null;
 };
 
 /** Public month calendar to pick class slots (used on /solicitar and in the info dialog). */
@@ -151,12 +152,19 @@ export function PublicClassCalendar({
                       ].join(" ")}
                     >
                       <Checkbox checked={checked} onCheckedChange={() => onToggle(c.id)} />
-                      <span className="tabular-nums">
-                        {formatTimeRange(c.start_time, c.end_time)}
+                      <span className="flex flex-col">
+                        <span className="tabular-nums">
+                          {formatTimeRange(c.start_time, c.end_time)}
+                        </span>
+                        {c.teacher ? (
+                          <span className="text-xs text-muted-foreground">
+                            Profe {c.teacher}
+                          </span>
+                        ) : null}
                       </span>
                       {c.audience === "kids" ? (
                         <span className="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                          Niños
+                          Clase infantil
                         </span>
                       ) : (
                         <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
