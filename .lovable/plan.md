@@ -1,36 +1,50 @@
-## Diagnóstico
+# Estado de Stripe y limpieza del sistema de créditos
 
-La cuenta `zuzacande@gmail.com` existe en la base de datos:
-- Perfil: `role = 'admin'` ✅ (los permisos están bien)
-- `email_confirmed_at = NULL` ❌
-- `last_sign_in_at = NULL` (nunca ha entrado)
+## 1. ¿Está listo Stripe?
 
-El problema no es la contraseña ni el rol: es que **su email nunca fue confirmado**. Con Supabase, si el email no está confirmado, todos los intentos de login devuelven "Invalid login credentials" (que es exactamente el error que vemos en los logs de auth de hoy antes de que entraras tú). Un simple "reset password" no arregla esto de forma limpia si además no recuerda haber creado contraseña.
+Casi. La conexión con tu cuenta de Stripe está hecha y las claves live ya existen. Falta **el último paso: la verificación final (readiness check)** en la pestaña de Pagos. Hasta que se complete, la web solo cobra en modo prueba.
 
-## Recomendación
+- Cuenta sandbox: conectada
+- Cuenta live: conectada, app de Lovable instalada, claves live creadas
+- Pendiente: comprobación de preparación (readiness check)
 
-En vez de solo resetear la contraseña, hacer las dos cosas juntas en un único paso administrativo:
+## 2. ¿Están bien conectados los productos?
 
-1. **Confirmar su email manualmente** en Auth (marcar `email_confirmed_at = now()`), para que el login deje de rechazarla.
-2. **Enviar un enlace de recuperación** a `zuzacande@gmail.com` para que ella misma establezca una contraseña nueva desde el correo.
+Sí, la conexión es correcta y estable:
 
-Así:
-- No le pasamos ninguna contraseña por chat/WhatsApp (más seguro).
-- Ella hace un solo click en el correo → pone su contraseña → entra directamente al panel admin.
-- Queda cubierto tanto el bloqueo por email sin confirmar como el "no sé mi contraseña".
+| Producto en la web | Precio | Identificador en Stripe |
+|---|---|---|
+| Plan 1 clase/mes | 30 € | plan_1_class_month |
+| Plan 2 clases/mes | 55 € | plan_2_class_month |
+| Plan 3 clases/mes | 70 € | plan_3_class_month |
+| Plan 4 clases/mes | 85 € | plan_4_class_month |
+| Clase de prueba (2 h) | 35 € | trial_class_single |
+| Clase suelta / extra | 20 € | drop_in_class_single |
 
-## Pasos técnicos
+El checkout busca el precio por ese identificador en el momento del pago, así que el importe siempre viene de Stripe (no está escrito a mano en el código). Los cuatro planes de la base de datos apuntan a su producto correcto y están activos.
 
-1. Ejecutar migración puntual que actualice `auth.users.email_confirmed_at` para ese usuario si sigue en `NULL` (idempotente).
-2. Disparar `password recovery` para ese email vía Auth Admin API (server function admin-only, o directamente desde el backend).
-3. Verificar que existe la ruta `/reset-password` en la app — si no existe, crearla (formulario mínimo que llama `supabase.auth.updateUser({ password })` tras detectar `type=recovery` en la URL). Sin esta página el enlace de recuperación solo iniciaría sesión sin permitir cambiar contraseña.
-4. Confirmar por chat cuando el correo esté enviado, para que Cande revise su bandeja (y spam).
+Nota: el precio que se muestre en la web y el de Stripe hay que mantenerlos sincronizados a mano; si cambias un precio en Stripe, hay que cambiar también el texto de la web.
 
-## Alternativa (si prefieres)
+## 3. Limpieza del sistema de créditos
 
-Si no quieres depender del correo, puedo en su lugar:
-- Confirmar el email y **fijar una contraseña temporal** (que te muestro por chat) para que ella entre y la cambie desde Perfil.
+La lógica de reserva ya no usa créditos (con plan del mes pagado se reserva libremente), pero quedan restos que confunden. Se limpian así:
 
-Menos seguro pero inmediato y sin depender de la entrega del email.
+**Base de datos**
+- Quitar las columnas de créditos de las suscripciones (`credits_total`, `credits_remaining`) y actualizar las funciones que aún las escriben: alta de plan por Stripe, alta de plan en efectivo y la función de resumen mensual.
+- Mantener intactas las recuperaciones (las clases canceladas a tiempo siguen guardándose y reservándose dentro del mes).
 
-¿Voy con la **opción recomendada (confirmar email + enviar recovery + asegurar página /reset-password)**, o prefieres la **alternativa con contraseña temporal**?
+**Textos de la app**
+- "Tus créditos están listos" → "Tu plan del mes está activo, ya puedes reservar tus clases".
+- Cancelaciones: cambiar "recuperas el crédito" por "recuperas la clase".
+- Mensajes de error: eliminar "No te quedan créditos en tu plan este mes".
+- Notificaciones (email/WhatsApp): confirmación de reserva, alta de plan y resumen de fin de mes reescritos sin créditos (el resumen pasa a contar clases asistidas y recuperaciones pendientes).
+
+**Incoherencia de la ventana de cancelación**
+La web promete 12 horas, pero la app y la base de datos aplican 3 horas. Propuesta: unificar todo a **12 horas**, que es lo que se comunica públicamente. Si prefieres otro plazo, se cambia en un solo sitio.
+
+## Detalles técnicos
+
+- Migración: `ALTER TABLE public.subscriptions DROP COLUMN credits_total, credits_remaining`; recrear `grant_plan_subscription`, `grant_cash_plan_purchase` y la función de resumen mensual sin esas columnas; regenerar tipos.
+- Ventana de cancelación: constante en `src/lib/booking.ts` + comprobación dentro de `cancel_booking` en la base de datos.
+- Textos: `src/routes/app.plan-exitoso.tsx`, `src/routes/app.reservas.tsx`, `src/lib/booking.ts`, `supabase/functions/process-notifications/index.ts`.
+- Tras la migración conviene publicar para que la versión publicada no quede desalineada con el esquema.
