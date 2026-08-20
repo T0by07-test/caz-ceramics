@@ -138,13 +138,9 @@ function Index() {
         {/* Cómo funciona */}
         <section className="mt-20 sm:mt-28">
           <div className="text-center">
-            <span className="text-label uppercase">¿CÓMO FUNCIONA?</span>
-            <p className="text-body mx-auto mt-3 max-w-xl text-muted-foreground">
-              Si es tu primera vez, empieza por el paso 01. Si ya eres alumno/a, entra
-              con tu cuenta y ve directo al calendario para reservar tus clases del mes.
-            </p>
+            <h2 className="text-h2">¿Cómo funciona?</h2>
           </div>
-          <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ol className="mx-auto mt-8 grid max-w-3xl gap-4 sm:grid-cols-2">
             {STEPS.map((s) => (
               <li
                 key={s.n}
