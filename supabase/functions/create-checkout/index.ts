@@ -51,11 +51,21 @@ Deno.serve(async (req) => {
       );
       const { data: klass, error: cErr } = await adminPublic
         .from("classes")
-        .select("id, date, start_time, status")
+        .select("id, date, start_time, status, capacity_max")
         .eq("id", classId)
         .single();
       if (cErr || !klass || klass.status !== "scheduled") {
         return jsonResponse({ error: "Class not available" }, 404);
+      }
+
+      // Don't sell a trial seat for a class that is already full.
+      const { count: bookedCount } = await adminPublic
+        .from("bookings")
+        .select("id", { count: "exact", head: true })
+        .eq("class_id", classId)
+        .in("status", ["reserved", "confirmed", "attended"]);
+      if ((bookedCount ?? 0) >= (klass.capacity_max ?? 7)) {
+        return jsonResponse({ error: "Class full" }, 409);
       }
 
       const publicStripe = createStripeClient(environment);
@@ -103,11 +113,12 @@ Deno.serve(async (req) => {
     const user = userData.user;
 
     const body = rawBody;
-    const { purpose, environment, returnUrl, paymentMethod } = body as {
+    const { purpose, environment, returnUrl, paymentMethod, month } = body as {
       purpose: "drop_in" | "plan";
       environment: StripeEnv;
       returnUrl: string;
       paymentMethod?: "card" | "bizum";
+      month?: string;
     };
     if (environment !== "sandbox" && environment !== "live") {
       return jsonResponse({ error: "Invalid environment" }, 400);
@@ -120,6 +131,11 @@ Deno.serve(async (req) => {
     // may behave as a redirect-based method.
     if (paymentMethod !== undefined && paymentMethod !== "card" && paymentMethod !== "bizum") {
       return jsonResponse({ error: "Invalid paymentMethod" }, 400);
+    }
+    // Optional target month for a plan purchase ("YYYY-MM-01"). The database
+    // enforces which months are actually allowed (current, or next from day 20).
+    if (month !== undefined && !/^\d{4}-\d{2}-01$/.test(month)) {
+      return jsonResponse({ error: "Invalid month" }, 400);
     }
 
     const stripe = createStripeClient(environment);
@@ -160,6 +176,7 @@ Deno.serve(async (req) => {
       if (pErr || !plan || !plan.active) return jsonResponse({ error: "Plan not available" }, 404);
       priceId = plan.stripe_price_id;
       metadata.planId = planId;
+      if (month) metadata.month = month;
     } else {
       return jsonResponse({ error: "Invalid purpose" }, 400);
     }

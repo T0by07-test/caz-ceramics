@@ -11,6 +11,28 @@ import { useAuth } from "@/lib/auth";
 
 type Pref = "both" | "email_only" | "whatsapp_only";
 
+type PaymentRow = {
+  id: string;
+  amount_cents: number;
+  status: string;
+  method: string | null;
+  created_at: string;
+  booking_id: string | null;
+  subscription_id: string | null;
+};
+
+const PAYMENT_STATUS_LABEL: Record<string, string> = {
+  pending: "Pendiente",
+  confirmed: "Pagado",
+  failed: "No completado",
+};
+
+const PAYMENT_METHOD_LABEL: Record<string, string> = {
+  cash: "Efectivo",
+  card: "Tarjeta",
+  bizum: "Bizum",
+};
+
 export const Route = createFileRoute("/app/perfil")({
   head: () => ({ meta: [{ title: "Mi perfil — Cerámica Studio" }] }),
   component: PerfilPage,
@@ -24,6 +46,7 @@ function PerfilPage() {
   const [pref, setPref] = useState<Pref>("both");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [payments, setPayments] = useState<PaymentRow[] | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -44,6 +67,22 @@ function PerfilPage() {
         setPref((data.notification_preference as Pref) ?? "both");
       }
       setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabase
+        .from("payments")
+        .select("id, amount_cents, status, method, created_at, booking_id, subscription_id")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (!cancelled) setPayments((data ?? []) as PaymentRow[]);
     })();
     return () => {
       cancelled = true;
@@ -138,6 +177,49 @@ function PerfilPage() {
           {saving ? "Guardando…" : "Guardar cambios"}
         </Button>
       </div>
+
+      <Card className="space-y-4 p-6">
+        <div>
+          <h2 className="text-h3">Mis pagos</h2>
+          <p className="text-label mt-1 uppercase">Últimos movimientos</p>
+        </div>
+        {payments === null ? (
+          <div className="h-16 animate-pulse rounded-lg bg-background" />
+        ) : payments.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Todavía no tienes pagos registrados.</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {payments.map((p) => (
+              <li key={p.id} className="flex items-center justify-between gap-3 py-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">
+                    {p.subscription_id ? "Plan mensual" : "Clase suelta"}
+                    {p.method ? ` · ${PAYMENT_METHOD_LABEL[p.method] ?? p.method}` : ""}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(p.created_at).toLocaleDateString("es-ES", {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold tabular-nums">
+                    {(p.amount_cents / 100).toLocaleString("es-ES", {
+                      style: "currency",
+                      currency: "EUR",
+                    })}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {PAYMENT_STATUS_LABEL[p.status] ?? p.status}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
     </div>
   );
 }

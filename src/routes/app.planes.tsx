@@ -29,6 +29,22 @@ export const Route = createFileRoute("/app/planes")({
   component: PlanesPage,
 });
 
+/** Month options: current month, plus next month from day 20 onwards. */
+function monthOptions() {
+  const now = new Date();
+  const iso = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+  const label = (d: Date) =>
+    d.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+  const current = new Date(now.getFullYear(), now.getMonth(), 1);
+  const options = [{ value: iso(current), label: label(current) }];
+  if (now.getDate() >= 20) {
+    const next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    options.push({ value: iso(next), label: label(next) });
+  }
+  return options;
+}
+
 function PlanesPage() {
   const navigate = useNavigate();
   const [plans, setPlans] = useState<Plan[] | null>(null);
@@ -38,6 +54,8 @@ function PlanesPage() {
   const [paymentMethod, setPaymentMethod] = useState<"card" | "bizum">("card");
   const [cashLoading, setCashLoading] = useState(false);
   const [cashConfirmOpen, setCashConfirmOpen] = useState(false);
+  const months = monthOptions();
+  const [month, setMonth] = useState(months[0]!.value);
 
   const startStripe = useCallback((plan: Plan, method: "card" | "bizum") => {
     setActivePlan(plan);
@@ -53,6 +71,7 @@ function PlanesPage() {
       args: Record<string, unknown>,
     ) => Promise<{ error: { message: string } | null }>)("purchase_plan_cash", {
       p_plan_id: plan.id,
+      p_month: month,
     });
     setCashLoading(false);
     if (error) {
@@ -61,7 +80,7 @@ function PlanesPage() {
     }
     setMethodOpen(false);
     setCashConfirmOpen(true);
-  }, []);
+  }, [month]);
 
   useEffect(() => {
     void (async () => {
@@ -86,9 +105,10 @@ function PlanesPage() {
       planId: activePlan.id,
       returnUrl,
       paymentMethod,
+      month,
     });
     return clientSecret;
-  }, [activePlan, paymentMethod]);
+  }, [activePlan, paymentMethod, month]);
 
   return (
     <div className="space-y-6">
@@ -99,6 +119,25 @@ function PlanesPage() {
           Compra tu plan del mes y reserva las clases que quieras según disponibilidad.
         </p>
       </div>
+
+      {months.length > 1 ? (
+        <div className="space-y-2">
+          <span className="text-label uppercase">¿Para qué mes?</span>
+          <div className="flex flex-wrap gap-2">
+            {months.map((m) => (
+              <Button
+                key={m.value}
+                size="sm"
+                variant={month === m.value ? "default" : "outline"}
+                className="capitalize"
+                onClick={() => setMonth(m.value)}
+              >
+                {m.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       {plans === null ? (
         <div className="grid gap-4 sm:grid-cols-2">

@@ -11,6 +11,14 @@ import {
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Banknote, CreditCard, Smartphone } from "lucide-react";
+import {
   capacityDotClass,
   capacityLabel,
   capacityLevel,
@@ -150,6 +158,9 @@ function ClassDetailsSheet({
   const [joiningWl, setJoiningWl] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [pendingBookingId, setPendingBookingId] = useState<string | null>(null);
+  const [methodOpen, setMethodOpen] = useState(false);
+  const [dropInMethod, setDropInMethod] = useState<"card" | "bizum">("card");
+  const [cashLoading, setCashLoading] = useState(false);
 
   const isFull = cls ? cls.booked_count >= cls.capacity_max : true;
   const usePlan = hasPlan;
@@ -203,9 +214,9 @@ function ClassDetailsSheet({
         toast.success("Clase reservada");
         onBooked();
       } else {
-        // Drop-in: open Stripe checkout for this booking
+        // Drop-in: the seat is held 30 min while she chooses how to pay.
         setPendingBookingId(res.booking_id);
-        setCheckoutOpen(true);
+        setMethodOpen(true);
       }
     } catch (err) {
       toast.error("No se pudo reservar", {
@@ -214,6 +225,28 @@ function ClassDetailsSheet({
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleDropInCash = async () => {
+    if (!pendingBookingId) return;
+    setCashLoading(true);
+    const { error } = await (supabase.rpc as unknown as (
+      fn: string,
+      args: Record<string, unknown>,
+    ) => Promise<{ error: { message: string } | null }>)("pay_drop_in_cash", {
+      p_booking_id: pendingBookingId,
+    });
+    setCashLoading(false);
+    if (error) {
+      toast.error("No se pudo reservar tu plaza", { description: error.message });
+      return;
+    }
+    setMethodOpen(false);
+    setPendingBookingId(null);
+    toast.success("Plaza reservada", {
+      description: "Paga los 20 € en el estudio antes de la clase.",
+    });
+    onBooked();
   };
 
   const handleJoinWaitlist = async () => {
@@ -301,6 +334,76 @@ function ClassDetailsSheet({
         ) : null}
       </SheetContent>
     </Sheet>
+      <Dialog
+        open={methodOpen}
+        onOpenChange={(o) => {
+          setMethodOpen(o);
+          if (!o && !checkoutOpen) {
+            setPendingBookingId(null);
+            onBooked();
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>¿Cómo quieres pagar la clase suelta?</DialogTitle>
+            <DialogDescription>
+              20 € · Guardamos tu plaza 30 minutos mientras completas el pago.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-auto justify-start gap-3 py-4 text-left"
+              disabled={cashLoading}
+              onClick={() => void handleDropInCash()}
+            >
+              <Banknote className="h-5 w-5 shrink-0" />
+              <span className="flex flex-col">
+                <span className="font-medium">Efectivo</span>
+                <span className="text-sm text-muted-foreground">
+                  Reserva tu plaza y paga en el estudio
+                </span>
+              </span>
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-auto justify-start gap-3 py-4 text-left"
+              disabled={cashLoading}
+              onClick={() => {
+                setDropInMethod("card");
+                setMethodOpen(false);
+                setCheckoutOpen(true);
+              }}
+            >
+              <CreditCard className="h-5 w-5 shrink-0" />
+              <span className="flex flex-col">
+                <span className="font-medium">Tarjeta</span>
+                <span className="text-sm text-muted-foreground">Paga ahora con tarjeta</span>
+              </span>
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-auto justify-start gap-3 py-4 text-left"
+              disabled={cashLoading}
+              onClick={() => {
+                setDropInMethod("bizum");
+                setMethodOpen(false);
+                setCheckoutOpen(true);
+              }}
+            >
+              <Smartphone className="h-5 w-5 shrink-0" />
+              <span className="flex flex-col">
+                <span className="font-medium">Bizum</span>
+                <span className="text-sm text-muted-foreground">Paga ahora con Bizum</span>
+              </span>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       <StripeCheckoutDialog
         open={checkoutOpen}
         onOpenChange={(o) => {
@@ -317,6 +420,7 @@ function ClassDetailsSheet({
           const { clientSecret } = await createDropInCheckout({
             bookingId: pendingBookingId,
             returnUrl,
+            paymentMethod: dropInMethod,
           });
           return clientSecret;
         }}

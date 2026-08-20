@@ -441,6 +441,7 @@ export type Database = {
           month: string | null
           notes: string | null
           status: string | null
+          stripe_session_id: string | null
           student_name: string | null
         }
         Insert: {
@@ -456,6 +457,7 @@ export type Database = {
           month?: string | null
           notes?: string | null
           status?: string | null
+          stripe_session_id?: string | null
           student_name?: string | null
         }
         Update: {
@@ -471,6 +473,7 @@ export type Database = {
           month?: string | null
           notes?: string | null
           status?: string | null
+          stripe_session_id?: string | null
           student_name?: string | null
         }
         Relationships: []
@@ -965,11 +968,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      enqueue_plan_renewal_reminders: { Args: never; Returns: number }
       enroll_from_invite: { Args: { p_token: string }; Returns: undefined }
       expire_pending_drop_ins: { Args: never; Returns: number }
       fail_payment: { Args: { p_session_id: string }; Returns: undefined }
       grant_plan_subscription: {
-        Args: { p_plan_id: string; p_session_id: string; p_student_id: string }
+        Args: {
+          p_month?: string
+          p_plan_id: string
+          p_session_id: string
+          p_student_id: string
+        }
         Returns: undefined
       }
       is_admin: { Args: never; Returns: boolean }
@@ -990,9 +999,14 @@ export type Database = {
         Returns: undefined
       }
       mark_notification_sent: { Args: { p_id: string }; Returns: undefined }
+      pay_drop_in_cash: { Args: { p_booking_id: string }; Returns: undefined }
       promote_waitlist: { Args: { p_class_id: string }; Returns: undefined }
-      purchase_plan_cash: { Args: { p_plan_id: string }; Returns: undefined }
+      purchase_plan_cash: {
+        Args: { p_month?: string; p_plan_id: string }
+        Returns: undefined
+      }
       redeem_invite: { Args: { p_token: string }; Returns: Json }
+      resolve_plan_month: { Args: { p_month: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never

@@ -23,9 +23,11 @@ async function recordLedgerIncome(params: {
   category: string;
   amountCents: number;
   notes?: string;
+  /** Idempotency key so Stripe retries don't duplicate the income row. */
+  stripeSessionId?: string;
 }) {
   const today = new Date().toISOString().slice(0, 10);
-  const { error } = await admin().from("ledger_entries").insert({
+  const row = {
     entry_date: today,
     month: monthKey(today),
     student_name: params.studentName,
@@ -35,7 +37,13 @@ async function recordLedgerIncome(params: {
     method: "T",
     status: "Pagado",
     notes: params.notes ?? "Cobro automático con Stripe",
-  });
+    stripe_session_id: params.stripeSessionId ?? null,
+  };
+  const { error } = params.stripeSessionId
+    ? await admin()
+        .from("ledger_entries")
+        .upsert(row, { onConflict: "stripe_session_id", ignoreDuplicates: true })
+    : await admin().from("ledger_entries").insert(row);
   if (error) console.error("Failed to record ledger income", error);
 }
 
@@ -76,6 +84,7 @@ async function handlePublicTrial(session: any) {
     category: "Suelta",
     amountCents: amount,
     notes: `Clase de prueba pagada online · ${md.classDate ?? ""} ${md.classTime ?? ""}`.trim(),
+    stripeSessionId: session.id as string,
   });
 }
 
@@ -108,6 +117,7 @@ async function handleSessionCompleted(session: any, _env: StripeEnv) {
       p_session_id: sessionId,
       p_student_id: studentId,
       p_plan_id: planId,
+      p_month: md.month ?? null,
     });
   } else {
     console.warn("Unknown purpose in metadata", { sessionId, purpose });
@@ -130,6 +140,7 @@ async function handleSessionCompleted(session: any, _env: StripeEnv) {
       item: purpose === "plan" ? "Plan mensual" : "Clase suelta",
       category: purpose === "plan" ? "Clases" : "Suelta",
       amountCents: amountForLedger,
+      stripeSessionId: sessionId,
     });
   }
 

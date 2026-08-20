@@ -87,6 +87,11 @@ function render(type: string, payload: Record<string, unknown>, profile: Profile
         "Plan activado",
         `Hola ${name}, tu plan del mes está activo. Reserva tus clases desde la app cuando quieras.`,
       );
+    case "plan_renewal":
+      return wrap(
+        "Renueva tu plan del mes",
+        `Hola ${name}, empieza un mes nuevo y todavía no tienes plan. Elige tu plan desde la app para seguir reservando tus clases.`,
+      );
     case "reminder_24h":
       return wrap(
         "Recordatorio de tu clase mañana",
@@ -198,6 +203,8 @@ function resolveContentSid(type: string, payload: Record<string, unknown>): stri
       return Deno.env.get("TWILIO_TEMPLATE_RESERVATION_CONFIRMED");
     case "plan_purchased":
       return Deno.env.get("TWILIO_TEMPLATE_PLAN_PURCHASED");
+    case "plan_renewal":
+      return Deno.env.get("TWILIO_TEMPLATE_PLAN_RENEWAL");
     case "reminder_24h":
       return Deno.env.get("TWILIO_TEMPLATE_REMINDER_24H");
     case "class_cancelled":
@@ -233,6 +240,7 @@ function buildContentVariables(
   switch (type) {
     case "reservation_confirmed":
     case "plan_purchased":
+    case "plan_renewal":
     case "class_cancelled":
     case "makeup_available":
     case "waitlist_promoted":

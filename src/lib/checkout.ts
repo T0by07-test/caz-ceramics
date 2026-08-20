@@ -3,15 +3,30 @@ import { getStripeEnvironment } from "@/lib/stripe";
 
 type PaymentMethod = "card" | "bizum";
 
-type CreateDropInArgs = { bookingId: string; returnUrl: string };
-type CreatePlanArgs = { planId: string; returnUrl: string; paymentMethod?: PaymentMethod };
+type CreateDropInArgs = {
+  bookingId: string;
+  returnUrl: string;
+  paymentMethod?: PaymentMethod;
+};
+type CreatePlanArgs = {
+  planId: string;
+  returnUrl: string;
+  paymentMethod?: PaymentMethod;
+  /** First day of the target month, "YYYY-MM-01". Defaults to the current month. */
+  month?: string;
+};
 
-export async function createDropInCheckout({ bookingId, returnUrl }: CreateDropInArgs) {
+export async function createDropInCheckout({
+  bookingId,
+  returnUrl,
+  paymentMethod,
+}: CreateDropInArgs) {
   const { data, error } = await supabase.functions.invoke("create-checkout", {
     body: {
       purpose: "drop_in",
       bookingId,
       returnUrl,
+      ...(paymentMethod ? { paymentMethod } : {}),
       environment: getStripeEnvironment(),
     },
   });
@@ -20,13 +35,14 @@ export async function createDropInCheckout({ bookingId, returnUrl }: CreateDropI
   return data as { clientSecret: string; sessionId: string };
 }
 
-export async function createPlanCheckout({ planId, returnUrl, paymentMethod }: CreatePlanArgs) {
+export async function createPlanCheckout({ planId, returnUrl, paymentMethod, month }: CreatePlanArgs) {
   const { data, error } = await supabase.functions.invoke("create-checkout", {
     body: {
       purpose: "plan",
       planId,
       returnUrl,
       ...(paymentMethod ? { paymentMethod } : {}),
+      ...(month ? { month } : {}),
       environment: getStripeEnvironment(),
     },
   });
