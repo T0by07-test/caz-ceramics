@@ -87,6 +87,11 @@ function render(type: string, payload: Record<string, unknown>, profile: Profile
         "Plan activado",
         `Hola ${name}, tu plan del mes está activo. Reserva tus clases desde la app cuando quieras.`,
       );
+    case "plan_renewal":
+      return wrap(
+        "Renueva tu plan del mes",
+        `Hola ${name}, empieza un mes nuevo y todavía no tienes plan. Elige tu plan desde la app para seguir reservando tus clases.`,
+      );
     case "reminder_24h":
       return wrap(
         "Recordatorio de tu clase mañana",
