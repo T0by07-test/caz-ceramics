@@ -140,9 +140,9 @@ function ClassDetailsSheet({
   const open = cls !== null;
   const level = cls ? capacityLevel(cls.booked_count, cls.capacity_max) : "available";
   const available = cls ? Math.max(cls.capacity_max - cls.booked_count, 0) : 0;
-  // Look up the credits for the class's month (not necessarily the visible one).
+  // Look up the plan for the class's month (not necessarily the visible one).
   const planMonth = cls ? parseIsoToLocalDate(cls.date) : undefined;
-  const { creditsRemaining } = useMyPlan(planMonth);
+  const { hasPlan } = useMyPlan(planMonth);
   const [submitting, setSubmitting] = useState(false);
   const { user } = useAuth();
   const [waitlistCount, setWaitlistCount] = useState(0);
@@ -152,7 +152,7 @@ function ClassDetailsSheet({
   const [pendingBookingId, setPendingBookingId] = useState<string | null>(null);
 
   const isFull = cls ? cls.booked_count >= cls.capacity_max : true;
-  const usePlan = (creditsRemaining ?? 0) > 0;
+  const usePlan = hasPlan;
 
   useEffect(() => {
     if (!cls) {
@@ -293,7 +293,7 @@ function ClassDetailsSheet({
                 {submitting
                   ? "Reservando…"
                   : usePlan
-                    ? `Reservar con mi plan (${creditsRemaining} restantes)`
+                    ? "Reservar con mi plan"
                     : "Reservar clase suelta"}
               </Button>
             )}

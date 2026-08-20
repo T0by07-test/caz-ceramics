@@ -24,7 +24,7 @@ import {
 } from "@/lib/calendar-view";
 import { CalendarHeader } from "@/components/calendar/CalendarHeader";
 import { CalendarBoard } from "@/components/calendar/CalendarBoard";
-import { bookClass } from "@/lib/booking";
+import { bookMakeup } from "@/lib/booking";
 
 export const Route = createFileRoute("/app/recuperaciones")({
   validateSearch: (search) => calendarSearchSchema.parse(search),
@@ -129,14 +129,7 @@ function RecuperacionesPage() {
     if (!selected || makeups.length === 0) return;
     setPicking(true);
     try {
-      const res = await bookClass(selected.id, "drop_in");
-      // Mark the oldest unused makeup as used by this booking.
-      const oldest = makeups[0];
-      const { error } = await supabase
-        .from("makeups")
-        .update({ used_booking_id: res.booking_id })
-        .eq("id", oldest.id);
-      if (error) throw new Error(error.message);
+      await bookMakeup(selected.id);
       toast.success("Recuperación reservada");
       setSelected(null);
       await Promise.all([fetchMakeups(), fetchMyBookings(), refresh()]);
