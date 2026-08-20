@@ -78,7 +78,6 @@ type StudentRow = {
   email: string | null;
   whatsapp: string | null;
   plan_name: string | null;
-  credits_remaining: number | null;
   pending_makeups: number;
   tags: { id: string; name: string }[];
   slots: { id: string; weekday: number; start_time: string }[];
@@ -153,7 +152,7 @@ function AdminStudentsPage() {
       await Promise.all([
         supabase
           .from("subscriptions")
-          .select("student_id, plan_id, credits_remaining")
+          .select("student_id, plan_id")
           .eq("month", monthStart),
         supabase
           .from("makeups")
@@ -172,7 +171,7 @@ function AdminStudentsPage() {
     const subByStudent = new Map(
       (subs ?? []).map((s) => [
         s.student_id,
-        { plan_name: planNameById.get(s.plan_id) ?? null, credits_remaining: s.credits_remaining },
+        { plan_name: planNameById.get(s.plan_id) ?? null },
       ]),
     );
     const makeupCount = new Map<string, number>();
@@ -197,7 +196,6 @@ function AdminStudentsPage() {
         email: p.email,
         whatsapp: p.whatsapp,
         plan_name: subByStudent.get(p.id)?.plan_name ?? null,
-        credits_remaining: subByStudent.get(p.id)?.credits_remaining ?? null,
         pending_makeups: makeupCount.get(p.id) ?? 0,
         tags,
         slots,
@@ -341,10 +339,9 @@ function AdminStudentsPage() {
                   <div className="flex flex-wrap items-center gap-1.5 text-xs">
                     <Badge variant="outline">{ROLE_LABELS[r.role]}</Badge>
                     {r.plan_name ? <Badge variant="secondary">{r.plan_name}</Badge> : null}
-                    {viewerRole === "admin" && r.credits_remaining != null ? (
+                    {viewerRole === "admin" && r.pending_makeups > 0 ? (
                       <span className="text-muted-foreground">
-                        {r.credits_remaining} créditos
-                        {r.pending_makeups > 0 ? ` · ${r.pending_makeups} recup.` : ""}
+                        {r.pending_makeups} recup.
                       </span>
                     ) : null}
                   </div>
@@ -392,7 +389,6 @@ function AdminStudentsPage() {
                   {viewerRole === "admin" && (
                     <>
                       <TableHead>Plan del mes</TableHead>
-                      <TableHead className="text-center">Créditos</TableHead>
                       <TableHead className="text-center">Recup.</TableHead>
                     </>
                   )}
@@ -439,7 +435,6 @@ function AdminStudentsPage() {
                             <span className="text-muted-foreground">Sin plan</span>
                           )}
                         </TableCell>
-                        <TableCell className="text-center">{r.credits_remaining ?? "—"}</TableCell>
                         <TableCell className="text-center">
                           {r.pending_makeups > 0 ? (
                             <Badge variant="outline">{r.pending_makeups}</Badge>
