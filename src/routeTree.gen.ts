@@ -35,6 +35,7 @@ import { Route as AdminGastosRouteImport } from './routes/admin.gastos'
 import { Route as AdminFinanzasRouteImport } from './routes/admin.finanzas'
 import { Route as AdminClasesRouteImport } from './routes/admin.clases'
 import { Route as AdminAlumnasRouteImport } from './routes/admin.alumnas'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicHooksAutoCancelClassesRouteImport } from './routes/api/public/hooks/auto-cancel-classes'
 
 const SolicitarRoute = SolicitarRouteImport.update({
@@ -167,6 +168,12 @@ const AdminAlumnasRoute = AdminAlumnasRouteImport.update({
   path: '/alumnas',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksAutoCancelClassesRoute =
   ApiPublicHooksAutoCancelClassesRouteImport.update({
     id: '/api/public/hooks/auto-cancel-classes',
@@ -202,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/api/public/hooks/auto-cancel-classes': typeof ApiPublicHooksAutoCancelClassesRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -229,6 +237,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
   '/api/public/hooks/auto-cancel-classes': typeof ApiPublicHooksAutoCancelClassesRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -259,6 +268,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/api/public/hooks/auto-cancel-classes': typeof ApiPublicHooksAutoCancelClassesRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -290,6 +300,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/'
     | '/api/public/hooks/auto-cancel-classes'
+    | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -317,6 +328,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/api/public/hooks/auto-cancel-classes'
+    | '/api/public/payments/webhook'
   id:
     | '__root__'
     | '/'
@@ -346,6 +358,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/'
     | '/api/public/hooks/auto-cancel-classes'
+    | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -359,6 +372,7 @@ export interface RootRouteChildren {
   SolicitarRoute: typeof SolicitarRoute
   UnirseTokenRoute: typeof UnirseTokenRoute
   ApiPublicHooksAutoCancelClassesRoute: typeof ApiPublicHooksAutoCancelClassesRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -545,6 +559,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAlumnasRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/auto-cancel-classes': {
       id: '/api/public/hooks/auto-cancel-classes'
       path: '/api/public/hooks/auto-cancel-classes'
@@ -616,6 +637,7 @@ const rootRouteChildren: RootRouteChildren = {
   SolicitarRoute: SolicitarRoute,
   UnirseTokenRoute: UnirseTokenRoute,
   ApiPublicHooksAutoCancelClassesRoute: ApiPublicHooksAutoCancelClassesRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
