@@ -113,12 +113,13 @@ Deno.serve(async (req) => {
     const user = userData.user;
 
     const body = rawBody;
-    const { purpose, environment, returnUrl, paymentMethod, month } = body as {
+    const { purpose, environment, returnUrl, paymentMethod, month, hosted } = body as {
       purpose: "drop_in" | "plan";
       environment: StripeEnv;
       returnUrl: string;
       paymentMethod?: "card" | "bizum";
       month?: string;
+      hosted?: boolean;
     };
     if (environment !== "sandbox" && environment !== "live") {
       return jsonResponse({ error: "Invalid environment" }, 400);
@@ -189,11 +190,19 @@ Deno.serve(async (req) => {
     const sessionParams: Record<string, unknown> = {
       line_items: [{ price: stripePrice.id, quantity: 1 }],
       mode: "payment",
-      ui_mode: "embedded",
-      return_url: returnUrl,
       customer_email: user.email ?? undefined,
       metadata,
     };
+    if (hosted === true) {
+      // Embedded Checkout cannot run inside an iFrame (Lovable editor/preview),
+      // so the client can ask for a top-level hosted Checkout URL instead.
+      const sep = returnUrl.includes("?") ? "&" : "?";
+      sessionParams.success_url = returnUrl;
+      sessionParams.cancel_url = `${returnUrl.split("?")[0]}${sep}pago=cancelado`;
+    } else {
+      sessionParams.ui_mode = "embedded";
+      sessionParams.return_url = returnUrl;
+    }
     if (paymentMethod) {
       sessionParams.payment_method_types = [paymentMethod];
     }
@@ -210,7 +219,11 @@ Deno.serve(async (req) => {
     if (purpose === "drop_in") paymentRow.booking_id = metadata.bookingId;
     await admin.from("payments").insert(paymentRow);
 
-    return jsonResponse({ clientSecret: session.client_secret, sessionId: session.id });
+    return jsonResponse({
+      clientSecret: session.client_secret,
+      url: session.url,
+      sessionId: session.id,
+    });
   } catch (e) {
     console.error("create-checkout error:", e);
     return jsonResponse({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
