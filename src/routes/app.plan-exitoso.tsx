@@ -49,7 +49,7 @@ function PlanExitosoPage() {
             <CheckCircle2 className="h-12 w-12 text-success" />
             <h1 className="text-h1">¡Plan activado!</h1>
             <p className="text-body text-muted-foreground">
-              Tus créditos están listos para reservar clases este mes.
+              Tu plan del mes está activo: ya puedes reservar tus clases.
             </p>
           </>
         ) : status === "failed" ? (

@@ -80,17 +80,17 @@ function render(type: string, payload: Record<string, unknown>, profile: Profile
     case "reservation_confirmed":
       return wrap(
         "Reserva confirmada",
-        `Hola ${name}, tu reserva está confirmada. Te esperamos en el estudio. Si necesitas cancelar, recuerda hacerlo con más de 3 horas de antelación para recuperar el crédito.`,
+        `Hola ${name}, tu reserva está confirmada. Te esperamos en el estudio. Si necesitas cancelar, recuerda hacerlo con más de 12 horas de antelación para poder recuperar la clase.`,
       );
     case "plan_purchased":
       return wrap(
         "Plan activado",
-        `Hola ${name}, tu plan está activo y tus créditos del mes están listos. Reserva tus clases desde la app cuando quieras.`,
+        `Hola ${name}, tu plan del mes está activo. Reserva tus clases desde la app cuando quieras.`,
       );
     case "reminder_24h":
       return wrap(
         "Recordatorio de tu clase mañana",
-        `Hola ${name}, te recordamos tu clase ${date} de ${start} a ${end}. Si no puedes venir, cancela con más de 3 horas de antelación.`,
+        `Hola ${name}, te recordamos tu clase ${date} de ${start} a ${end}. Si no puedes venir, cancela con más de 12 horas de antelación.`,
       );
     case "class_cancelled":
       return wrap(
@@ -112,13 +112,12 @@ function render(type: string, payload: Record<string, unknown>, profile: Profile
       );
     }
     case "monthly_summary": {
-      const used = Number(payload.credits_used ?? 0);
-      const total = Number(payload.credits_total ?? 0);
-      const remaining = Number(payload.credits_remaining ?? 0);
       const makeups = Number(payload.makeups_pending ?? 0);
+      const booked = Number(payload.classes_booked ?? 0);
+      const attended = Number(payload.classes_attended ?? 0);
       return wrap(
         "Resumen del mes",
-        `Hola ${name}, este mes has usado ${used} de ${total} créditos (te quedan ${remaining}). Recuperaciones pendientes: ${makeups}. Recuerda que los créditos no se acumulan al mes siguiente.`,
+        `Hola ${name}, este mes has reservado ${booked} clases y has asistido a ${attended}. Recuperaciones pendientes: ${makeups}. Recuerda que las recuperaciones caducan a fin de mes.`,
       );
     }
     case "payment_reminder": {
@@ -241,16 +240,14 @@ function buildContentVariables(
     case "reminder_24h":
       return { "1": name, "2": date, "3": start, "4": end };
     case "monthly_summary": {
-      const used = Number(payload.credits_used ?? 0);
-      const total = Number(payload.credits_total ?? 0);
-      const remaining = Number(payload.credits_remaining ?? 0);
       const makeups = Number(payload.makeups_pending ?? 0);
+      const booked = Number(payload.classes_booked ?? 0);
+      const attended = Number(payload.classes_attended ?? 0);
       return {
         "1": name,
-        "2": String(used),
-        "3": String(total),
-        "4": String(remaining),
-        "5": String(makeups),
+        "2": String(booked),
+        "3": String(attended),
+        "4": String(makeups),
       };
     }
     case "payment_reminder":
