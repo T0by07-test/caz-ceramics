@@ -240,6 +240,7 @@ function buildContentVariables(
   switch (type) {
     case "reservation_confirmed":
     case "plan_purchased":
+    case "plan_renewal":
     case "class_cancelled":
     case "makeup_available":
     case "waitlist_promoted":
