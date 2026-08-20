@@ -144,6 +144,10 @@ function Index() {
         <section className="mt-20 sm:mt-28">
           <div className="text-center">
             <span className="text-label uppercase">¿CÓMO FUNCIONA?</span>
+            <p className="text-body mx-auto mt-3 max-w-xl text-muted-foreground">
+              Si es tu primera vez, empieza por el paso 01. Si ya eres alumno/a, entra
+              con tu cuenta y ve directo al calendario para reservar tus clases del mes.
+            </p>
           </div>
           <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {STEPS.map((s) => (
