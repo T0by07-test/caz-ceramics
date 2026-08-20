@@ -72,12 +72,18 @@ async function handlePublicTrial(session: any) {
     console.error("Failed to create trial enrollment request", reqError);
     return;
   }
+  const requestId = request.id as string;
   if (md.classId) {
     const { error: linkError } = await admin()
       .from("enrollment_request_classes")
-      .insert({ request_id: request.id, class_id: md.classId, granted: false });
+      .insert({ request_id: requestId, class_id: md.classId, granted: false });
     if (linkError) console.error("Failed to link trial class", linkError);
   }
+  // Paid online → accept automatically and create the invite.
+  const { error: acceptError } = await admin().rpc("accept_paid_enrollment_request", {
+    p_request_id: requestId,
+  });
+  if (acceptError) console.error("Failed to auto-accept paid trial request", acceptError);
   await recordLedgerIncome({
     studentName: fullName || email || "Clase de prueba",
     item: "Clase de prueba",
