@@ -59,8 +59,8 @@ async function handlePublicTrial(session: any) {
     .from("enrollment_requests")
     .insert({
       name: name || "Sin nombre",
-      surname: rest.join(" ") || null,
-      email,
+      surname: rest.join(" ") || "-",
+      email: email ?? "",
       message: `Clase de prueba pagada (${(amount / 100).toFixed(2)} €) · ${md.classDate ?? ""} ${md.classTime ?? ""}`.trim(),
       status: "pending",
     })
