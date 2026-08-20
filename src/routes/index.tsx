@@ -19,8 +19,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const SHOP_URL = "https://cazuceramics.com";
-
 export const Route = createFileRoute("/")({
   head: () => ({
       meta: [
@@ -108,14 +106,6 @@ function Index() {
           <span className="text-h3">Cazú Ceramics</span>
         </div>
         <nav className="flex items-center gap-5">
-          <a
-            href={SHOP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:inline"
-          >
-            Tienda
-          </a>
           <Link
             to="/login"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -154,7 +144,6 @@ function Index() {
         <section className="mt-20 sm:mt-28">
           <div className="text-center">
             <span className="text-label uppercase">¿CÓMO FUNCIONA?</span>
-            <h2 className="text-h2 mt-2">Encontramos tu lugar en el estudio</h2>
           </div>
           <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {STEPS.map((s) => (
@@ -176,7 +165,6 @@ function Index() {
         <section className="mt-20 sm:mt-28">
           <div className="text-center">
             <span className="text-label uppercase">Planes mensuales</span>
-            <h2 className="text-h2 mt-2">Elige cuánto quieres crear</h2>
             <p className="text-body mx-auto mt-3 max-w-xl text-muted-foreground">
               Elige cuántas clases quieres hacer al mes y cuéntanos qué días y
               horarios te vienen bien. Te ayudaremos a encontrar el grupo que mejor
