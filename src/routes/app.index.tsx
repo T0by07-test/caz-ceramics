@@ -30,10 +30,12 @@ import { useClassesInRange, type ClassWithCount } from "@/hooks/useClassesInRang
 import { useMyPlan } from "@/hooks/useMyPlan";
 import { bookClass } from "@/lib/booking";
 import { joinWaitlist } from "@/lib/waitlist";
-import { createDropInCheckout } from "@/lib/checkout";
+import { createPlanCheckout } from "@/lib/checkout";
 import { StripeCheckoutDialog } from "@/components/StripeCheckoutDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useActivePlans, planForCount, formatEuros, type Plan } from "@/lib/plan-pricing";
+import { savePendingBookings, clearPendingBookings } from "@/lib/pending-bookings";
 import {
   calendarSearchSchema,
   parseReference,
@@ -44,6 +46,7 @@ import {
 } from "@/lib/calendar-view";
 import { CalendarHeader } from "@/components/calendar/CalendarHeader";
 import { CalendarBoard } from "@/components/calendar/CalendarBoard";
+
 
 export const Route = createFileRoute("/app/")({
   validateSearch: (search) => calendarSearchSchema.parse(search),
@@ -60,14 +63,18 @@ function CalendarioPage() {
   const [full, setFull] = useState<ClassWithCount | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
-  const [pendingBookingId, setPendingBookingId] = useState<string | null>(null);
+  const [payment, setPayment] = useState<{ plan: Plan; month: string; classIds: string[] } | null>(
+    null,
+  );
   const { classes, loading, refresh } = useClassesInRange(range, "student");
   const { hasPlan } = useMyPlan(reference);
+  const plans = useActivePlans();
 
   const selectedClasses = useMemo(
     () => classes.filter((c) => selectedIds.has(c.id)),
     [classes, selectedIds],
   );
+  const pricePlan = planForCount(plans, selectedClasses.length);
 
   const setView = (v: CalendarView) =>
     navigate({ search: (prev: CalendarSearch) => ({ ...prev, view: v }) });
@@ -97,31 +104,33 @@ function CalendarioPage() {
 
   const handleConfirm = async () => {
     if (selectedClasses.length === 0) return;
-    if (!hasPlan && selectedClasses.length > 1) {
-      toast.error("Para reservar varias clases necesitas un plan mensual", {
-        description: "Elige un plan en «Planes» y reserva todas las clases que quieras.",
-      });
-      return;
-    }
-    setSubmitting(true);
     const ordered = [...selectedClasses].sort((a, b) =>
       `${a.date}${a.start_time}`.localeCompare(`${b.date}${b.start_time}`),
     );
+
     if (!hasPlan) {
-      try {
-        const res = await bookClass(ordered[0].id, "drop_in");
-        setSelectedIds(new Set());
-        setPendingBookingId(res.booking_id);
-      } catch (err) {
-        toast.error("No se pudo reservar", {
-          description: err instanceof Error ? err.message : undefined,
+      // No plan yet: price comes straight from the number of classes chosen.
+      const months = new Set(ordered.map((c) => c.date.slice(0, 7)));
+      if (months.size > 1) {
+        toast.error("Elige clases de un solo mes", {
+          description: "El precio se calcula por mes. Reserva primero un mes y luego el siguiente.",
         });
-      } finally {
-        setSubmitting(false);
+        return;
       }
+      if (!pricePlan) {
+        toast.error("No se pudo calcular el precio", {
+          description: "Vuelve a intentarlo en unos segundos.",
+        });
+        return;
+      }
+      const month = `${ordered[0]!.date.slice(0, 7)}-01`;
+      const classIds = ordered.map((c) => c.id);
+      savePendingBookings({ month, classIds });
+      setPayment({ plan: pricePlan, month, classIds });
       return;
     }
 
+    setSubmitting(true);
     let ok = 0;
     const failed: string[] = [];
     for (const c of ordered) {
@@ -149,14 +158,18 @@ function CalendarioPage() {
     void refresh();
   };
 
+
   return (
     <div className="space-y-6 pb-24">
       <div>
         <span className="text-label uppercase">Tu mes</span>
         <h1 className="text-h1 mt-1">Calendario</h1>
         <p className="text-body mt-2 text-muted-foreground">
-          Toca las clases a las que quieras venir y confirma tu reserva.
+          {hasPlan
+            ? "Toca las clases a las que quieras venir y confirma tu reserva."
+            : "Toca las clases a las que quieras venir este mes: el precio se calcula automáticamente según cuántas elijas."}
         </p>
+
       </div>
 
       <CalendarHeader
@@ -190,6 +203,7 @@ function CalendarioPage() {
         <SelectionBar
           classes={selectedClasses}
           hasPlan={hasPlan}
+          priceCents={pricePlan?.price_cents ?? null}
           submitting={submitting}
           onClear={() => setSelectedIds(new Set())}
           onConfirm={() => void handleConfirm()}
@@ -198,10 +212,11 @@ function CalendarioPage() {
 
       <WaitlistSheet cls={full} onOpenChange={(open) => !open && setFull(null)} />
 
-      <DropInPaymentFlow
-        bookingId={pendingBookingId}
+      <PlanPaymentFlow
+        payment={payment}
         onClose={() => {
-          setPendingBookingId(null);
+          setPayment(null);
+          setSelectedIds(new Set());
           void refresh();
         }}
       />
@@ -212,12 +227,14 @@ function CalendarioPage() {
 function SelectionBar({
   classes,
   hasPlan,
+  priceCents,
   submitting,
   onClear,
   onConfirm,
 }: {
   classes: ClassWithCount[];
   hasPlan: boolean;
+  priceCents: number | null;
   submitting: boolean;
   onClear: () => void;
   onConfirm: () => void;
@@ -227,8 +244,11 @@ function SelectionBar({
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 p-3 shadow-card backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center gap-3">
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-semibold">
-            {count === 1 ? "1 clase seleccionada" : `${count} clases seleccionadas`}
+          <div className="flex flex-wrap items-baseline gap-x-2 text-sm font-semibold">
+            <span>{count === 1 ? "1 clase seleccionada" : `${count} clases seleccionadas`}</span>
+            {!hasPlan && priceCents !== null ? (
+              <span className="text-primary">{formatEuros(priceCents)} este mes</span>
+            ) : null}
           </div>
           <div className="truncate text-xs text-muted-foreground">
             {classes
@@ -246,12 +266,15 @@ function SelectionBar({
               ? count === 1
                 ? "Reservar clase"
                 : `Reservar ${count} clases`
-              : "Reservar y pagar"}
+              : priceCents !== null
+                ? `Pagar ${formatEuros(priceCents)}`
+                : "Continuar"}
         </Button>
       </div>
     </div>
   );
 }
+
 
 function Legend() {
   return (
@@ -376,42 +399,58 @@ function WaitlistSheet({
   );
 }
 
-function DropInPaymentFlow({
-  bookingId,
+function PlanPaymentFlow({
+  payment,
   onClose,
 }: {
-  bookingId: string | null;
+  payment: { plan: Plan; month: string; classIds: string[] } | null;
   onClose: () => void;
 }) {
   const [methodOpen, setMethodOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [dropInMethod, setDropInMethod] = useState<"card" | "bizum">("card");
+  const [method, setMethod] = useState<"card" | "bizum">("card");
   const [cashLoading, setCashLoading] = useState(false);
 
   useEffect(() => {
-    if (bookingId) setMethodOpen(true);
-  }, [bookingId]);
+    if (payment) setMethodOpen(true);
+  }, [payment]);
 
-  const handleDropInCash = async () => {
-    if (!bookingId) return;
+  const count = payment?.classIds.length ?? 0;
+
+  const handleCash = async () => {
+    if (!payment) return;
     setCashLoading(true);
     const { error } = await (supabase.rpc as unknown as (
       fn: string,
       args: Record<string, unknown>,
-    ) => Promise<{ error: { message: string } | null }>)("pay_drop_in_cash", {
-      p_booking_id: bookingId,
+    ) => Promise<{ error: { message: string } | null }>)("purchase_plan_cash", {
+      p_plan_id: payment.plan.id,
+      p_month: payment.month,
     });
-    setCashLoading(false);
     if (error) {
+      setCashLoading(false);
       toast.error("No se pudo reservar tu plaza", { description: error.message });
       return;
     }
+    let ok = 0;
+    for (const id of payment.classIds) {
+      try {
+        await bookClass(id, "plan");
+        ok += 1;
+      } catch {
+        /* keep going */
+      }
+    }
+    setCashLoading(false);
     setMethodOpen(false);
-    toast.success("Plaza reservada", {
-      description: "Paga los 20 € en el estudio antes de la clase.",
+    toast.success(ok === 1 ? "Clase reservada" : `${ok} clases reservadas`, {
+      description: `Paga ${formatEuros(payment.plan.price_cents)} en tu primera clase del mes.`,
     });
+    clearPendingBookings();
     onClose();
   };
+
+  const returnUrl = `${window.location.origin}/app/plan-exitoso?session_id={CHECKOUT_SESSION_ID}`;
 
   return (
     <>
@@ -424,9 +463,13 @@ function DropInPaymentFlow({
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>¿Cómo quieres pagar la clase?</DialogTitle>
+            <DialogTitle>
+              {count === 1 ? "1 clase este mes" : `${count} clases este mes`}
+            </DialogTitle>
             <DialogDescription>
-              20 € · Guardamos tu plaza 30 minutos mientras completas el pago.
+              {payment
+                ? `${formatEuros(payment.plan.price_cents)} · Elige cómo quieres pagar y confirmamos tus clases.`
+                : ""}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
@@ -435,13 +478,13 @@ function DropInPaymentFlow({
               size="lg"
               className="h-auto justify-start gap-3 py-4 text-left"
               disabled={cashLoading}
-              onClick={() => void handleDropInCash()}
+              onClick={() => void handleCash()}
             >
               <Banknote className="h-5 w-5 shrink-0" />
               <span className="flex flex-col">
                 <span className="font-medium">Efectivo</span>
                 <span className="text-sm text-muted-foreground">
-                  Reserva tu plaza y paga en el estudio
+                  Reserva tus clases y paga en el estudio
                 </span>
               </span>
             </Button>
@@ -451,7 +494,7 @@ function DropInPaymentFlow({
               className="h-auto justify-start gap-3 py-4 text-left"
               disabled={cashLoading}
               onClick={() => {
-                setDropInMethod("card");
+                setMethod("card");
                 setMethodOpen(false);
                 setCheckoutOpen(true);
               }}
@@ -468,7 +511,7 @@ function DropInPaymentFlow({
               className="h-auto justify-start gap-3 py-4 text-left"
               disabled={cashLoading}
               onClick={() => {
-                setDropInMethod("bizum");
+                setMethod("bizum");
                 setMethodOpen(false);
                 setCheckoutOpen(true);
               }}
@@ -488,24 +531,24 @@ function DropInPaymentFlow({
           setCheckoutOpen(o);
           if (!o) onClose();
         }}
-        title="Pagar clase"
+        title="Pagar mis clases"
         fetchClientSecret={async () => {
-          if (!bookingId) throw new Error("No booking");
-          const returnUrl = `${window.location.origin}/app/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`;
-          const { clientSecret } = await createDropInCheckout({
-            bookingId,
+          if (!payment) throw new Error("No payment");
+          const { clientSecret } = await createPlanCheckout({
+            planId: payment.plan.id,
             returnUrl,
-            paymentMethod: dropInMethod,
+            paymentMethod: method,
+            month: payment.month,
           });
           return clientSecret;
         }}
         fetchHostedUrl={async () => {
-          if (!bookingId) throw new Error("No booking");
-          const returnUrl = `${window.location.origin}/app/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`;
-          const { url } = await createDropInCheckout({
-            bookingId,
+          if (!payment) throw new Error("No payment");
+          const { url } = await createPlanCheckout({
+            planId: payment.plan.id,
             returnUrl,
-            paymentMethod: dropInMethod,
+            paymentMethod: method,
+            month: payment.month,
             hosted: true,
           });
           return url;
@@ -514,3 +557,4 @@ function DropInPaymentFlow({
     </>
   );
 }
+

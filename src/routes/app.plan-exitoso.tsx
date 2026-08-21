@@ -4,6 +4,8 @@ import { CheckCircle2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { bookClass } from "@/lib/booking";
+import { loadPendingBookings, clearPendingBookings } from "@/lib/pending-bookings";
 
 export const Route = createFileRoute("/app/plan-exitoso")({
   head: () => ({ meta: [{ title: "Plan activado — Cerámica Studio" }] }),
@@ -16,6 +18,7 @@ export const Route = createFileRoute("/app/plan-exitoso")({
 function PlanExitosoPage() {
   const { session_id } = Route.useSearch();
   const [status, setStatus] = useState<"waiting" | "confirmed" | "failed">("waiting");
+  const [booked, setBooked] = useState<number | null>(null);
 
   useEffect(() => {
     if (!session_id) {
@@ -31,7 +34,23 @@ function PlanExitosoPage() {
         .eq("stripe_session_id", session_id)
         .maybeSingle();
       if (cancelled) return;
-      if (data?.status === "confirmed") setStatus("confirmed");
+      if (data?.status === "confirmed") {
+        setStatus("confirmed");
+        const pending = loadPendingBookings();
+        if (pending && pending.classIds.length > 0) {
+          let ok = 0;
+          for (const id of pending.classIds) {
+            try {
+              await bookClass(id, "plan");
+              ok += 1;
+            } catch {
+              /* skip classes that are no longer available */
+            }
+          }
+          clearPendingBookings();
+          if (!cancelled) setBooked(ok);
+        }
+      }
       else if (data?.status === "failed") setStatus("failed");
       else if (attempts++ < 15) setTimeout(poll, 1000);
     };
@@ -49,7 +68,11 @@ function PlanExitosoPage() {
             <CheckCircle2 className="h-12 w-12 text-success" />
             <h1 className="text-h1">¡Plan activado!</h1>
             <p className="text-body text-muted-foreground">
-              Tu plan del mes está activo: ya puedes reservar tus clases.
+              {booked !== null
+                ? booked === 1
+                  ? "Hemos confirmado tu clase del mes."
+                  : `Hemos confirmado tus ${booked} clases del mes.`
+                : "Tu mes está activo: ya puedes reservar tus clases."}
             </p>
           </>
         ) : status === "failed" ? (
@@ -68,7 +91,7 @@ function PlanExitosoPage() {
         )}
         <div className="flex gap-3 pt-2">
           <Button asChild variant="secondary">
-            <Link to="/app/planes">Ver planes</Link>
+            <Link to="/app/reservas">Mis reservas</Link>
           </Button>
           <Button asChild>
             <Link to="/app">Ir al calendario</Link>
