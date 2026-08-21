@@ -396,42 +396,58 @@ function WaitlistSheet({
   );
 }
 
-function DropInPaymentFlow({
-  bookingId,
+function PlanPaymentFlow({
+  payment,
   onClose,
 }: {
-  bookingId: string | null;
+  payment: { plan: Plan; month: string; classIds: string[] } | null;
   onClose: () => void;
 }) {
   const [methodOpen, setMethodOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [dropInMethod, setDropInMethod] = useState<"card" | "bizum">("card");
+  const [method, setMethod] = useState<"card" | "bizum">("card");
   const [cashLoading, setCashLoading] = useState(false);
 
   useEffect(() => {
-    if (bookingId) setMethodOpen(true);
-  }, [bookingId]);
+    if (payment) setMethodOpen(true);
+  }, [payment]);
 
-  const handleDropInCash = async () => {
-    if (!bookingId) return;
+  const count = payment?.classIds.length ?? 0;
+
+  const handleCash = async () => {
+    if (!payment) return;
     setCashLoading(true);
     const { error } = await (supabase.rpc as unknown as (
       fn: string,
       args: Record<string, unknown>,
-    ) => Promise<{ error: { message: string } | null }>)("pay_drop_in_cash", {
-      p_booking_id: bookingId,
+    ) => Promise<{ error: { message: string } | null }>)("purchase_plan_cash", {
+      p_plan_id: payment.plan.id,
+      p_month: payment.month,
     });
-    setCashLoading(false);
     if (error) {
+      setCashLoading(false);
       toast.error("No se pudo reservar tu plaza", { description: error.message });
       return;
     }
+    let ok = 0;
+    for (const id of payment.classIds) {
+      try {
+        await bookClass(id, "plan");
+        ok += 1;
+      } catch {
+        /* keep going */
+      }
+    }
+    setCashLoading(false);
     setMethodOpen(false);
-    toast.success("Plaza reservada", {
-      description: "Paga los 20 € en el estudio antes de la clase.",
+    toast.success(ok === 1 ? "Clase reservada" : `${ok} clases reservadas`, {
+      description: `Paga ${formatEuros(payment.plan.price_cents)} en tu primera clase del mes.`,
     });
+    clearPendingBookings();
     onClose();
   };
+
+  const returnUrl = `${window.location.origin}/app/plan-exitoso?session_id={CHECKOUT_SESSION_ID}`;
 
   return (
     <>
@@ -444,9 +460,13 @@ function DropInPaymentFlow({
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>¿Cómo quieres pagar la clase?</DialogTitle>
+            <DialogTitle>
+              {count === 1 ? "1 clase este mes" : `${count} clases este mes`}
+            </DialogTitle>
             <DialogDescription>
-              20 € · Guardamos tu plaza 30 minutos mientras completas el pago.
+              {payment
+                ? `${formatEuros(payment.plan.price_cents)} · Elige cómo quieres pagar y confirmamos tus clases.`
+                : ""}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
@@ -455,13 +475,13 @@ function DropInPaymentFlow({
               size="lg"
               className="h-auto justify-start gap-3 py-4 text-left"
               disabled={cashLoading}
-              onClick={() => void handleDropInCash()}
+              onClick={() => void handleCash()}
             >
               <Banknote className="h-5 w-5 shrink-0" />
               <span className="flex flex-col">
                 <span className="font-medium">Efectivo</span>
                 <span className="text-sm text-muted-foreground">
-                  Reserva tu plaza y paga en el estudio
+                  Reserva tus clases y paga en el estudio
                 </span>
               </span>
             </Button>
@@ -471,7 +491,7 @@ function DropInPaymentFlow({
               className="h-auto justify-start gap-3 py-4 text-left"
               disabled={cashLoading}
               onClick={() => {
-                setDropInMethod("card");
+                setMethod("card");
                 setMethodOpen(false);
                 setCheckoutOpen(true);
               }}
@@ -488,7 +508,7 @@ function DropInPaymentFlow({
               className="h-auto justify-start gap-3 py-4 text-left"
               disabled={cashLoading}
               onClick={() => {
-                setDropInMethod("bizum");
+                setMethod("bizum");
                 setMethodOpen(false);
                 setCheckoutOpen(true);
               }}
@@ -508,24 +528,24 @@ function DropInPaymentFlow({
           setCheckoutOpen(o);
           if (!o) onClose();
         }}
-        title="Pagar clase"
+        title="Pagar mis clases"
         fetchClientSecret={async () => {
-          if (!bookingId) throw new Error("No booking");
-          const returnUrl = `${window.location.origin}/app/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`;
-          const { clientSecret } = await createDropInCheckout({
-            bookingId,
+          if (!payment) throw new Error("No payment");
+          const { clientSecret } = await createPlanCheckout({
+            planId: payment.plan.id,
             returnUrl,
-            paymentMethod: dropInMethod,
+            paymentMethod: method,
+            month: payment.month,
           });
           return clientSecret;
         }}
         fetchHostedUrl={async () => {
-          if (!bookingId) throw new Error("No booking");
-          const returnUrl = `${window.location.origin}/app/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`;
-          const { url } = await createDropInCheckout({
-            bookingId,
+          if (!payment) throw new Error("No payment");
+          const { url } = await createPlanCheckout({
+            planId: payment.plan.id,
             returnUrl,
-            paymentMethod: dropInMethod,
+            paymentMethod: method,
+            month: payment.month,
             hosted: true,
           });
           return url;
@@ -534,3 +554,4 @@ function DropInPaymentFlow({
     </>
   );
 }
+
