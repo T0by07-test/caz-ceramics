@@ -165,8 +165,11 @@ function CalendarioPage() {
         <span className="text-label uppercase">Tu mes</span>
         <h1 className="text-h1 mt-1">Calendario</h1>
         <p className="text-body mt-2 text-muted-foreground">
-          Toca las clases a las que quieras venir y confirma tu reserva.
+          {hasPlan
+            ? "Toca las clases a las que quieras venir y confirma tu reserva."
+            : "Toca las clases a las que quieras venir este mes: el precio se calcula automáticamente según cuántas elijas."}
         </p>
+
       </div>
 
       <CalendarHeader
