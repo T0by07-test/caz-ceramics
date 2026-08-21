@@ -200,6 +200,7 @@ function CalendarioPage() {
         <SelectionBar
           classes={selectedClasses}
           hasPlan={hasPlan}
+          priceCents={pricePlan?.price_cents ?? null}
           submitting={submitting}
           onClear={() => setSelectedIds(new Set())}
           onConfirm={() => void handleConfirm()}
@@ -208,10 +209,11 @@ function CalendarioPage() {
 
       <WaitlistSheet cls={full} onOpenChange={(open) => !open && setFull(null)} />
 
-      <DropInPaymentFlow
-        bookingId={pendingBookingId}
+      <PlanPaymentFlow
+        payment={payment}
         onClose={() => {
-          setPendingBookingId(null);
+          setPayment(null);
+          setSelectedIds(new Set());
           void refresh();
         }}
       />
@@ -222,12 +224,14 @@ function CalendarioPage() {
 function SelectionBar({
   classes,
   hasPlan,
+  priceCents,
   submitting,
   onClear,
   onConfirm,
 }: {
   classes: ClassWithCount[];
   hasPlan: boolean;
+  priceCents: number | null;
   submitting: boolean;
   onClear: () => void;
   onConfirm: () => void;
@@ -237,8 +241,11 @@ function SelectionBar({
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 p-3 shadow-card backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center gap-3">
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-semibold">
-            {count === 1 ? "1 clase seleccionada" : `${count} clases seleccionadas`}
+          <div className="flex flex-wrap items-baseline gap-x-2 text-sm font-semibold">
+            <span>{count === 1 ? "1 clase seleccionada" : `${count} clases seleccionadas`}</span>
+            {!hasPlan && priceCents !== null ? (
+              <span className="text-primary">{formatEuros(priceCents)} este mes</span>
+            ) : null}
           </div>
           <div className="truncate text-xs text-muted-foreground">
             {classes
@@ -256,12 +263,15 @@ function SelectionBar({
               ? count === 1
                 ? "Reservar clase"
                 : `Reservar ${count} clases`
-              : "Reservar y pagar"}
+              : priceCents !== null
+                ? `Pagar ${formatEuros(priceCents)}`
+                : "Continuar"}
         </Button>
       </div>
     </div>
   );
 }
+
 
 function Legend() {
   return (
