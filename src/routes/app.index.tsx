@@ -63,14 +63,18 @@ function CalendarioPage() {
   const [full, setFull] = useState<ClassWithCount | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
-  const [pendingBookingId, setPendingBookingId] = useState<string | null>(null);
+  const [payment, setPayment] = useState<{ plan: Plan; month: string; classIds: string[] } | null>(
+    null,
+  );
   const { classes, loading, refresh } = useClassesInRange(range, "student");
   const { hasPlan } = useMyPlan(reference);
+  const plans = useActivePlans();
 
   const selectedClasses = useMemo(
     () => classes.filter((c) => selectedIds.has(c.id)),
     [classes, selectedIds],
   );
+  const priceePlan = planForCount(plans, selectedClasses.length);
 
   const setView = (v: CalendarView) =>
     navigate({ search: (prev: CalendarSearch) => ({ ...prev, view: v }) });
@@ -100,31 +104,33 @@ function CalendarioPage() {
 
   const handleConfirm = async () => {
     if (selectedClasses.length === 0) return;
-    if (!hasPlan && selectedClasses.length > 1) {
-      toast.error("Para reservar varias clases necesitas un plan mensual", {
-        description: "Elige un plan en «Planes» y reserva todas las clases que quieras.",
-      });
-      return;
-    }
-    setSubmitting(true);
     const ordered = [...selectedClasses].sort((a, b) =>
       `${a.date}${a.start_time}`.localeCompare(`${b.date}${b.start_time}`),
     );
+
     if (!hasPlan) {
-      try {
-        const res = await bookClass(ordered[0].id, "drop_in");
-        setSelectedIds(new Set());
-        setPendingBookingId(res.booking_id);
-      } catch (err) {
-        toast.error("No se pudo reservar", {
-          description: err instanceof Error ? err.message : undefined,
+      // No plan yet: price comes straight from the number of classes chosen.
+      const months = new Set(ordered.map((c) => c.date.slice(0, 7)));
+      if (months.size > 1) {
+        toast.error("Elige clases de un solo mes", {
+          description: "El precio se calcula por mes. Reserva primero un mes y luego el siguiente.",
         });
-      } finally {
-        setSubmitting(false);
+        return;
       }
+      if (!pricePlan) {
+        toast.error("No se pudo calcular el precio", {
+          description: "Vuelve a intentarlo en unos segundos.",
+        });
+        return;
+      }
+      const month = `${ordered[0]!.date.slice(0, 7)}-01`;
+      const classIds = ordered.map((c) => c.id);
+      savePendingBookings({ month, classIds });
+      setPayment({ plan: pricePlan, month, classIds });
       return;
     }
 
+    setSubmitting(true);
     let ok = 0;
     const failed: string[] = [];
     for (const c of ordered) {
@@ -151,6 +157,7 @@ function CalendarioPage() {
     }
     void refresh();
   };
+
 
   return (
     <div className="space-y-6 pb-24">
