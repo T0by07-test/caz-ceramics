@@ -1004,6 +1004,10 @@ export type Database = {
       }
       mark_notification_sent: { Args: { p_id: string }; Returns: undefined }
       pay_drop_in_cash: { Args: { p_booking_id: string }; Returns: undefined }
+      pay_drop_in_cash_batch: {
+        Args: { p_booking_ids: string[] }
+        Returns: undefined
+      }
       promote_waitlist: { Args: { p_class_id: string }; Returns: undefined }
       purchase_plan_cash: {
         Args: { p_month?: string; p_plan_id: string }
