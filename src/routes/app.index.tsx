@@ -35,11 +35,7 @@ import { StripeCheckoutDialog } from "@/components/StripeCheckoutDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useActivePlans, planForCount, formatEuros, type Plan } from "@/lib/plan-pricing";
-import {
-  savePendingBookings,
-  clearPendingBookings,
-  loadPendingBookings,
-} from "@/lib/pending-bookings";
+import { savePendingBookings, clearPendingBookings } from "@/lib/pending-bookings";
 import {
   calendarSearchSchema,
   parseReference,
