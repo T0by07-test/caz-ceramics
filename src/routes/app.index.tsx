@@ -30,10 +30,12 @@ import { useClassesInRange, type ClassWithCount } from "@/hooks/useClassesInRang
 import { useMyPlan } from "@/hooks/useMyPlan";
 import { bookClass } from "@/lib/booking";
 import { joinWaitlist } from "@/lib/waitlist";
-import { createDropInCheckout } from "@/lib/checkout";
+import { createPlanCheckout } from "@/lib/checkout";
 import { StripeCheckoutDialog } from "@/components/StripeCheckoutDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useActivePlans, planForCount, formatEuros, type Plan } from "@/lib/plan-pricing";
+import { savePendingBookings } from "@/lib/pending-bookings";
 import {
   calendarSearchSchema,
   parseReference,
@@ -44,6 +46,7 @@ import {
 } from "@/lib/calendar-view";
 import { CalendarHeader } from "@/components/calendar/CalendarHeader";
 import { CalendarBoard } from "@/components/calendar/CalendarBoard";
+
 
 export const Route = createFileRoute("/app/")({
   validateSearch: (search) => calendarSearchSchema.parse(search),
