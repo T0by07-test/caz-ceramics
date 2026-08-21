@@ -62,6 +62,7 @@ function CalendarioPage() {
 
   const [full, setFull] = useState<ClassWithCount | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [reviewOpen, setReviewOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [payment, setPayment] = useState<{ plan: Plan; month: string; classIds: string[] } | null>(
     null,
