@@ -74,7 +74,7 @@ function CalendarioPage() {
     () => classes.filter((c) => selectedIds.has(c.id)),
     [classes, selectedIds],
   );
-  const priceePlan = planForCount(plans, selectedClasses.length);
+  const pricePlan = planForCount(plans, selectedClasses.length);
 
   const setView = (v: CalendarView) =>
     navigate({ search: (prev: CalendarSearch) => ({ ...prev, view: v }) });
