@@ -244,7 +244,11 @@ Deno.serve(async (req) => {
     // attendance/refund records stay granular even though it's a single Stripe charge.
     const basePaymentRow: Record<string, unknown> = {
       student_id: user.id,
-      amount_cents: stripePrice.unit_amount ?? 0,
+      amount_cents:
+        purpose === "drop_in" && dropInCount > 0
+          ? Math.round(totalCents / dropInCount)
+          : totalCents,
+
       status: "pending",
       stripe_session_id: session.id,
     };
