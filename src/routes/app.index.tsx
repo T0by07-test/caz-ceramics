@@ -104,6 +104,7 @@ function CalendarioPage() {
   };
 
   const handleConfirm = async () => {
+    setReviewOpen(false);
     if (selectedClasses.length === 0) return;
     const ordered = [...selectedClasses].sort((a, b) =>
       `${a.date}${a.start_time}`.localeCompare(`${b.date}${b.start_time}`),
@@ -207,11 +208,22 @@ function CalendarioPage() {
           priceCents={pricePlan?.price_cents ?? null}
           submitting={submitting}
           onClear={() => setSelectedIds(new Set())}
-          onConfirm={() => void handleConfirm()}
+          onConfirm={() => setReviewOpen(true)}
         />
       ) : null}
 
+      <ReviewDialog
+        open={reviewOpen}
+        onOpenChange={setReviewOpen}
+        classes={selectedClasses}
+        hasPlan={hasPlan}
+        priceCents={pricePlan?.price_cents ?? null}
+        submitting={submitting}
+        onConfirm={() => void handleConfirm()}
+      />
+
       <WaitlistSheet cls={full} onOpenChange={(open) => !open && setFull(null)} />
+
 
       <PlanPaymentFlow
         payment={payment}
@@ -273,6 +285,83 @@ function SelectionBar({
         </Button>
       </div>
     </div>
+  );
+}
+
+function ReviewDialog({
+  open,
+  onOpenChange,
+  classes,
+  hasPlan,
+  priceCents,
+  submitting,
+  onConfirm,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  classes: ClassWithCount[];
+  hasPlan: boolean;
+  priceCents: number | null;
+  submitting: boolean;
+  onConfirm: () => void;
+}) {
+  const ordered = [...classes].sort((a, b) =>
+    `${a.date}${a.start_time}`.localeCompare(`${b.date}${b.start_time}`),
+  );
+  const count = ordered.length;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Revisa tus clases</DialogTitle>
+          <DialogDescription>
+            {count === 1
+              ? "Has seleccionado 1 clase."
+              : `Has seleccionado ${count} clases.`}{" "}
+            Comprueba fecha y horario antes de confirmar.
+          </DialogDescription>
+        </DialogHeader>
+
+        <ul className="max-h-72 space-y-2 overflow-y-auto">
+          {ordered.map((c) => (
+            <li
+              key={c.id}
+              className="rounded-xl border border-border bg-surface p-3 text-sm shadow-card"
+            >
+              <div className="font-semibold capitalize">{formatLongDate(c.date)}</div>
+              <div className="text-xs text-muted-foreground">
+                {formatTimeRange(c.start_time, c.end_time)}
+                {c.teacher ? ` · Profe ${c.teacher}` : ""}
+                {c.audience === "kids" ? " · Clase infantil" : ""}
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        <div className="flex items-baseline justify-between border-t border-border pt-3">
+          <span className="text-sm text-muted-foreground">
+            {hasPlan ? "Incluidas en tu plan" : "Total este mes"}
+          </span>
+          <span className="text-lg font-semibold text-primary">
+            {hasPlan ? "0 €" : priceCents !== null ? formatEuros(priceCents) : "—"}
+          </span>
+        </div>
+
+        <div className="flex gap-2">
+          <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+            Seguir eligiendo
+          </Button>
+          <Button className="flex-1" onClick={onConfirm} disabled={submitting}>
+            {hasPlan
+              ? "Confirmar reserva"
+              : priceCents !== null
+                ? `Pagar ${formatEuros(priceCents)}`
+                : "Continuar"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
