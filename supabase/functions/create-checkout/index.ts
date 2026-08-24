@@ -135,6 +135,8 @@ Deno.serve(async (req) => {
 
     const stripe = createStripeClient(environment);
     let priceId: string;
+    let dropInCount = 0;
+
     const metadata: Record<string, string> = {
       userId: user.id,
       purpose,
