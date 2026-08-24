@@ -25,15 +25,20 @@ function PagoExitosoPage() {
     let cancelled = false;
     let attempts = 0;
     const poll = async () => {
+      // A checkout session can cover several classes (one payment row per booking),
+      // so the session is only confirmed once every row tied to it is.
       const { data } = await supabase
         .from("payments")
         .select("status, booking_id")
-        .eq("stripe_session_id", session_id)
-        .maybeSingle();
+        .eq("stripe_session_id", session_id);
       if (cancelled) return;
-      if (data?.status === "confirmed") setStatus("confirmed");
-      else if (data?.status === "failed") setStatus("failed");
-      else if (attempts++ < 15) setTimeout(poll, 1000);
+      if (data && data.length > 0 && data.every((p) => p.status === "confirmed")) {
+        setStatus("confirmed");
+      } else if (data?.some((p) => p.status === "failed")) {
+        setStatus("failed");
+      } else if (attempts++ < 15) {
+        setTimeout(poll, 1000);
+      }
     };
     void poll();
     return () => {

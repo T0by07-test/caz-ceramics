@@ -7,10 +7,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { createTrialCheckout } from "@/lib/checkout";
 import { startOfMonth, toIsoDate } from "@/lib/calendar";
-import {
-  PublicClassCalendar,
-  type UpcomingClass,
-} from "@/components/PublicClassCalendar";
+import { PublicClassCalendar, type UpcomingClass } from "@/components/PublicClassCalendar";
 import {
   Dialog,
   DialogContent,
@@ -21,14 +18,14 @@ import {
 
 export const Route = createFileRoute("/")({
   head: () => ({
-      meta: [
-        { title: "Cazú Ceramics — Clases de cerámica en un espacio acogedor" },
-        {
-          name: "description",
-          content:
-            "Solicita tu plaza en Cazú Ceramics. Clases de cerámica en grupos reducidos, atención personalizada y un ambiente cálido y artesanal.",
-        },
-        { property: "og:title", content: "Cazú Ceramics" },
+    meta: [
+      { title: "Cazú Ceramics — Clases de cerámica en un espacio acogedor" },
+      {
+        name: "description",
+        content:
+          "Solicita tu plaza en Cazú Ceramics. Clases de cerámica en grupos reducidos, atención personalizada y un ambiente cálido y artesanal.",
+      },
+      { property: "og:title", content: "Cazú Ceramics" },
       {
         property: "og:description",
         content: "Clases de cerámica en grupos reducidos. Solicita tu plaza.",
@@ -64,8 +61,7 @@ const PLANS = [
   {
     classes: "2 clases",
     detail: "al mes",
-    description:
-      "El equilibrio perfecto para mantener la cerámica en tu rutina.",
+    description: "El equilibrio perfecto para mantener la cerámica en tu rutina.",
     price: "55 €",
     period: "/ mes",
   },
@@ -81,9 +77,8 @@ const PLANS = [
   {
     classes: "4 clases",
     detail: "al mes",
-    tagline: "Una clase cada semana",
-    description:
-      "La opción ideal si quieres hacer de la cerámica parte de tu rutina.",
+    tagline: "Elige los días que quieras",
+    description: "La opción ideal si quieres hacer de la cerámica parte de tu rutina.",
     price: "85 €",
     period: "/ mes",
     featured: true,
@@ -119,8 +114,10 @@ function Index() {
             <br />a tu ritmo.
           </h1>
           <p className="text-body mt-5 text-muted-foreground">
-            Un espacio para descubrir la cerámica, aprender nuevas técnicas y crear con tus propias manos. Clases para todos los niveles, grupos reducidos y&nbsp;
-            <br />acompañamiento durante todo el proceso.
+            Un espacio para descubrir la cerámica, aprender nuevas técnicas y crear con tus propias
+            manos. Clases para todos los niveles, grupos reducidos y&nbsp;
+            <br />
+            acompañamiento durante todo el proceso.
           </p>
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -142,10 +139,7 @@ function Index() {
           </div>
           <ol className="mx-auto mt-8 grid max-w-3xl gap-4 sm:grid-cols-2">
             {STEPS.map((s) => (
-              <li
-                key={s.n}
-                className="rounded-2xl border border-border bg-surface p-5 shadow-card"
-              >
+              <li key={s.n} className="rounded-2xl border border-border bg-surface p-5 shadow-card">
                 <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                   {s.n}
                 </span>
@@ -198,9 +192,7 @@ function Index() {
           </div>
 
           <div className="mt-6 text-center">
-            <p className="text-body text-foreground">
-              ¿Quieres venir más de 4 veces al mes?
-            </p>
+            <p className="text-body text-foreground">¿Quieres venir más de 4 veces al mes?</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Puedes añadir clases extra por 20 € cada una.
             </p>
@@ -208,12 +200,12 @@ function Index() {
 
           <div className="mt-8 rounded-2xl border border-border bg-surface p-6 text-center shadow-card sm:p-8">
             <p className="text-body text-foreground">
-              Tú eliges cuándo venir. Cada mes tienes un número de clases según el plan
-              que elijas y puedes reservarlas desde el calendario según la disponibilidad.
+              Tú eliges cuándo venir. Cada mes tienes un número de clases según el plan que elijas y
+              puedes reservarlas desde el calendario según la disponibilidad.
             </p>
             <p className="mt-3 text-xs text-muted-foreground">
-              Las clases no se acumulan de un mes a otro. Si no las usas, se reinician al
-              comienzo del siguiente mes.
+              Las clases no se acumulan de un mes a otro. Si no las usas, se reinician al comienzo
+              del siguiente mes.
             </p>
             <div className="mt-6">
               <Button asChild size="lg">
@@ -229,8 +221,8 @@ function Index() {
             <span className="text-label uppercase">Cosas a tener en cuenta</span>
             <h2 className="text-h2 mt-2">Cancelaciones y recuperaciones</h2>
             <p className="text-body mx-auto mt-3 max-w-xl text-muted-foreground">
-              Pagas por las clases del plan que elijas (1, 2, 3 o 4 al mes). Si no puedes
-              asistir a alguna, esto es lo que necesitas saber.
+              Pagas por las clases del plan que elijas (1, 2, 3 o 4 al mes). Si no puedes asistir a
+              alguna, esto es lo que necesitas saber.
             </p>
           </div>
           <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -240,8 +232,8 @@ function Index() {
               </span>
               <h3 className="mt-4 text-base font-semibold">Avisa con tiempo</h3>
               <p className="mt-1.5 text-sm text-muted-foreground">
-                Cancela tu clase con al menos 12 horas de antelación para no perderla.
-                Así podemos ofrecer tu plaza a alguien más.
+                Cancela tu clase con al menos 12 horas de antelación para no perderla. Así podemos
+                ofrecer tu plaza a alguien más.
               </p>
             </li>
             <li className="rounded-2xl border border-border bg-surface p-5 shadow-card">
@@ -250,26 +242,24 @@ function Index() {
               </span>
               <h3 className="mt-4 text-base font-semibold">Recupera tu clase</h3>
               <p className="mt-1.5 text-sm text-muted-foreground">
-                Si cancelas a tiempo, puedes reservar otro horario disponible dentro del
-                mismo mes a través del calendario.
+                Si cancelas a tiempo, puedes reservar otro horario disponible dentro del mismo mes a
+                través del calendario.
               </p>
             </li>
             <li className="rounded-2xl border border-border bg-surface p-5 shadow-card">
               <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                 03
               </span>
-              <h3 className="mt-4 text-base font-semibold">
-                Si cancelas tarde o no vienes
-              </h3>
+              <h3 className="mt-4 text-base font-semibold">Si cancelas tarde o no vienes</h3>
               <p className="mt-1.5 text-sm text-muted-foreground">
-                Si cancelas con menos de 12 horas o no asistes sin avisar, esa clase se
-                cuenta como utilizada y no se puede recuperar.
+                Si cancelas con menos de 12 horas o no asistes sin avisar, esa clase se cuenta como
+                utilizada y no se puede recuperar.
               </p>
             </li>
           </ol>
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            Las clases recuperadas deben usarse dentro del mismo mes natural. No se
-            acumulan ni se trasladan al mes siguiente.
+            Las clases recuperadas deben usarse dentro del mismo mes natural. No se acumulan ni se
+            trasladan al mes siguiente.
           </p>
         </section>
 
@@ -277,8 +267,8 @@ function Index() {
         <section className="mt-20 text-center sm:mt-28">
           <h2 className="text-h2">¿List@ para empezar?</h2>
           <p className="text-body mx-auto mt-3 max-w-md text-muted-foreground">
-            Cuéntanos qué horarios te vienen bien y encontraremos la opción que
-            mejor encaje contigo.
+            Cuéntanos qué horarios te vienen bien y encontraremos la opción que mejor encaje
+            contigo.
           </p>
           <div className="mt-6">
             <Button asChild size="lg">
@@ -291,41 +281,35 @@ function Index() {
   );
 }
 
-function InfoDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-}) {
+function InfoDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto text-left sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-h3">Clases regulares de cerámica</DialogTitle>
           <DialogDescription>
-            Son clases de modelado en cerámica, en grupos reducidos y para todos los
-            niveles. No necesitas experiencia previa. 🤎
+            Son clases de modelado en cerámica, en grupos reducidos y para todos los niveles. No
+            necesitas experiencia previa. 🤎
           </DialogDescription>
         </DialogHeader>
 
         <p className="text-sm text-muted-foreground">
-          En las clases exploramos diferentes técnicas e ideas para crear tus propias
-          piezas. Trabajamos con arcilla gres, un material resistente y duradero, y
-          puedes crear tanto piezas funcionales como piezas decorativas.
+          En las clases exploramos diferentes técnicas e ideas para crear tus propias piezas.
+          Trabajamos con arcilla gres, un material resistente y duradero, y puedes crear tanto
+          piezas funcionales como piezas decorativas.
         </p>
 
         <ul className="space-y-2 rounded-xl border border-border bg-surface p-4 text-sm">
           <li>
-            <span aria-hidden>📍</span> <strong>Dónde:</strong> Taller Cazú Ceramics,
-            Ruzafa, Valencia
+            <span aria-hidden>📍</span> <strong>Dónde:</strong> Taller Cazú Ceramics, Ruzafa,
+            Valencia
           </li>
           <li>
             <span aria-hidden>⏰</span> <strong>Duración:</strong> 2 horas por clase
           </li>
           <li>
-            <span aria-hidden>📅</span> <strong>Frecuencia:</strong> puedes elegir entre
-            diferentes planes de 1 a 4 clases al mes, según el ritmo que quieras llevar.
+            <span aria-hidden>📅</span> <strong>Frecuencia:</strong> puedes elegir entre diferentes
+            planes de 1 a 4 clases al mes, según el ritmo que quieras llevar.
           </li>
         </ul>
 
@@ -341,8 +325,8 @@ function InfoDialog({
               <span aria-hidden>👐</span> Quiero probar una clase
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Ven a conocer el estudio, experimentar con el barro y descubrir si la
-              cerámica es para ti.
+              Ven a conocer el estudio, experimentar con el barro y descubrir si la cerámica es para
+              ti.
             </p>
             <TrialBooking />
           </div>
@@ -405,10 +389,7 @@ function TrialBooking() {
     return map;
   }, [classes]);
 
-  const selectedIds = useMemo(
-    () => new Set(selectedId ? [selectedId] : []),
-    [selectedId],
-  );
+  const selectedIds = useMemo(() => new Set(selectedId ? [selectedId] : []), [selectedId]);
 
   const handlePay = async () => {
     if (!selectedId) {
@@ -458,11 +439,7 @@ function TrialBooking() {
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="trial-name">Nombre</Label>
-          <Input
-            id="trial-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
+          <Input id="trial-name" value={name} onChange={(e) => setName(e.target.value)} />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="trial-email">Correo electrónico</Label>

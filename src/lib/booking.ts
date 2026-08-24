@@ -2,6 +2,13 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type BookSource = "plan" | "drop_in";
 
+/**
+ * Price of a single drop-in class, in cents. Mirrors the Stripe "drop_in_class_single"
+ * price and the amount hardcoded in pay_drop_in_cash_batch — kept in sync by hand,
+ * same as the rest of the pricing in this app (see the Stripe status doc).
+ */
+export const DROP_IN_PRICE_CENTS = 2000;
+
 export type BookResult = { booking_id: string; status: string };
 export type CancelResult = {
   booking_id: string;
@@ -39,11 +46,15 @@ export async function bookClass(classId: string, source: BookSource): Promise<Bo
   return row as BookResult;
 }
 
-export async function bookMakeup(classId: string): Promise<{ booking_id: string; makeup_id: string }> {
-  const { data, error } = await (supabase.rpc as unknown as (
-    fn: string,
-    args: Record<string, unknown>,
-  ) => Promise<{ data: unknown; error: { message: string } | null }>)("book_makeup", {
+export async function bookMakeup(
+  classId: string,
+): Promise<{ booking_id: string; makeup_id: string }> {
+  const { data, error } = await (
+    supabase.rpc as unknown as (
+      fn: string,
+      args: Record<string, unknown>,
+    ) => Promise<{ data: unknown; error: { message: string } | null }>
+  )("book_makeup", {
     p_class_id: classId,
   });
   if (error) throw new Error(friendlyError(error.message));

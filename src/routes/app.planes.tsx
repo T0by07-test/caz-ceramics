@@ -32,10 +32,8 @@ export const Route = createFileRoute("/app/planes")({
 /** Month options: current month, plus next month from day 20 onwards. */
 function monthOptions() {
   const now = new Date();
-  const iso = (d: Date) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
-  const label = (d: Date) =>
-    d.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+  const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+  const label = (d: Date) => d.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
   const current = new Date(now.getFullYear(), now.getMonth(), 1);
   const options = [{ value: iso(current), label: label(current) }];
   if (now.getDate() >= 20) {
@@ -64,23 +62,28 @@ function PlanesPage() {
     setOpen(true);
   }, []);
 
-  const handleCash = useCallback(async (plan: Plan) => {
-    setCashLoading(true);
-    const { error } = await (supabase.rpc as unknown as (
-      fn: string,
-      args: Record<string, unknown>,
-    ) => Promise<{ error: { message: string } | null }>)("purchase_plan_cash", {
-      p_plan_id: plan.id,
-      p_month: month,
-    });
-    setCashLoading(false);
-    if (error) {
-      toast.error(error.message ?? "No se pudo reservar tu plaza");
-      return;
-    }
-    setMethodOpen(false);
-    setCashConfirmOpen(true);
-  }, [month]);
+  const handleCash = useCallback(
+    async (plan: Plan) => {
+      setCashLoading(true);
+      const { error } = await (
+        supabase.rpc as unknown as (
+          fn: string,
+          args: Record<string, unknown>,
+        ) => Promise<{ error: { message: string } | null }>
+      )("purchase_plan_cash", {
+        p_plan_id: plan.id,
+        p_month: month,
+      });
+      setCashLoading(false);
+      if (error) {
+        toast.error(error.message ?? "No se pudo reservar tu plaza");
+        return;
+      }
+      setMethodOpen(false);
+      setCashConfirmOpen(true);
+    },
+    [month],
+  );
 
   useEffect(() => {
     void (async () => {
@@ -155,7 +158,10 @@ function PlanesPage() {
       {plans === null ? (
         <div className="grid gap-4 sm:grid-cols-2">
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-44 animate-pulse rounded-xl border border-border bg-surface" />
+            <div
+              key={i}
+              className="h-44 animate-pulse rounded-xl border border-border bg-surface"
+            />
           ))}
         </div>
       ) : plans.length === 0 ? (
@@ -169,7 +175,9 @@ function PlanesPage() {
                   <h2 className="text-h3">{p.name}</h2>
                   <p className="text-label mt-1 uppercase">{p.classes_per_month} clases / mes</p>
                 </div>
-                <Badge variant="secondary" className="shrink-0">Pago único</Badge>
+                <Badge variant="secondary" className="shrink-0">
+                  Pago único
+                </Badge>
               </div>
               <p className="text-3xl font-semibold tabular-nums">
                 {(p.price_cents / 100).toLocaleString("es-ES", {
@@ -218,7 +226,7 @@ function PlanesPage() {
               <span className="flex flex-col">
                 <span className="font-medium">Efectivo</span>
                 <span className="text-sm text-muted-foreground">
-                  Reserva tu plaza y paga en tu primera clase
+                  Reserva tu plaza y paga en tu primera clase del mes
                 </span>
               </span>
             </Button>
@@ -245,7 +253,9 @@ function PlanesPage() {
               <Smartphone className="h-5 w-5 shrink-0" />
               <span className="flex flex-col">
                 <span className="font-medium">Bizum</span>
-                <span className="text-sm text-muted-foreground">Paga ahora con Bizum</span>
+                <span className="text-sm text-muted-foreground">
+                  Paga ahora con Bizum al 627 093 463
+                </span>
               </span>
             </Button>
           </div>
@@ -262,9 +272,7 @@ function PlanesPage() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Tu plaza está reservada</DialogTitle>
-            <DialogDescription>
-              Paga el importe en tu primera clase del mes.
-            </DialogDescription>
+            <DialogDescription>Paga el importe en tu primera clase del mes.</DialogDescription>
           </DialogHeader>
           <Button
             size="lg"

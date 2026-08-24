@@ -132,6 +132,7 @@ async function handleSessionCompleted(session: any, _env: StripeEnv) {
 
   // Mirror the income into the admin ledger with the student's name.
   const amountForLedger = (session.amount_total as number | null) ?? 0;
+  const classCount = Number(md.classCount ?? "1") || 1;
   if (md.userId) {
     const { data: profile } = await admin()
       .from("profiles")
@@ -143,26 +144,33 @@ async function handleSessionCompleted(session: any, _env: StripeEnv) {
       || "Alumna";
     await recordLedgerIncome({
       studentName,
-      item: purpose === "plan" ? "Plan mensual" : "Clase suelta",
+      item: purpose === "plan"
+        ? "Plan mensual"
+        : classCount > 1 ? `${classCount} clases sueltas` : "Clase suelta",
       category: purpose === "plan" ? "Clases" : "Suelta",
       amountCents: amountForLedger,
       stripeSessionId: sessionId,
     });
   }
 
-  // Record the real paid amount on the payment row (the confirming RPCs above
-  // leave amount_cents at 0). amount_total is in cents; guard against null.
-  const amountTotal = session.amount_total as number | null | undefined;
-  if (amountTotal != null) {
-    const { error: amountError } = await admin()
-      .from("payments")
-      .update({ amount_cents: amountTotal })
-      .eq("stripe_session_id", sessionId);
-    if (amountError) {
-      console.error("Failed to record payment amount", { sessionId, amountError });
+  // Record the real paid amount on the plan's payment row (grant_plan_subscription
+  // leaves amount_cents at 0 for that single row). Drop-in checkouts already carry
+  // the correct per-class amount from creation time (one row per booked class), so
+  // overwriting them here with the full session total would double-count a
+  // multi-class purchase across its rows.
+  if (purpose === "plan") {
+    const amountTotal = session.amount_total as number | null | undefined;
+    if (amountTotal != null) {
+      const { error: amountError } = await admin()
+        .from("payments")
+        .update({ amount_cents: amountTotal })
+        .eq("stripe_session_id", sessionId);
+      if (amountError) {
+        console.error("Failed to record payment amount", { sessionId, amountError });
+      }
+    } else {
+      console.warn("Stripe session has no amount_total to record", { sessionId });
     }
-  } else {
-    console.warn("Stripe session has no amount_total to record", { sessionId });
   }
 }
 

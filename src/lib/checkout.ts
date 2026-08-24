@@ -4,7 +4,7 @@ import { getStripeEnvironment } from "@/lib/stripe";
 type PaymentMethod = "card" | "bizum";
 
 type CreateDropInArgs = {
-  bookingId: string;
+  bookingIds: string[];
   returnUrl: string;
   paymentMethod?: PaymentMethod;
   /** Ask for a top-level hosted Checkout URL instead of an embedded clientSecret. */
@@ -20,7 +20,7 @@ type CreatePlanArgs = {
 };
 
 export async function createDropInCheckout({
-  bookingId,
+  bookingIds,
   returnUrl,
   paymentMethod,
   hosted,
@@ -28,7 +28,7 @@ export async function createDropInCheckout({
   const { data, error } = await supabase.functions.invoke("create-checkout", {
     body: {
       purpose: "drop_in",
-      bookingId,
+      bookingIds,
       returnUrl,
       ...(paymentMethod ? { paymentMethod } : {}),
       ...(hosted ? { hosted: true } : {}),

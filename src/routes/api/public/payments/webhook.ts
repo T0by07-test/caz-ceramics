@@ -129,6 +129,7 @@ async function handleSessionCompleted(session: any) {
   }
 
   const amountForLedger = (session.amount_total as number | null) ?? 0;
+  const classCount = Number(md.classCount ?? "1") || 1;
   if (md.userId) {
     const { data: profile } = await admin()
       .from("profiles")
@@ -142,20 +143,27 @@ async function handleSessionCompleted(session: any) {
       "Alumna";
     await recordLedgerIncome({
       studentName,
-      item: purpose === "plan" ? "Plan mensual" : "Clase suelta",
+      item: purpose === "plan"
+        ? "Plan mensual"
+        : classCount > 1 ? `${classCount} clases sueltas` : "Clase suelta",
       category: purpose === "plan" ? "Clases" : "Suelta",
       amountCents: amountForLedger,
       stripeSessionId: sessionId,
     });
   }
 
-  const amountTotal = session.amount_total as number | null | undefined;
-  if (amountTotal != null) {
-    const { error: amountError } = await admin()
-      .from("payments")
-      .update({ amount_cents: amountTotal })
-      .eq("stripe_session_id", sessionId);
-    if (amountError) console.error("Failed to record payment amount", { sessionId, amountError });
+  // Drop-in payment rows already carry the correct per-class amount from creation
+  // time (one row per booked class); only plan payments need the total reconciled
+  // here, since a multi-class purchase would otherwise get double-counted per row.
+  if (purpose === "plan") {
+    const amountTotal = session.amount_total as number | null | undefined;
+    if (amountTotal != null) {
+      const { error: amountError } = await admin()
+        .from("payments")
+        .update({ amount_cents: amountTotal })
+        .eq("stripe_session_id", sessionId);
+      if (amountError) console.error("Failed to record payment amount", { sessionId, amountError });
+    }
   }
 }
 
