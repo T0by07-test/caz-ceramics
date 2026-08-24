@@ -407,7 +407,7 @@ function DropInPaymentFlow({ bookingIds, onClose }: { bookingIds: string[]; onCl
     }
     setMethodOpen(false);
     toast.success(count === 1 ? "Plaza reservada" : "Plazas reservadas", {
-      description: `Paga los ${totalLabel} € en el estudio antes de la clase.`,
+      description: `Paga ${totalLabel} en el estudio antes de la clase.`,
     });
     onClose();
   };
