@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { withoutClosedDates } from "@/lib/closures";
 import { createEnrollmentRequest } from "@/lib/requests";
 import { startOfMonth, toIsoDate } from "@/lib/calendar";
 import {
@@ -80,7 +81,7 @@ function SolicitarPage() {
         setClasses([]);
         return;
       }
-      setClasses((data ?? []) as UpcomingClass[]);
+      setClasses(withoutClosedDates((data ?? []) as UpcomingClass[]));
     })();
   }, []);
 
@@ -176,7 +177,7 @@ function SolicitarPage() {
             <CardDescription>
               {isTrial ? (
                 <>
-                  Clase de prueba · 2 horas · 30 €
+                  Clase de prueba · 2 horas · 35 €
                   <br />
                   Todos los materiales y cocciones incluidos.
                   <br />

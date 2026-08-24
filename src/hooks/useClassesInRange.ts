@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { withoutClosedDates } from "@/lib/closures";
+
 
 export type ClassRow = {
   id: string;
@@ -54,14 +56,18 @@ export function useClassesInRange(
       q = q.eq("status", "scheduled");
     }
 
-    const { data: classRows, error: classErr } = await q;
+    const { data: allRows, error: classErr } = await q;
     if (classErr) {
       setError(classErr.message);
       setLoading(false);
       return;
     }
 
+    // Students never see classes on studio closure dates.
+    const classRows = mode === "student" ? withoutClosedDates(allRows ?? []) : (allRows ?? []);
+
     const ids = (classRows ?? []).map((c) => c.id);
+
     let counts = new Map<string, number>();
     if (ids.length > 0) {
       const { data: bookings, error: bErr } = await supabase

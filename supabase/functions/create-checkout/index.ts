@@ -135,6 +135,8 @@ Deno.serve(async (req) => {
 
     const stripe = createStripeClient(environment);
     let priceId: string;
+    let dropInCount = 0;
+
     const metadata: Record<string, string> = {
       userId: user.id,
       purpose,
@@ -165,7 +167,9 @@ Deno.serve(async (req) => {
         }
       }
       priceId = "drop_in_class_single";
+      dropInCount = bookingIds.length;
       metadata.bookingIds = bookingIds.join(",");
+
       metadata.classCount = String(bookingIds.length);
     } else if (purpose === "plan") {
       const planId = body.planId as string | undefined;
@@ -185,13 +189,37 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Invalid purpose" }, 400);
     }
 
-    // Resolve human-readable price id via lookup_keys
-    const prices = await stripe.prices.list({ lookup_keys: [priceId], limit: 1 });
-    if (!prices.data.length) return jsonResponse({ error: `Price ${priceId} not found in Stripe` }, 500);
-    const stripePrice = prices.data[0];
+    // Resolve a Stripe price from its human-readable lookup key.
+    const resolvePrice = async (lookupKey: string) => {
+      const prices = await stripe.prices.list({ lookup_keys: [lookupKey], limit: 1 });
+      if (!prices.data.length) throw new Error(`Price ${lookupKey} not found in Stripe`);
+      return prices.data[0];
+    };
+
+    // Tiered monthly pricing for a selection of classes:
+    // 1 -> 30 €, 2 -> 55 €, 3 -> 70 €, 4 -> 85 €; every extra class 20 €.
+    const lineItems: { price: string; quantity: number }[] = [];
+    let totalCents = 0;
+    if (purpose === "drop_in") {
+      const tier = Math.min(dropInCount, 4);
+      const tierPrice = await resolvePrice(`plan_${tier}_class_month`);
+      lineItems.push({ price: tierPrice.id, quantity: 1 });
+      totalCents += tierPrice.unit_amount ?? 0;
+      const extras = dropInCount - tier;
+      if (extras > 0) {
+        const extraPrice = await resolvePrice("drop_in_class_single");
+        lineItems.push({ price: extraPrice.id, quantity: extras });
+        totalCents += (extraPrice.unit_amount ?? 0) * extras;
+      }
+    } else {
+      const planPrice = await resolvePrice(priceId);
+      lineItems.push({ price: planPrice.id, quantity: 1 });
+      totalCents += planPrice.unit_amount ?? 0;
+    }
 
     const sessionParams: Record<string, unknown> = {
-      line_items: [{ price: stripePrice.id, quantity: purpose === "drop_in" ? bookingIds.length : 1 }],
+      line_items: lineItems,
+
       mode: "payment",
       customer_email: user.email ?? undefined,
       metadata,
@@ -216,7 +244,11 @@ Deno.serve(async (req) => {
     // attendance/refund records stay granular even though it's a single Stripe charge.
     const basePaymentRow: Record<string, unknown> = {
       student_id: user.id,
-      amount_cents: stripePrice.unit_amount ?? 0,
+      amount_cents:
+        purpose === "drop_in" && dropInCount > 0
+          ? Math.round(totalCents / dropInCount)
+          : totalCents,
+
       status: "pending",
       stripe_session_id: session.id,
     };
