@@ -104,6 +104,7 @@ function CalendarioPage() {
   };
 
   const handleConfirm = async () => {
+    setReviewOpen(false);
     if (selectedClasses.length === 0) return;
     const ordered = [...selectedClasses].sort((a, b) =>
       `${a.date}${a.start_time}`.localeCompare(`${b.date}${b.start_time}`),
