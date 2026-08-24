@@ -167,7 +167,9 @@ Deno.serve(async (req) => {
         }
       }
       priceId = "drop_in_class_single";
+      dropInCount = bookingIds.length;
       metadata.bookingIds = bookingIds.join(",");
+
       metadata.classCount = String(bookingIds.length);
     } else if (purpose === "plan") {
       const planId = body.planId as string | undefined;
