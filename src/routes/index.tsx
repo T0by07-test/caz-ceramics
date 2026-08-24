@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { withoutClosedDates } from "@/lib/closures";
 import { createTrialCheckout } from "@/lib/checkout";
 import { startOfMonth, toIsoDate } from "@/lib/calendar";
 import { PublicClassCalendar, type UpcomingClass } from "@/components/PublicClassCalendar";
@@ -375,7 +376,7 @@ function TrialBooking() {
         setClasses([]);
         return;
       }
-      setClasses((data ?? []) as UpcomingClass[]);
+      setClasses(withoutClosedDates((data ?? []) as UpcomingClass[]));
     })();
   }, []);
 
