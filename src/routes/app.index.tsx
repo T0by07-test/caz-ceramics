@@ -28,7 +28,9 @@ import {
 } from "@/lib/calendar";
 import { useClassesInRange, type ClassWithCount } from "@/hooks/useClassesInRange";
 import { useMyPlan } from "@/hooks/useMyPlan";
-import { bookClass, DROP_IN_PRICE_CENTS } from "@/lib/booking";
+import { bookClass } from "@/lib/booking";
+import { formatEuros, monthlyPriceCents } from "@/lib/pricing";
+import { studioClosureFor } from "@/lib/closures";
 import { joinWaitlist } from "@/lib/waitlist";
 import { createDropInCheckout } from "@/lib/checkout";
 import { StripeCheckoutDialog } from "@/components/StripeCheckoutDialog";
@@ -49,20 +51,6 @@ export const Route = createFileRoute("/app/")({
   validateSearch: (search) => calendarSearchSchema.parse(search),
   component: CalendarioPage,
 });
-
-// Temporary, September-only: the calendar's boundary week (28/9–2/10) visually
-// appears at the tail of September's month grid, but those October days belong
-// to October's own schedule and shouldn't be bookable while browsing September.
-// Remove once September has passed.
-const SEPTEMBER_BOUNDARY_BLOCK_START = "2026-09-28";
-const SEPTEMBER_BOUNDARY_BLOCK_END = "2026-10-02";
-
-function isBlockedSeptemberBoundary(classDateIso: string, reference: Date): boolean {
-  if (reference.getFullYear() !== 2026 || reference.getMonth() !== 8) return false;
-  return (
-    classDateIso >= SEPTEMBER_BOUNDARY_BLOCK_START && classDateIso <= SEPTEMBER_BOUNDARY_BLOCK_END
-  );
-}
 
 function CalendarioPage() {
   const search = Route.useSearch();
@@ -97,10 +85,9 @@ function CalendarioPage() {
 
   const handleSelectClass = (c: ClassWithCount) => {
     if (c.status !== "scheduled") return;
-    if (isBlockedSeptemberBoundary(c.date, reference)) {
-      toast.error("Esta clase es de octubre", {
-        description: "Del 28/9 al 2/10 no se puede reservar desde el calendario de septiembre.",
-      });
+    const closure = studioClosureFor(c.date);
+    if (closure) {
+      toast.error("Esa semana el estudio está cerrado", { description: closure.label });
       return;
     }
     if (c.booked_count >= c.capacity_max) {
@@ -233,14 +220,14 @@ function SelectionBar({
   onConfirm: () => void;
 }) {
   const count = classes.length;
-  const totalLabel = ((count * DROP_IN_PRICE_CENTS) / 100).toFixed(0);
+  const totalLabel = formatEuros(monthlyPriceCents(count));
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 p-3 shadow-card backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center gap-3">
         <div className="min-w-0 flex-1">
           <div className="text-sm font-semibold">
             {count === 1 ? "1 clase seleccionada" : `${count} clases seleccionadas`}
-            {!hasPlan ? ` · Total ${totalLabel} €` : ""}
+            {!hasPlan ? ` · ${totalLabel}` : ""}
           </div>
           <div className="truncate text-xs text-muted-foreground">
             {classes
@@ -260,9 +247,7 @@ function SelectionBar({
               ? count === 1
                 ? "Reservar clase"
                 : `Reservar ${count} clases`
-              : count === 1
-                ? "Reservar y pagar"
-                : `Reservar y pagar (${count})`}
+              : `Reservar y pagar ${totalLabel}`}
         </Button>
       </div>
     </div>
@@ -398,7 +383,7 @@ function DropInPaymentFlow({ bookingIds, onClose }: { bookingIds: string[]; onCl
   const [dropInMethod, setDropInMethod] = useState<"card" | "bizum">("card");
   const [cashLoading, setCashLoading] = useState(false);
   const count = bookingIds.length;
-  const totalLabel = ((count * DROP_IN_PRICE_CENTS) / 100).toFixed(0);
+  const totalLabel = formatEuros(monthlyPriceCents(count));
 
   useEffect(() => {
     if (count > 0) setMethodOpen(true);
@@ -442,7 +427,7 @@ function DropInPaymentFlow({ bookingIds, onClose }: { bookingIds: string[]; onCl
               ¿Cómo quieres pagar {count === 1 ? "la clase" : `las ${count} clases`}?
             </DialogTitle>
             <DialogDescription>
-              {totalLabel} € · Guardamos tu plaza 30 minutos mientras completas el pago.
+              {totalLabel} · Guardamos tu plaza 30 minutos mientras completas el pago.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
