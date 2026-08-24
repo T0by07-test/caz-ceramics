@@ -208,11 +208,22 @@ function CalendarioPage() {
           priceCents={pricePlan?.price_cents ?? null}
           submitting={submitting}
           onClear={() => setSelectedIds(new Set())}
-          onConfirm={() => void handleConfirm()}
+          onConfirm={() => setReviewOpen(true)}
         />
       ) : null}
 
+      <ReviewDialog
+        open={reviewOpen}
+        onOpenChange={setReviewOpen}
+        classes={selectedClasses}
+        hasPlan={hasPlan}
+        priceCents={pricePlan?.price_cents ?? null}
+        submitting={submitting}
+        onConfirm={() => void handleConfirm()}
+      />
+
       <WaitlistSheet cls={full} onOpenChange={(open) => !open && setFull(null)} />
+
 
       <PlanPaymentFlow
         payment={payment}
