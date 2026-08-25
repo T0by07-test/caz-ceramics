@@ -551,7 +551,13 @@ function DropInPaymentFlow({
           if (!o) onClose();
         }}
         title={count === 1 ? "Pagar clase" : `Pagar ${count} clases`}
+        notice={
+          dropInMethod === "bizum"
+            ? "Si pagas con Bizum, envía el importe al 627 093 463."
+            : undefined
+        }
         fetchClientSecret={fetchClientSecret}
+
         fetchHostedUrl={fetchHostedUrl}
       />
     </>
