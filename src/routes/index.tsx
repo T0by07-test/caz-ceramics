@@ -340,7 +340,12 @@ function InfoDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: b
             Valencia
           </li>
           <li>
-            <span aria-hidden>⏰</span> <strong>Duración:</strong> 2 horas por clase
+            <span aria-hidden>⏰</span> <strong>Duración:</strong> 2 horas por clase (las clases de
+            niños son 1 hora)
+          </li>
+          <li>
+            <span aria-hidden>👩‍🏫</span> <strong>Profesoras:</strong> Sofi (lunes y viernes) y Cande
+            (miércoles y jueves)
           </li>
           <li>
             <span aria-hidden>📅</span> <strong>Frecuencia:</strong> puedes elegir entre diferentes
@@ -349,7 +354,8 @@ function InfoDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: b
         </ul>
 
         <p className="text-sm text-muted-foreground">
-          Todos los materiales y las cocciones en horno cerámico están incluidos.
+          Todos los materiales y las cocciones en horno cerámico están incluidos. La clase de niños
+          (lunes 17:00, 1 h) tiene un precio aparte de 12 €.
         </p>
 
         <div className="mt-2 space-y-3">
