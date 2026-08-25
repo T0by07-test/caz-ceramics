@@ -11,6 +11,23 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type AcceptRequestResult = { invite_url: string; token: string };
 
+async function getFunctionErrorMessage(error: { message: string; context?: unknown }): Promise<string> {
+  const context = error.context;
+  if (context instanceof Response) {
+    const text = await context.text().catch(() => "");
+    if (text) {
+      try {
+        const parsed = JSON.parse(text) as { error?: unknown; message?: unknown };
+        const detail = parsed.error ?? parsed.message;
+        if (typeof detail === "string" && detail.trim()) return detail;
+      } catch {
+        return text;
+      }
+    }
+  }
+  return error.message;
+}
+
 /**
  * Accept an enrollment request, granting the selected classes. Triggers the
  * `accept-request` edge function which creates the invite, sends the invite
@@ -23,7 +40,7 @@ export async function acceptRequest(
   const { data, error } = await supabase.functions.invoke("accept-request", {
     body: { request_id: requestId, granted_class_ids: grantedClassIds },
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(await getFunctionErrorMessage(error));
   if (!data?.invite_url) throw new Error(data?.error ?? "No se recibió el enlace de invitación");
   return data as AcceptRequestResult;
 }
