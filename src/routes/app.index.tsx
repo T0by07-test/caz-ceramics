@@ -443,11 +443,11 @@ function DropInPaymentFlow({
       return;
     }
     setMethodOpen(false);
-    toast.success(count === 1 ? "Plaza reservada" : "Plazas reservadas", {
-      description: `Paga ${totalLabel} en el estudio antes de la clase.`,
-    });
-    onClose();
+    setCashDoneTotal(totalLabel);
+    setCashDoneOpen(true);
+    toast.success(count === 1 ? "Plaza reservada" : "Plazas reservadas");
   };
+
 
   const fetchClientSecret = useCallback(async () => {
     const ids = await reserveBookings();
