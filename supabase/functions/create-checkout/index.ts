@@ -152,10 +152,10 @@ Deno.serve(async (req) => {
       if (bookingIds.some((id) => !/^[0-9a-f-]{36}$/i.test(id))) {
         return jsonResponse({ error: "Invalid bookingIds" }, 400);
       }
-      // Verify every booking belongs to this user and is reserved drop-in
+      // Verify every booking belongs to this user and is a reserved drop-in
       const { data: bookings, error: bErr } = await admin
         .from("bookings")
-        .select("id, student_id, source, status")
+        .select("id, student_id, source, status, class_id")
         .in("id", bookingIds);
       if (bErr || !bookings || bookings.length !== bookingIds.length) {
         return jsonResponse({ error: "Booking not found" }, 404);
@@ -166,11 +166,20 @@ Deno.serve(async (req) => {
           return jsonResponse({ error: "Booking is not pending payment" }, 400);
         }
       }
-      priceId = "drop_in_class_single";
-      dropInCount = bookingIds.length;
+      // Fetch each class's audience so kids classes are priced individually.
+      const classIds = Array.from(new Set(bookings.map((b) => b.class_id)));
+      const { data: classes } = await admin
+        .from("classes")
+        .select("id, audience")
+        .in("id", classIds);
+      const audienceByClass = new Map((classes ?? []).map((c) => [c.id, c.audience]));
+      const kidsCount = bookings.filter((b) => audienceByClass.get(b.class_id) === "kids").length;
+      const adultCount = bookings.length - kidsCount;
+      dropInCount = bookings.length;
       metadata.bookingIds = bookingIds.join(",");
-
       metadata.classCount = String(bookingIds.length);
+      metadata.adultCount = String(adultCount);
+      metadata.kidsCount = String(kidsCount);
     } else if (purpose === "plan") {
       const planId = body.planId as string | undefined;
       if (!planId || !/^[0-9a-f-]{36}$/i.test(planId)) {
