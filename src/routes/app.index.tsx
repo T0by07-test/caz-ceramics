@@ -27,6 +27,7 @@ import {
   toIsoDate,
 } from "@/lib/calendar";
 import { useClassesInRange, type ClassWithCount } from "@/hooks/useClassesInRange";
+import { useMyBookedClassIds } from "@/hooks/useMyBookedClassIds";
 import { useMyPlan } from "@/hooks/useMyPlan";
 import { bookClass } from "@/lib/booking";
 import { formatEuros, selectionPriceCents } from "@/lib/pricing";
@@ -66,6 +67,7 @@ function CalendarioPage() {
   const [pendingTotalCents, setPendingTotalCents] = useState(0);
   const { classes, loading, refresh } = useClassesInRange(range, "student");
   const { hasPlan } = useMyPlan(reference);
+  const { bookedClassIds, refresh: refreshMyBookings } = useMyBookedClassIds();
 
   const selectedClasses = useMemo(
     () => classes.filter((c) => selectedIds.has(c.id)),
@@ -89,6 +91,12 @@ function CalendarioPage() {
     const closure = studioClosureFor(c.date);
     if (closure) {
       toast.error("Esa semana el estudio está cerrado", { description: closure.label });
+      return;
+    }
+    if (bookedClassIds.has(c.id)) {
+      toast.info("Ya tienes esta clase reservada", {
+        description: "Puedes verla en «Mis reservas».",
+      });
       return;
     }
     if (c.booked_count >= c.capacity_max) {
@@ -126,6 +134,7 @@ function CalendarioPage() {
     }
     setSubmitting(false);
     setSelectedIds(new Set());
+    void refreshMyBookings();
 
     if (failed.length > 0) {
       toast.error(
