@@ -359,6 +359,9 @@ function DropInPaymentFlow({
   const [reservedClasses, setReservedClasses] = useState<ClassWithCount[]>([]);
   const [reserving, setReserving] = useState(false);
   const [cashLoading, setCashLoading] = useState(false);
+  const [cashDoneOpen, setCashDoneOpen] = useState(false);
+  const [cashDoneTotal, setCashDoneTotal] = useState("");
+
   const count = classes.length;
   const paidClasses = reservedClasses.length > 0 ? reservedClasses : classes;
   const totalLabel = formatEuros(selectionPriceCents(paidClasses));
