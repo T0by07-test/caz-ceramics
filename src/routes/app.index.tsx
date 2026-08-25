@@ -359,6 +359,9 @@ function DropInPaymentFlow({
   const [reservedClasses, setReservedClasses] = useState<ClassWithCount[]>([]);
   const [reserving, setReserving] = useState(false);
   const [cashLoading, setCashLoading] = useState(false);
+  const [cashDoneOpen, setCashDoneOpen] = useState(false);
+  const [cashDoneTotal, setCashDoneTotal] = useState("");
+
   const count = classes.length;
   const paidClasses = reservedClasses.length > 0 ? reservedClasses : classes;
   const totalLabel = formatEuros(selectionPriceCents(paidClasses));
@@ -443,11 +446,11 @@ function DropInPaymentFlow({
       return;
     }
     setMethodOpen(false);
-    toast.success(count === 1 ? "Plaza reservada" : "Plazas reservadas", {
-      description: `Paga ${totalLabel} en el estudio antes de la clase.`,
-    });
-    onClose();
+    setCashDoneTotal(totalLabel);
+    setCashDoneOpen(true);
+    toast.success(count === 1 ? "Plaza reservada" : "Plazas reservadas");
   };
+
 
   const fetchClientSecret = useCallback(async () => {
     const ids = await reserveBookings();
@@ -544,6 +547,39 @@ function DropInPaymentFlow({
           </div>
         </DialogContent>
       </Dialog>
+      <Dialog
+        open={cashDoneOpen}
+        onOpenChange={(o) => {
+          setCashDoneOpen(o);
+          if (!o) onClose();
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {count === 1 ? "Plaza reservada" : "Plazas reservadas"} · {cashDoneTotal}
+            </DialogTitle>
+            <DialogDescription>
+              Si has elegido pagar tus clases en efectivo, puedes realizar el pago directamente en el
+              taller el primer día de clase del mes al que corresponden tus clases.
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            No necesitas realizar ningún pago por adelantado para reservar tu plaza. Te hemos enviado
+            un correo con la confirmación de tus clases.
+          </p>
+          <Button
+            className="w-full"
+            onClick={() => {
+              setCashDoneOpen(false);
+              onClose();
+            }}
+          >
+            Entendido
+          </Button>
+        </DialogContent>
+      </Dialog>
+
       <StripeCheckoutDialog
         open={checkoutOpen}
         onOpenChange={(o) => {
