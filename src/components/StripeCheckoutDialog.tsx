@@ -100,7 +100,13 @@ export function StripeCheckoutDialog({
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
+        {notice ? (
+          <div className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-foreground">
+            {notice}
+          </div>
+        ) : null}
         <div id="checkout" className="min-h-[400px]">
+
           {error ? (
             <p className="text-sm text-destructive">{error}</p>
           ) : framed && fetchHostedUrl ? (
