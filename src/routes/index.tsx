@@ -464,8 +464,13 @@ function TrialBooking() {
       const availableClasses = withoutClosedDates((data ?? []) as UpcomingClass[]);
       setClasses(availableClasses);
       if (availableClasses.length > 0) {
-        const firstAvailableDate = new Date(`${availableClasses[0].date}T00:00:00`);
+        const firstAvailableInCurrentMonth = availableClasses.find((c) =>
+          c.date.startsWith(toIsoDate(new Date()).slice(0, 7)),
+        );
+        const initialClass = firstAvailableInCurrentMonth ?? availableClasses[0];
+        const firstAvailableDate = new Date(`${initialClass.date}T00:00:00`);
         setMonthRef(startOfMonth(firstAvailableDate));
+        setSelectedDay(initialClass.date);
       }
     })();
   }, []);
