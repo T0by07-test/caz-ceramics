@@ -547,6 +547,39 @@ function DropInPaymentFlow({
           </div>
         </DialogContent>
       </Dialog>
+      <Dialog
+        open={cashDoneOpen}
+        onOpenChange={(o) => {
+          setCashDoneOpen(o);
+          if (!o) onClose();
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {count === 1 ? "Plaza reservada" : "Plazas reservadas"} · {cashDoneTotal}
+            </DialogTitle>
+            <DialogDescription>
+              Si has elegido pagar tus clases en efectivo, puedes realizar el pago directamente en el
+              taller el primer día de clase del mes al que corresponden tus clases.
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            No necesitas realizar ningún pago por adelantado para reservar tu plaza. Te hemos enviado
+            un correo con la confirmación de tus clases.
+          </p>
+          <Button
+            className="w-full"
+            onClick={() => {
+              setCashDoneOpen(false);
+              onClose();
+            }}
+          >
+            Entendido
+          </Button>
+        </DialogContent>
+      </Dialog>
+
       <StripeCheckoutDialog
         open={checkoutOpen}
         onOpenChange={(o) => {
