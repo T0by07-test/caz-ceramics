@@ -280,18 +280,39 @@ function Index() {
               </p>
             </div>
             <div className="rounded-2xl border border-border bg-surface p-5 shadow-card">
-              <h3 className="text-base font-semibold">Miércoles y jueves</h3>
+              <h3 className="text-base font-semibold">Martes</h3>
               <p className="mt-1.5 text-sm text-muted-foreground">
-                18:00 a 20:00 — adultos · Profe Cande
+                18:30 a 20:30 — adultos · Profe Cande
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border bg-surface p-5 shadow-card">
+              <h3 className="text-base font-semibold">Miércoles</h3>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                10:30 a 12:30 — adultos · Profe Cande
+                <br />
+                15:00 a 16:00 — adultos · Profe Cande
+                <br />
+                18:30 a 20:30 — adultos · Profe Cande
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border bg-surface p-5 shadow-card">
+              <h3 className="text-base font-semibold">Jueves</h3>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                16:00 a 18:00 — adultos · Profe Cande
+                <br />
+                18:30 a 20:30 — adultos · Profe Cande
               </p>
             </div>
             <div className="rounded-2xl border border-border bg-surface p-5 shadow-card">
               <h3 className="text-base font-semibold">Viernes</h3>
               <p className="mt-1.5 text-sm text-muted-foreground">
+                10:30 a 12:30 — adultos · Profe Cande
+                <br />
                 17:30 a 19:30 — adultos · Profe Sofi
               </p>
             </div>
           </div>
+
           <p className="mt-6 text-center text-sm text-muted-foreground">
             La clase de niños (lunes 17:00) tiene un precio de 12 €. El resto de las clases siguen
             los planes mensuales o el precio por clase suelta.
