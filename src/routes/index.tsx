@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { MessageCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -313,6 +314,21 @@ function Index() {
             </div>
           </div>
 
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            ¿Sois más de 3 personas que queréis unirse a una clase y no encontráis día y horario?
+            <br />
+            Escríbeme por WhatsApp al{" "}
+            <a
+              href="https://wa.me/34661499026"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+            >
+              <MessageCircle className="h-4 w-4" />
+              +34 661 499 026
+            </a>{" "}
+            y coordinamos un día y horario que os venga bien.
+          </p>
         </section>
 
         {/* Closing CTA */}
