@@ -537,9 +537,8 @@ function DropInPaymentFlow({
               <Smartphone className="h-5 w-5 shrink-0" />
               <span className="flex flex-col">
                 <span className="font-medium">Bizum</span>
-                <span className="text-sm text-muted-foreground">
-                  Paga ahora con Bizum al 627 093 463
-                </span>
+                <span className="text-sm text-muted-foreground">Paga ahora con Bizum</span>
+
               </span>
             </Button>
           </div>
@@ -552,7 +551,13 @@ function DropInPaymentFlow({
           if (!o) onClose();
         }}
         title={count === 1 ? "Pagar clase" : `Pagar ${count} clases`}
+        notice={
+          dropInMethod === "bizum"
+            ? "Si pagas con Bizum, envía el importe al 627 093 463."
+            : undefined
+        }
         fetchClientSecret={fetchClientSecret}
+
         fetchHostedUrl={fetchHostedUrl}
       />
     </>
