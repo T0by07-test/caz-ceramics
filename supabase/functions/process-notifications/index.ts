@@ -78,10 +78,17 @@ function render(type: string, payload: Record<string, unknown>, profile: Profile
 
   switch (type) {
     case "reservation_confirmed":
+      if (payload.method === "cash") {
+        return wrap(
+          "Reserva confirmada · pago en efectivo",
+          `Hola ${name}, hemos reservado tus clases. Si has elegido pagar tus clases en efectivo, puedes realizar el pago directamente en el taller el primer día de clase del mes al que corresponden tus clases. No necesitas realizar ningún pago por adelantado para reservar tu plaza. Si necesitas cancelar, recuerda hacerlo con más de 12 horas de antelación para poder recuperar la clase.`,
+        );
+      }
       return wrap(
         "Reserva confirmada",
         `Hola ${name}, tu reserva está confirmada. Te esperamos en el estudio. Si necesitas cancelar, recuerda hacerlo con más de 12 horas de antelación para poder recuperar la clase.`,
       );
+
     case "plan_purchased":
       return wrap(
         "Plan activado",
