@@ -31,9 +31,12 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 export function friendlyError(raw: string | undefined | null): string {
   if (!raw) return "Ha ocurrido un error.";
+  if (raw.includes("bookings_student_id_class_id_key") || raw.includes("duplicate key"))
+    return ERROR_MESSAGES.ALREADY_BOOKED;
   const code = raw.match(/^[A-Z_]+/)?.[0] ?? raw;
   return ERROR_MESSAGES[code] ?? raw;
 }
+
 
 export async function bookClass(classId: string, source: BookSource): Promise<BookResult> {
   const { data, error } = await supabase.rpc("book_class", {
