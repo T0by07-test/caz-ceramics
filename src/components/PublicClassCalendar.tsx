@@ -7,9 +7,12 @@ import {
   buildMonthGrid,
   formatLongDate,
   formatMonthTitle,
+  formatTime,
   formatTimeRange,
+  teacherShort,
   toIsoDate,
 } from "@/lib/calendar";
+
 
 export type UpcomingClass = {
   id: string;
