@@ -159,10 +159,16 @@ function Index() {
           <div className="text-center">
             <h2 className="text-h2">Planes mensuales</h2>
             <p className="text-body mx-auto mt-3 max-w-xl text-muted-foreground">
-              Elige cuántas clases quieres hacer en el mes.
+              Elige cuántas clases quieres hacer al mes y organiza tus clases según tu
+              disponibilidad.
             </p>
+            <p className="text-body mx-auto mt-1 max-w-xl text-muted-foreground">
+              Todos los planes te permiten elegir libremente los días y horarios disponibles al
+              reservar tus clases.
+            </p>
+            <p className="mt-4 text-sm font-medium text-foreground">Luego:</p>
           </div>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {PLANS.map((p) => (
               <div
                 key={p.classes}
@@ -186,10 +192,8 @@ function Index() {
                   <span className="text-2xl font-semibold tabular-nums">{p.price}</span>
                   <span className="text-sm text-muted-foreground">{p.period}</span>
                 </div>
-                {p.classes === "1 clase" ? (
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    La clase de prueba de un solo día son 35 €.
-                  </p>
+                {p.trialNote ? (
+                  <p className="mt-3 text-xs text-muted-foreground">{p.trialNote}</p>
                 ) : null}
               </div>
             ))}
