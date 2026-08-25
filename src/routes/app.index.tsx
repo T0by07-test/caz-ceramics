@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,7 +28,6 @@ import {
 } from "@/lib/calendar";
 import { useClassesInRange, type ClassWithCount } from "@/hooks/useClassesInRange";
 import { useMyBookedClassIds } from "@/hooks/useMyBookedClassIds";
-import { useMyPlan } from "@/hooks/useMyPlan";
 import { bookClass } from "@/lib/booking";
 import { formatEuros, selectionPriceCents } from "@/lib/pricing";
 import { studioClosureFor } from "@/lib/closures";
@@ -63,10 +62,8 @@ function CalendarioPage() {
   const [full, setFull] = useState<ClassWithCount | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
-  const [pendingBookingIds, setPendingBookingIds] = useState<string[]>([]);
-  const [pendingTotalCents, setPendingTotalCents] = useState(0);
+  const [pendingPaymentClasses, setPendingPaymentClasses] = useState<ClassWithCount[]>([]);
   const { classes, loading, refresh } = useClassesInRange(range, "student");
-  const { hasPlan } = useMyPlan(reference);
   const { bookedClassIds, refresh: refreshMyBookings } = useMyBookedClassIds();
 
   const selectedClasses = useMemo(
@@ -118,43 +115,9 @@ function CalendarioPage() {
       `${a.date}${a.start_time}`.localeCompare(`${b.date}${b.start_time}`),
     );
 
-    const bookedIds: string[] = [];
-    const failed: string[] = [];
-    for (const c of ordered) {
-      try {
-        const res = await bookClass(c.id, hasPlan ? "plan" : "drop_in");
-        bookedIds.push(res.booking_id);
-      } catch (err) {
-        failed.push(
-          `${formatLongDate(c.date)} · ${formatTimeRange(c.start_time, c.end_time)}${
-            err instanceof Error ? ` — ${err.message}` : ""
-          }`,
-        );
-      }
-    }
     setSubmitting(false);
     setSelectedIds(new Set());
-    void refreshMyBookings();
-
-    if (failed.length > 0) {
-      toast.error(
-        bookedIds.length > 0 ? "Algunas clases no se pudieron reservar" : "No se pudo reservar",
-        { description: failed.join(" | ") },
-      );
-    }
-    if (bookedIds.length === 0) return;
-
-    if (hasPlan) {
-      toast.success(
-        bookedIds.length === 1 ? "Clase reservada" : `${bookedIds.length} clases reservadas`,
-      );
-      void refresh();
-      return;
-    }
-
-    // Drop-in: hand the reserved (unpaid) bookings off to the payment sheet.
-    setPendingTotalCents(selectionPriceCents(ordered));
-    setPendingBookingIds(bookedIds);
+    setPendingPaymentClasses(ordered);
   };
 
   return (
@@ -163,7 +126,7 @@ function CalendarioPage() {
         <span className="text-label uppercase">Tu mes</span>
         <h1 className="text-h1 mt-1">Calendario</h1>
         <p className="text-body mt-2 text-muted-foreground">
-          Toca las clases a las que quieras venir y confirma tu reserva.
+          Toca las clases a las que quieras venir y elige cómo pagar para reservar.
         </p>
       </div>
 
@@ -197,7 +160,6 @@ function CalendarioPage() {
       {selectedClasses.length > 0 ? (
         <SelectionBar
           classes={selectedClasses}
-          hasPlan={hasPlan}
           submitting={submitting}
           onClear={() => setSelectedIds(new Set())}
           onConfirm={() => void handleConfirm()}
@@ -207,12 +169,11 @@ function CalendarioPage() {
       <WaitlistSheet cls={full} onOpenChange={(open) => !open && setFull(null)} />
 
       <DropInPaymentFlow
-        bookingIds={pendingBookingIds}
-        totalCents={pendingTotalCents}
+        classes={pendingPaymentClasses}
         onClose={() => {
-          setPendingBookingIds([]);
-          setPendingTotalCents(0);
+          setPendingPaymentClasses([]);
           void refresh();
+          void refreshMyBookings();
         }}
       />
     </div>
@@ -221,13 +182,11 @@ function CalendarioPage() {
 
 function SelectionBar({
   classes,
-  hasPlan,
   submitting,
   onClear,
   onConfirm,
 }: {
   classes: ClassWithCount[];
-  hasPlan: boolean;
   submitting: boolean;
   onClear: () => void;
   onConfirm: () => void;
@@ -240,7 +199,7 @@ function SelectionBar({
         <div className="min-w-0 flex-1">
           <div className="text-sm font-semibold">
             {count === 1 ? "1 clase seleccionada" : `${count} clases seleccionadas`}
-            {!hasPlan ? ` · ${totalLabel}` : ""}
+            {` · ${totalLabel}`}
           </div>
           <div className="truncate text-xs text-muted-foreground">
             {classes
@@ -255,12 +214,8 @@ function SelectionBar({
         </Button>
         <Button onClick={onConfirm} disabled={submitting}>
           {submitting
-            ? "Reservando…"
-            : hasPlan
-              ? count === 1
-                ? "Reservar clase"
-                : `Reservar ${count} clases`
-              : `Reservar y pagar ${totalLabel}`}
+            ? "Preparando…"
+            : `Elegir pago · ${totalLabel}`}
         </Button>
       </div>
     </div>
@@ -391,35 +346,96 @@ function WaitlistSheet({
 }
 
 function DropInPaymentFlow({
-  bookingIds,
-  totalCents,
+  classes,
   onClose,
 }: {
-  bookingIds: string[];
-  totalCents: number;
+  classes: ClassWithCount[];
   onClose: () => void;
 }) {
   const [methodOpen, setMethodOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [dropInMethod, setDropInMethod] = useState<"card" | "bizum">("card");
+  const [bookingIds, setBookingIds] = useState<string[]>([]);
+  const [reservedClasses, setReservedClasses] = useState<ClassWithCount[]>([]);
+  const [reserving, setReserving] = useState(false);
   const [cashLoading, setCashLoading] = useState(false);
-  const count = bookingIds.length;
-  const totalLabel = formatEuros(totalCents);
+  const count = classes.length;
+  const paidClasses = reservedClasses.length > 0 ? reservedClasses : classes;
+  const totalLabel = formatEuros(selectionPriceCents(paidClasses));
 
   useEffect(() => {
     if (count > 0) setMethodOpen(true);
   }, [count]);
 
+  useEffect(() => {
+    if (count === 0) {
+      setBookingIds([]);
+      setReservedClasses([]);
+      setReserving(false);
+      setCashLoading(false);
+    }
+  }, [count]);
+
+  const reserveBookings = useCallback(async () => {
+    if (bookingIds.length > 0) return bookingIds;
+    if (classes.length === 0) throw new Error("No hay clases seleccionadas.");
+
+    setReserving(true);
+    const ordered = [...classes].sort((a, b) =>
+      `${a.date}${a.start_time}`.localeCompare(`${b.date}${b.start_time}`),
+    );
+    const createdIds: string[] = [];
+    const createdClasses: ClassWithCount[] = [];
+    const failed: string[] = [];
+
+    for (const c of ordered) {
+      try {
+        const res = await bookClass(c.id, "drop_in");
+        createdIds.push(res.booking_id);
+        createdClasses.push(c);
+      } catch (err) {
+        failed.push(
+          `${formatLongDate(c.date)} · ${formatTimeRange(c.start_time, c.end_time)}${
+            err instanceof Error ? ` — ${err.message}` : ""
+          }`,
+        );
+      }
+    }
+
+    setBookingIds(createdIds);
+    setReservedClasses(createdClasses);
+    setReserving(false);
+
+    if (failed.length > 0) {
+      toast.error(
+        createdIds.length > 0 ? "Algunas clases no se pudieron preparar" : "No se pudo reservar",
+        { description: failed.join(" | ") },
+      );
+    }
+    if (createdIds.length === 0) throw new Error("No se pudo preparar ninguna reserva.");
+    return createdIds;
+  }, [bookingIds, classes]);
+
   const handleDropInCash = async () => {
     if (count === 0) return;
     setCashLoading(true);
+    let ids: string[];
+    try {
+      ids = await reserveBookings();
+    } catch (err) {
+      setCashLoading(false);
+      toast.error("No se pudo reservar tu plaza", {
+        description: err instanceof Error ? err.message : undefined,
+      });
+      return;
+    }
     const { error } = await (
       supabase.rpc as unknown as (
         fn: string,
         args: Record<string, unknown>,
       ) => Promise<{ error: { message: string } | null }>
     )("pay_drop_in_cash_batch", {
-      p_booking_ids: bookingIds,
+      p_booking_ids: ids,
     });
     setCashLoading(false);
     if (error) {
@@ -432,6 +448,29 @@ function DropInPaymentFlow({
     });
     onClose();
   };
+
+  const fetchClientSecret = useCallback(async () => {
+    const ids = await reserveBookings();
+    const returnUrl = `${window.location.origin}/app/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`;
+    const { clientSecret } = await createDropInCheckout({
+      bookingIds: ids,
+      returnUrl,
+      paymentMethod: dropInMethod,
+    });
+    return clientSecret;
+  }, [dropInMethod, reserveBookings]);
+
+  const fetchHostedUrl = useCallback(async () => {
+    const ids = await reserveBookings();
+    const returnUrl = `${window.location.origin}/app/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`;
+    const { url } = await createDropInCheckout({
+      bookingIds: ids,
+      returnUrl,
+      paymentMethod: dropInMethod,
+      hosted: true,
+    });
+    return url;
+  }, [dropInMethod, reserveBookings]);
 
   return (
     <>
@@ -456,14 +495,14 @@ function DropInPaymentFlow({
               variant="outline"
               size="lg"
               className="h-auto justify-start gap-3 py-4 text-left"
-              disabled={cashLoading}
+              disabled={cashLoading || reserving}
               onClick={() => void handleDropInCash()}
             >
               <Banknote className="h-5 w-5 shrink-0" />
               <span className="flex flex-col">
                 <span className="font-medium">Efectivo</span>
                 <span className="text-sm text-muted-foreground">
-                  Reserva tu plaza y paga en el estudio
+                  Elige efectivo y la plaza queda reservada para pagar en el estudio
                 </span>
               </span>
             </Button>
@@ -471,7 +510,7 @@ function DropInPaymentFlow({
               variant="outline"
               size="lg"
               className="h-auto justify-start gap-3 py-4 text-left"
-              disabled={cashLoading}
+              disabled={cashLoading || reserving}
               onClick={() => {
                 setDropInMethod("card");
                 setMethodOpen(false);
@@ -488,7 +527,7 @@ function DropInPaymentFlow({
               variant="outline"
               size="lg"
               className="h-auto justify-start gap-3 py-4 text-left"
-              disabled={cashLoading}
+              disabled={cashLoading || reserving}
               onClick={() => {
                 setDropInMethod("bizum");
                 setMethodOpen(false);
@@ -513,27 +552,8 @@ function DropInPaymentFlow({
           if (!o) onClose();
         }}
         title={count === 1 ? "Pagar clase" : `Pagar ${count} clases`}
-        fetchClientSecret={async () => {
-          if (count === 0) throw new Error("No booking");
-          const returnUrl = `${window.location.origin}/app/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`;
-          const { clientSecret } = await createDropInCheckout({
-            bookingIds,
-            returnUrl,
-            paymentMethod: dropInMethod,
-          });
-          return clientSecret;
-        }}
-        fetchHostedUrl={async () => {
-          if (count === 0) throw new Error("No booking");
-          const returnUrl = `${window.location.origin}/app/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`;
-          const { url } = await createDropInCheckout({
-            bookingIds,
-            returnUrl,
-            paymentMethod: dropInMethod,
-            hosted: true,
-          });
-          return url;
-        }}
+        fetchClientSecret={fetchClientSecret}
+        fetchHostedUrl={fetchHostedUrl}
       />
     </>
   );
