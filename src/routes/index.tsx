@@ -486,6 +486,10 @@ function TrialBooking() {
       return;
     }
     setLoadingPay(true);
+    const checkoutWindow = window.open("about:blank", "_blank");
+    if (checkoutWindow) {
+      checkoutWindow.opener = null;
+    }
     try {
       const { url } = await createTrialCheckout({
         classId: selectedId,
@@ -493,8 +497,13 @@ function TrialBooking() {
         name: name.trim(),
         returnUrl: `${window.location.origin}/`,
       });
-      window.location.href = url;
+      if (checkoutWindow) {
+        checkoutWindow.location.href = url;
+      } else {
+        window.open(url, "_blank", "noopener,noreferrer");
+      }
     } catch (err) {
+      checkoutWindow?.close();
       toast.error("No se pudo iniciar el pago", {
         description: err instanceof Error ? err.message : undefined,
       });
