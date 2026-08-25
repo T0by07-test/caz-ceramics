@@ -537,9 +537,8 @@ function DropInPaymentFlow({
               <Smartphone className="h-5 w-5 shrink-0" />
               <span className="flex flex-col">
                 <span className="font-medium">Bizum</span>
-                <span className="text-sm text-muted-foreground">
-                  Paga ahora con Bizum al 627 093 463
-                </span>
+                <span className="text-sm text-muted-foreground">Paga ahora con Bizum</span>
+
               </span>
             </Button>
           </div>
