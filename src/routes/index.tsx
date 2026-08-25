@@ -460,7 +460,12 @@ function TrialBooking() {
         setClasses([]);
         return;
       }
-      setClasses(withoutClosedDates((data ?? []) as UpcomingClass[]));
+      const availableClasses = withoutClosedDates((data ?? []) as UpcomingClass[]);
+      setClasses(availableClasses);
+      if (availableClasses.length > 0) {
+        const firstAvailableDate = new Date(`${availableClasses[0].date}T00:00:00`);
+        setMonthRef(startOfMonth(firstAvailableDate));
+      }
     })();
   }, []);
 
