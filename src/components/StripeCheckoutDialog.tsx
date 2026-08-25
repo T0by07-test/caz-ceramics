@@ -19,7 +19,10 @@ type Props = {
    * Checkout URL that we open at the top level / in a new tab.
    */
   fetchHostedUrl?: () => Promise<string>;
+  /** Optional note shown above the payment form (e.g. Bizum phone number). */
+  notice?: string;
 };
+
 
 function isInIframe() {
   try {
