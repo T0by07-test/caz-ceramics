@@ -70,7 +70,7 @@ export function MonthGrid({ reference, classes, onSelectClass, selectedIds }: Pr
                         type="button"
                         onClick={() => onSelectClass(c)}
                         className={[
-                          "flex w-full flex-col gap-0.5 rounded-md border border-border px-1 py-1 text-left leading-tight transition-colors sm:px-1.5",
+                          "flex w-full flex-col gap-0.5 rounded-md border border-border px-0.5 py-0.5 text-left leading-[1.15] transition-colors sm:px-1.5 sm:py-1",
                           cancelled
                             ? "bg-muted text-muted-foreground line-through"
                             : picked
@@ -81,12 +81,12 @@ export function MonthGrid({ reference, classes, onSelectClass, selectedIds }: Pr
                         <span className="flex w-full items-center gap-1">
                           <span
                             className={[
-                              "h-1.5 w-1.5 shrink-0 rounded-full sm:h-2 sm:w-2",
+                              "hidden h-2 w-2 shrink-0 rounded-full sm:block",
                               cancelled ? "bg-muted-foreground" : capacityDotClass(level),
                             ].join(" ")}
                             aria-hidden
                           />
-                          <span className="text-[10px] font-semibold tabular-nums sm:text-xs">
+                          <span className="text-[9px] font-semibold tabular-nums sm:text-xs">
                             {formatTime(c.start_time)}
                           </span>
                           <span className="ml-auto hidden shrink-0 tabular-nums text-xs text-muted-foreground sm:inline">
@@ -94,15 +94,16 @@ export function MonthGrid({ reference, classes, onSelectClass, selectedIds }: Pr
                           </span>
                         </span>
                         {c.teacher ? (
-                          <span className="block truncate text-[9px] text-muted-foreground sm:pl-3.5 sm:text-[11px]">
+                          <span className="block text-[8px] text-muted-foreground sm:pl-3.5 sm:text-[11px]">
                             {teacherShort(c.teacher)}
                           </span>
                         ) : null}
                         {c.audience === "kids" ? (
-                          <span className="block truncate text-[9px] text-muted-foreground sm:pl-3.5 sm:text-[11px]">
+                          <span className="block text-[8px] text-muted-foreground sm:pl-3.5 sm:text-[11px]">
                             niños
                           </span>
                         ) : null}
+
                       </button>
                     </li>
                   );
