@@ -315,7 +315,8 @@ function Index() {
           </div>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            ¿Sois más de 3 personas que queréis unirse a una clase y no encontráis día y horario?
+            ¿Sois un grupo de 3 o más personas y queréis hacer una clase de cerámica durante la
+            semana?
             <br />
             Escríbeme por WhatsApp al{" "}
             <a
