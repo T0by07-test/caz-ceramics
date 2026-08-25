@@ -519,7 +519,9 @@ function TrialBooking() {
       let opened = false;
       if (checkoutWindow) {
         try {
-          checkoutWindow.location.replace(url);
+          checkoutWindow.document.open();
+          checkoutWindow.document.write(`<!doctype html><html lang="es"><head><title>Abriendo pago…</title></head><body><p>Abriendo el pago seguro…</p><script>window.opener=null;window.location.replace(${JSON.stringify(url)});</script></body></html>`);
+          checkoutWindow.document.close();
           opened = true;
         } catch {
           checkoutWindow.close();
