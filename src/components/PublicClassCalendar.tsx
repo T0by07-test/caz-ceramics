@@ -66,7 +66,7 @@ export function PublicClassCalendar({
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+      <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:text-[11px]">
         {ES_WEEKDAYS_SHORT.map((d) => (
           <div key={d} className="py-1">
             {d}
@@ -77,52 +77,94 @@ export function PublicClassCalendar({
       {loading ? (
         <div className="mt-1 grid grid-cols-7 gap-1">
           {Array.from({ length: 42 }).map((_, i) => (
-            <div key={i} className="h-12 animate-pulse rounded-md bg-muted/40" />
+            <div key={i} className="h-20 animate-pulse rounded-md bg-muted/40" />
           ))}
         </div>
       ) : (
-        <div className="mt-1 grid grid-cols-7 gap-1">
+        <div className="mt-1 grid grid-cols-7 gap-px overflow-hidden rounded-md border border-border bg-border">
           {cells.map((cell) => {
             const slots = byDate.get(cell.iso) ?? [];
-            const has = slots.length > 0;
             const isPast = cell.iso < todayIso;
-            const isSelected = selectedDay === cell.iso;
-            const hasSelected = slots.some((s) => selectedIds.has(s.id));
-            const disabled = !has || isPast;
+            const usable = slots.length > 0 && !isPast;
+            const isSelectedDay = selectedDay === cell.iso;
             return (
-              <button
-                type="button"
+              <div
                 key={cell.iso}
-                disabled={disabled}
-                onClick={() => onSelectDay(isSelected ? null : cell.iso)}
+                onClick={() => usable && onSelectDay(isSelectedDay ? null : cell.iso)}
                 className={[
-                  "relative flex h-12 flex-col items-center justify-center rounded-md border text-sm transition-colors",
-                  !cell.inMonth ? "text-muted-foreground/50" : "",
-                  disabled
-                    ? "cursor-not-allowed border-transparent bg-transparent text-muted-foreground/40"
-                    : isSelected
-                      ? "border-primary bg-primary/10 text-foreground"
-                      : hasSelected
-                        ? "border-primary/40 bg-primary/5 text-foreground hover:bg-primary/10"
-                        : "border-border bg-background hover:bg-muted/40",
-                  cell.isToday && !isSelected ? "ring-1 ring-primary/40" : "",
+                  "min-h-[76px] bg-surface p-1 sm:min-h-[96px]",
+                  !cell.inMonth ? "bg-background/60" : "",
+                  usable ? "cursor-pointer" : "",
                 ].join(" ")}
               >
-                <span className="tabular-nums leading-none">{cell.date.getDate()}</span>
-                {has && !disabled ? (
+                <div className="mb-1 flex justify-center">
                   <span
                     className={[
-                      "mt-1 h-1.5 w-1.5 rounded-full",
-                      hasSelected ? "bg-primary" : "bg-success",
+                      "inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full text-[11px] font-medium tabular-nums",
+                      cell.isToday
+                        ? "bg-primary text-primary-foreground"
+                        : !cell.inMonth || isPast
+                          ? "text-muted-foreground/50"
+                          : "text-foreground",
                     ].join(" ")}
-                    aria-hidden
-                  />
-                ) : null}
-              </button>
+                  >
+                    {cell.date.getDate()}
+                  </span>
+                </div>
+                <ul className="space-y-1">
+                  {slots.map((c) => {
+                    const checked = selectedIds.has(c.id);
+                    return (
+                      <li key={c.id}>
+                        <button
+                          type="button"
+                          disabled={isPast}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onToggle(c.id);
+                          }}
+                          className={[
+                            "flex w-full flex-col gap-0.5 rounded border px-1 py-0.5 text-left leading-tight transition-colors",
+                            isPast
+                              ? "cursor-not-allowed border-transparent bg-muted/40 text-muted-foreground/60"
+                              : checked
+                                ? "border-primary bg-primary/15 text-foreground"
+                                : "border-border bg-background hover:bg-muted/50",
+                          ].join(" ")}
+                        >
+                          <span className="flex items-center gap-1">
+                            <span
+                              className={[
+                                "h-1.5 w-1.5 shrink-0 rounded-full",
+                                checked ? "bg-primary" : "bg-success",
+                              ].join(" ")}
+                              aria-hidden
+                            />
+                            <span className="text-[10px] font-semibold tabular-nums">
+                              {formatTime(c.start_time)}
+                            </span>
+                          </span>
+                          {c.teacher ? (
+                            <span className="block truncate text-[9px] text-muted-foreground">
+                              {teacherShort(c.teacher)}
+                            </span>
+                          ) : null}
+                          {c.audience === "kids" ? (
+                            <span className="block truncate text-[9px] text-muted-foreground">
+                              niños
+                            </span>
+                          ) : null}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             );
           })}
         </div>
       )}
+
 
       <div className="mt-3 border-t border-border pt-3">
         {!selectedDay ? (
