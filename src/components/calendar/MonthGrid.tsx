@@ -72,7 +72,7 @@ export function MonthGrid({ reference, classes, onSelectClass, selectedIds }: Pr
                         type="button"
                         onClick={() => onSelectClass(c)}
                         className={[
-                          "flex w-full items-center gap-1.5 rounded-md border border-border px-1.5 py-1 text-left text-xs transition-colors",
+                          "flex w-full flex-col gap-0.5 rounded-md border border-border px-1.5 py-1 text-left text-xs transition-colors",
                           cancelled
                             ? "bg-muted text-muted-foreground line-through"
                             : picked
@@ -80,24 +80,26 @@ export function MonthGrid({ reference, classes, onSelectClass, selectedIds }: Pr
                               : "bg-background hover:bg-accent hover:text-foreground",
                         ].join(" ")}
                       >
-                        <span
-                          className={[
-                            "h-2 w-2 shrink-0 rounded-full",
-                            cancelled ? "bg-muted-foreground" : capacityDotClass(level),
-                          ].join(" ")}
-                          aria-hidden
-                        />
-                        <span className="min-w-0 truncate font-medium">
-                          {formatTime(c.start_time)}
-                          {c.teacher ? (
-                            <span className="ml-1 font-normal text-muted-foreground">
-                              {c.audience === "kids" ? `${c.teacher} · niños` : c.teacher}
-                            </span>
-                          ) : null}
+                        <span className="flex w-full items-center gap-1.5">
+                          <span
+                            className={[
+                              "h-2 w-2 shrink-0 rounded-full",
+                              cancelled ? "bg-muted-foreground" : capacityDotClass(level),
+                            ].join(" ")}
+                            aria-hidden
+                          />
+                          <span className="font-medium">{formatTime(c.start_time)}</span>
+                          <span className="ml-auto shrink-0 tabular-nums text-muted-foreground">
+                            {c.booked_count}/{c.capacity_max}
+                          </span>
                         </span>
-                        <span className="ml-auto shrink-0 tabular-nums text-muted-foreground">
-                          {c.booked_count}/{c.capacity_max}
-                        </span>
+                        {c.teacher ? (
+                          <span className="block truncate pl-3.5 text-[11px] leading-tight text-muted-foreground">
+                            Profe {c.teacher}
+                            {c.audience === "kids" ? " · niños" : ""}
+                          </span>
+                        ) : null}
+
                       </button>
                     </li>
                   );
