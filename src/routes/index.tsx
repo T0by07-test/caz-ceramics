@@ -56,16 +56,18 @@ const PLANS = [
     detail: "al mes",
     tagline: "Para empezar",
     description:
-      "Una clase al mes para descubrir la cerámica y disfrutar del proceso sin compromiso.",
+      "Una clase al mes para descubrir la cerámica y disfrutar del proceso, sin compromiso.",
     price: "30 €",
-    period: "/ mes",
+    period: "/mes",
+    trialNote: "¿Solo quieres probar una clase? La clase de prueba de un día tiene un precio de 35 €.",
   },
   {
     classes: "2 clases",
     detail: "al mes",
+    tagline: "Para mantener la práctica",
     description: "El equilibrio perfecto para mantener la cerámica en tu rutina.",
     price: "55 €",
-    period: "/ mes",
+    period: "/mes",
   },
   {
     classes: "3 clases",
@@ -74,15 +76,15 @@ const PLANS = [
     description:
       "Más tiempo para experimentar, avanzar en tus proyectos y aprender nuevas técnicas.",
     price: "70 €",
-    period: "/ mes",
+    period: "/mes",
   },
   {
     classes: "4 clases",
     detail: "al mes",
-    tagline: "Elige los días que quieras",
-    description: "La opción ideal si quieres hacer de la cerámica parte de tu rutina.",
+    tagline: "Para hacer de la cerámica parte de tu rutina",
+    description: "La opción ideal si quieres venir con frecuencia y aprovechar al máximo tu práctica.",
     price: "85 €",
-    period: "/ mes",
+    period: "/mes",
     featured: true,
     featuredLabel: "El más elegido",
   },
@@ -157,10 +159,16 @@ function Index() {
           <div className="text-center">
             <h2 className="text-h2">Planes mensuales</h2>
             <p className="text-body mx-auto mt-3 max-w-xl text-muted-foreground">
-              Elige cuántas clases quieres hacer en el mes.
+              Elige cuántas clases quieres hacer al mes y organiza tus clases según tu
+              disponibilidad.
             </p>
+            <p className="text-body mx-auto mt-1 max-w-xl text-muted-foreground">
+              Todos los planes te permiten elegir libremente los días y horarios disponibles al
+              reservar tus clases.
+            </p>
+            <p className="mt-4 text-sm font-medium text-foreground">Luego:</p>
           </div>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {PLANS.map((p) => (
               <div
                 key={p.classes}
@@ -184,10 +192,8 @@ function Index() {
                   <span className="text-2xl font-semibold tabular-nums">{p.price}</span>
                   <span className="text-sm text-muted-foreground">{p.period}</span>
                 </div>
-                {p.classes === "1 clase" ? (
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    La clase de prueba de un solo día son 35 €.
-                  </p>
+                {p.trialNote ? (
+                  <p className="mt-3 text-xs text-muted-foreground">{p.trialNote}</p>
                 ) : null}
               </div>
             ))}
