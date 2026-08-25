@@ -1,11 +1,10 @@
 import { MonthGrid } from "./MonthGrid";
 import { WeekGrid } from "./WeekGrid";
 import { DayView } from "./DayView";
-import { AgendaList } from "./AgendaList";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { formatMonthTitle, formatWeekTitle } from "@/lib/calendar";
 import type { CalendarView } from "@/lib/calendar-view";
 import type { ClassWithCount } from "@/hooks/useMonthClasses";
+
 
 type Props = {
   view: CalendarView;
@@ -39,34 +38,8 @@ export function CalendarBoard({
     );
   }
 
-  // On phones a 7-column grid clips the class info, so show a full agenda list
-  // of the visible range instead — every class with time, teacher and capacity.
-  if (isMobile) {
-    const inRange =
-      view === "month"
-        ? classes.filter((c) => {
-            const [y, m] = c.date.split("-").map(Number);
-            return m - 1 === reference.getMonth() && y === reference.getFullYear();
-          })
-        : classes;
-    return (
-      <div className="space-y-3">
-        <h2 className="text-h2 capitalize">
-          {view === "month" ? formatMonthTitle(reference) : formatWeekTitle(reference)}
-        </h2>
-        <AgendaList
-          classes={inRange}
-          onSelectClass={onSelectClass}
-          emptyLabel={
-            view === "month"
-              ? "No hay clases programadas este mes."
-              : "No hay clases esta semana."
-          }
-          selectedIds={selectedIds}
-        />
-      </div>
-    );
-  }
+  // Week view keeps its own horizontal scroll on phones; month view is compact.
+
 
   if (view === "week") {
     return (
