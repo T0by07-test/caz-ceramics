@@ -1,11 +1,10 @@
 import { MonthGrid } from "./MonthGrid";
 import { WeekGrid } from "./WeekGrid";
 import { DayView } from "./DayView";
-import { AgendaList } from "./AgendaList";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { formatMonthTitle, formatWeekTitle } from "@/lib/calendar";
 import type { CalendarView } from "@/lib/calendar-view";
 import type { ClassWithCount } from "@/hooks/useMonthClasses";
+
 
 type Props = {
   view: CalendarView;
