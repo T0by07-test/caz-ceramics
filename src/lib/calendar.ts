@@ -94,6 +94,12 @@ export function formatTimeRange(start: string, end: string): string {
   return `${formatTime(start)} – ${formatTime(end)}`;
 }
 
+/** Compact teacher label for calendar chips, e.g. "Cande" → "P. Cande". */
+export function teacherShort(teacher?: string | null): string {
+  return teacher ? `P. ${teacher}` : "";
+}
+
+
 export function formatLongDate(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);
   const date = new Date(y, m - 1, d);
