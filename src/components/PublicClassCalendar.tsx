@@ -127,7 +127,7 @@ export function PublicClassCalendar({
                             onToggle(c.id);
                           }}
                           className={[
-                            "flex w-full flex-col gap-0.5 rounded border px-1 py-0.5 text-left leading-tight transition-colors",
+                            "flex w-full flex-col gap-0.5 rounded border px-0.5 py-0.5 text-left leading-[1.15] transition-colors sm:px-1",
                             isPast
                               ? "cursor-not-allowed border-transparent bg-muted/40 text-muted-foreground/60"
                               : checked
@@ -138,25 +138,26 @@ export function PublicClassCalendar({
                           <span className="flex items-center gap-1">
                             <span
                               className={[
-                                "h-1.5 w-1.5 shrink-0 rounded-full",
+                                "hidden h-1.5 w-1.5 shrink-0 rounded-full sm:block",
                                 checked ? "bg-primary" : "bg-success",
                               ].join(" ")}
                               aria-hidden
                             />
-                            <span className="text-[10px] font-semibold tabular-nums">
+                            <span className="text-[9px] font-semibold tabular-nums sm:text-[11px]">
                               {formatTime(c.start_time)}
                             </span>
                           </span>
                           {c.teacher ? (
-                            <span className="block truncate text-[9px] text-muted-foreground">
+                            <span className="block text-[8px] text-muted-foreground sm:text-[10px]">
                               {teacherShort(c.teacher)}
                             </span>
                           ) : null}
                           {c.audience === "kids" ? (
-                            <span className="block truncate text-[9px] text-muted-foreground">
+                            <span className="block text-[8px] text-muted-foreground sm:text-[10px]">
                               niños
                             </span>
                           ) : null}
+
                         </button>
                       </li>
                     );
