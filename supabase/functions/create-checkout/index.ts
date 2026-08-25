@@ -143,6 +143,10 @@ Deno.serve(async (req) => {
     };
 
     let bookingIds: string[] = [];
+    let bookings: Array<{ id: string; student_id: string; source: string; status: string; class_id: string }> = [];
+    let audienceByClass = new Map<string, string | null | undefined>();
+    let adultCount = 0;
+    let kidsCount = 0;
     if (purpose === "drop_in") {
       const rawIds = body.bookingIds as string[] | undefined;
       if (!Array.isArray(rawIds) || rawIds.length === 0) {
@@ -153,13 +157,14 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: "Invalid bookingIds" }, 400);
       }
       // Verify every booking belongs to this user and is a reserved drop-in
-      const { data: bookings, error: bErr } = await admin
+      const { data: fetchedBookings, error: bErr } = await admin
         .from("bookings")
         .select("id, student_id, source, status, class_id")
         .in("id", bookingIds);
-      if (bErr || !bookings || bookings.length !== bookingIds.length) {
+      if (bErr || !fetchedBookings || fetchedBookings.length !== bookingIds.length) {
         return jsonResponse({ error: "Booking not found" }, 404);
       }
+      bookings = fetchedBookings;
       for (const booking of bookings) {
         if (booking.student_id !== user.id) return jsonResponse({ error: "Not your booking" }, 403);
         if (booking.source !== "drop_in" || booking.status !== "reserved") {
@@ -172,9 +177,9 @@ Deno.serve(async (req) => {
         .from("classes")
         .select("id, audience")
         .in("id", classIds);
-      const audienceByClass = new Map((classes ?? []).map((c) => [c.id, c.audience]));
-      const kidsCount = bookings.filter((b) => audienceByClass.get(b.class_id) === "kids").length;
-      const adultCount = bookings.length - kidsCount;
+      audienceByClass = new Map((classes ?? []).map((c) => [c.id, c.audience]));
+      kidsCount = bookings.filter((b) => audienceByClass.get(b.class_id) === "kids").length;
+      adultCount = bookings.length - kidsCount;
       dropInCount = bookings.length;
       metadata.bookingIds = bookingIds.join(",");
       metadata.classCount = String(bookingIds.length);
