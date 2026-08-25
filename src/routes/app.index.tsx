@@ -449,6 +449,29 @@ function DropInPaymentFlow({
     onClose();
   };
 
+  const fetchClientSecret = useCallback(async () => {
+    const ids = await reserveBookings();
+    const returnUrl = `${window.location.origin}/app/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`;
+    const { clientSecret } = await createDropInCheckout({
+      bookingIds: ids,
+      returnUrl,
+      paymentMethod: dropInMethod,
+    });
+    return clientSecret;
+  }, [dropInMethod, reserveBookings]);
+
+  const fetchHostedUrl = useCallback(async () => {
+    const ids = await reserveBookings();
+    const returnUrl = `${window.location.origin}/app/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`;
+    const { url } = await createDropInCheckout({
+      bookingIds: ids,
+      returnUrl,
+      paymentMethod: dropInMethod,
+      hosted: true,
+    });
+    return url;
+  }, [dropInMethod, reserveBookings]);
+
   return (
     <>
       <Dialog
@@ -529,27 +552,8 @@ function DropInPaymentFlow({
           if (!o) onClose();
         }}
         title={count === 1 ? "Pagar clase" : `Pagar ${count} clases`}
-        fetchClientSecret={async () => {
-          const ids = await reserveBookings();
-          const returnUrl = `${window.location.origin}/app/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`;
-          const { clientSecret } = await createDropInCheckout({
-            bookingIds: ids,
-            returnUrl,
-            paymentMethod: dropInMethod,
-          });
-          return clientSecret;
-        }}
-        fetchHostedUrl={async () => {
-          const ids = await reserveBookings();
-          const returnUrl = `${window.location.origin}/app/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`;
-          const { url } = await createDropInCheckout({
-            bookingIds: ids,
-            returnUrl,
-            paymentMethod: dropInMethod,
-            hosted: true,
-          });
-          return url;
-        }}
+        fetchClientSecret={fetchClientSecret}
+        fetchHostedUrl={fetchHostedUrl}
       />
     </>
   );
