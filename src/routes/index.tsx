@@ -313,10 +313,6 @@ function Index() {
             </div>
           </div>
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            La clase de niños (lunes 17:00) tiene un precio de 12 €. El resto de las clases siguen
-            los planes mensuales o el precio por clase suelta.
-          </p>
         </section>
 
         {/* Closing CTA */}
