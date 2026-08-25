@@ -5,7 +5,9 @@ import {
   dayHourBounds,
   ES_WEEKDAYS_SHORT,
   formatTime,
+  teacherShort,
 } from "@/lib/calendar";
+
 import type { ClassWithCount } from "@/hooks/useMonthClasses";
 
 type Props = {
