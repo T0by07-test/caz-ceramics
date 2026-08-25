@@ -335,9 +335,12 @@ function Index() {
         {/* Closing CTA */}
         <section className="mt-20 text-center sm:mt-28">
           <h2 className="text-h2">¿List@ para empezar?</h2>
-          <p className="text-body mx-auto mt-3 max-w-md text-muted-foreground">
-            Cuéntanos qué horarios te vienen bien y encontraremos la opción que mejor encaje
-            contigo.
+          <p className="text-body mx-auto mt-3 max-w-xl text-muted-foreground">
+            Consulta el calendario, descubre los días y horarios disponibles y elige la clase que
+            mejor se adapte a ti.
+          </p>
+          <p className="text-body mx-auto mt-2 max-w-xl text-muted-foreground">
+            Reserva tu lugar y empieza a crear.
           </p>
           <div className="mt-6">
             <Button asChild size="lg">
