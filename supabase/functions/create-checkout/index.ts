@@ -152,10 +152,10 @@ Deno.serve(async (req) => {
       if (bookingIds.some((id) => !/^[0-9a-f-]{36}$/i.test(id))) {
         return jsonResponse({ error: "Invalid bookingIds" }, 400);
       }
-      // Verify every booking belongs to this user and is reserved drop-in
+      // Verify every booking belongs to this user and is a reserved drop-in
       const { data: bookings, error: bErr } = await admin
         .from("bookings")
-        .select("id, student_id, source, status")
+        .select("id, student_id, source, status, class_id")
         .in("id", bookingIds);
       if (bErr || !bookings || bookings.length !== bookingIds.length) {
         return jsonResponse({ error: "Booking not found" }, 404);
@@ -166,11 +166,20 @@ Deno.serve(async (req) => {
           return jsonResponse({ error: "Booking is not pending payment" }, 400);
         }
       }
-      priceId = "drop_in_class_single";
-      dropInCount = bookingIds.length;
+      // Fetch each class's audience so kids classes are priced individually.
+      const classIds = Array.from(new Set(bookings.map((b) => b.class_id)));
+      const { data: classes } = await admin
+        .from("classes")
+        .select("id, audience")
+        .in("id", classIds);
+      const audienceByClass = new Map((classes ?? []).map((c) => [c.id, c.audience]));
+      const kidsCount = bookings.filter((b) => audienceByClass.get(b.class_id) === "kids").length;
+      const adultCount = bookings.length - kidsCount;
+      dropInCount = bookings.length;
       metadata.bookingIds = bookingIds.join(",");
-
       metadata.classCount = String(bookingIds.length);
+      metadata.adultCount = String(adultCount);
+      metadata.kidsCount = String(kidsCount);
     } else if (purpose === "plan") {
       const planId = body.planId as string | undefined;
       if (!planId || !/^[0-9a-f-]{36}$/i.test(planId)) {
@@ -196,20 +205,27 @@ Deno.serve(async (req) => {
       return prices.data[0];
     };
 
-    // Tiered monthly pricing for a selection of classes:
-    // 1 -> 30 €, 2 -> 55 €, 3 -> 70 €, 4 -> 85 €; every extra class 20 €.
+    // Mixed pricing: adult classes use the monthly tiers (1→30€, 2→55€, 3→70€, 4→85€, extras 20€),
+    // kids classes (lunes 17:00, 1h) are priced individually at 12€.
     const lineItems: { price: string; quantity: number }[] = [];
     let totalCents = 0;
     if (purpose === "drop_in") {
-      const tier = Math.min(dropInCount, 4);
-      const tierPrice = await resolvePrice(`plan_${tier}_class_month`);
-      lineItems.push({ price: tierPrice.id, quantity: 1 });
-      totalCents += tierPrice.unit_amount ?? 0;
-      const extras = dropInCount - tier;
-      if (extras > 0) {
+      const adultTier = Math.min(adultCount, 4);
+      if (adultTier > 0) {
+        const tierPrice = await resolvePrice(`plan_${adultTier}_class_month`);
+        lineItems.push({ price: tierPrice.id, quantity: 1 });
+        totalCents += tierPrice.unit_amount ?? 0;
+      }
+      const adultExtras = adultCount - adultTier;
+      if (adultExtras > 0) {
         const extraPrice = await resolvePrice("drop_in_class_single");
-        lineItems.push({ price: extraPrice.id, quantity: extras });
-        totalCents += (extraPrice.unit_amount ?? 0) * extras;
+        lineItems.push({ price: extraPrice.id, quantity: adultExtras });
+        totalCents += (extraPrice.unit_amount ?? 0) * adultExtras;
+      }
+      if (kidsCount > 0) {
+        const kidsPrice = await resolvePrice("kids_class_single");
+        lineItems.push({ price: kidsPrice.id, quantity: kidsCount });
+        totalCents += (kidsPrice.unit_amount ?? 0) * kidsCount;
       }
     } else {
       const planPrice = await resolvePrice(priceId);
@@ -240,26 +256,26 @@ Deno.serve(async (req) => {
     const session = await stripe.checkout.sessions.create(sessionParams);
 
     // Insert pending payment row(s). Idempotency on (stripe_session_id, booking_id).
-    // A drop-in checkout gets one row per booked class so per-class amounts and
-    // attendance/refund records stay granular even though it's a single Stripe charge.
-    const basePaymentRow: Record<string, unknown> = {
-      student_id: user.id,
-      amount_cents:
-        purpose === "drop_in" && dropInCount > 0
-          ? Math.round(totalCents / dropInCount)
-          : totalCents,
-
-      status: "pending",
-      stripe_session_id: session.id,
-    };
-    if (paymentMethod) basePaymentRow.method = paymentMethod;
-    if (purpose === "drop_in") {
-      await admin
-        .from("payments")
-        .insert(bookingIds.map((bookingId) => ({ ...basePaymentRow, booking_id: bookingId })));
-    } else {
-      await admin.from("payments").insert(basePaymentRow);
-    }
+    // Adults share the tiered total evenly; each kids class is 12 €.
+    const adultTotalCents = adultCount > 0 ? totalCents - (kidsCount * 1200) : 0;
+    const perAdultCents = adultCount > 0 ? Math.round(adultTotalCents / adultCount) : 0;
+    const paymentRows = purpose === "drop_in"
+      ? bookings.map((b) => ({
+        student_id: user.id,
+        amount_cents: audienceByClass.get(b.class_id) === "kids" ? 1200 : perAdultCents,
+        status: "pending",
+        stripe_session_id: session.id,
+        booking_id: b.id,
+        ...(paymentMethod ? { method: paymentMethod } : {}),
+      }))
+      : [{
+        student_id: user.id,
+        amount_cents: totalCents,
+        status: "pending",
+        stripe_session_id: session.id,
+        ...(paymentMethod ? { method: paymentMethod } : {}),
+      }];
+    await admin.from("payments").insert(paymentRows);
 
     return jsonResponse({
       clientSecret: session.client_secret,

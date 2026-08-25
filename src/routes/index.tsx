@@ -264,6 +264,40 @@ function Index() {
           </p>
         </section>
 
+        {/* Horarios y profesoras */}
+        <section className="mt-20 sm:mt-28">
+          <div className="text-center">
+            <span className="text-label uppercase">Horarios y profesoras</span>
+            <h2 className="text-h2 mt-2">¿Cuándo se imparten las clases?</h2>
+          </div>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="rounded-2xl border border-border bg-surface p-5 shadow-card">
+              <h3 className="text-base font-semibold">Lunes</h3>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                17:00 a 18:00 — clases de niños (1 h) · Profe Sofi
+                <br />
+                18:30 a 20:30 — adultos · Profe Sofi
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border bg-surface p-5 shadow-card">
+              <h3 className="text-base font-semibold">Miércoles y jueves</h3>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                18:00 a 20:00 — adultos · Profe Cande
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border bg-surface p-5 shadow-card">
+              <h3 className="text-base font-semibold">Viernes</h3>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                17:30 a 19:30 — adultos · Profe Sofi
+              </p>
+            </div>
+          </div>
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            La clase de niños (lunes 17:00) tiene un precio de 12 €. El resto de las clases siguen
+            los planes mensuales o el precio por clase suelta.
+          </p>
+        </section>
+
         {/* Closing CTA */}
         <section className="mt-20 text-center sm:mt-28">
           <h2 className="text-h2">¿List@ para empezar?</h2>
@@ -306,7 +340,12 @@ function InfoDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: b
             Valencia
           </li>
           <li>
-            <span aria-hidden>⏰</span> <strong>Duración:</strong> 2 horas por clase
+            <span aria-hidden>⏰</span> <strong>Duración:</strong> 2 horas por clase (las clases de
+            niños son 1 hora)
+          </li>
+          <li>
+            <span aria-hidden>👩‍🏫</span> <strong>Profesoras:</strong> Sofi (lunes y viernes) y Cande
+            (miércoles y jueves)
           </li>
           <li>
             <span aria-hidden>📅</span> <strong>Frecuencia:</strong> puedes elegir entre diferentes
@@ -315,7 +354,8 @@ function InfoDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: b
         </ul>
 
         <p className="text-sm text-muted-foreground">
-          Todos los materiales y las cocciones en horno cerámico están incluidos.
+          Todos los materiales y las cocciones en horno cerámico están incluidos. La clase de niños
+          (lunes 17:00, 1 h) tiene un precio aparte de 12 €.
         </p>
 
         <div className="mt-2 space-y-3">
