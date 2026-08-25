@@ -256,26 +256,26 @@ Deno.serve(async (req) => {
     const session = await stripe.checkout.sessions.create(sessionParams);
 
     // Insert pending payment row(s). Idempotency on (stripe_session_id, booking_id).
-    // A drop-in checkout gets one row per booked class so per-class amounts and
-    // attendance/refund records stay granular even though it's a single Stripe charge.
-    const basePaymentRow: Record<string, unknown> = {
-      student_id: user.id,
-      amount_cents:
-        purpose === "drop_in" && dropInCount > 0
-          ? Math.round(totalCents / dropInCount)
-          : totalCents,
-
-      status: "pending",
-      stripe_session_id: session.id,
-    };
-    if (paymentMethod) basePaymentRow.method = paymentMethod;
-    if (purpose === "drop_in") {
-      await admin
-        .from("payments")
-        .insert(bookingIds.map((bookingId) => ({ ...basePaymentRow, booking_id: bookingId })));
-    } else {
-      await admin.from("payments").insert(basePaymentRow);
-    }
+    // Adults share the tiered total evenly; each kids class is 12 €.
+    const adultTotalCents = adultCount > 0 ? totalCents - (kidsCount * 1200) : 0;
+    const perAdultCents = adultCount > 0 ? Math.round(adultTotalCents / adultCount) : 0;
+    const paymentRows = purpose === "drop_in"
+      ? bookings.map((b) => ({
+        student_id: user.id,
+        amount_cents: audienceByClass.get(b.class_id) === "kids" ? 1200 : perAdultCents,
+        status: "pending",
+        stripe_session_id: session.id,
+        booking_id: b.id,
+        ...(paymentMethod ? { method: paymentMethod } : {}),
+      }))
+      : [{
+        student_id: user.id,
+        amount_cents: totalCents,
+        status: "pending",
+        stripe_session_id: session.id,
+        ...(paymentMethod ? { method: paymentMethod } : {}),
+      }];
+    await admin.from("payments").insert(paymentRows);
 
     return jsonResponse({
       clientSecret: session.client_secret,
