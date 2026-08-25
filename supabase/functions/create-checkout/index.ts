@@ -205,20 +205,27 @@ Deno.serve(async (req) => {
       return prices.data[0];
     };
 
-    // Tiered monthly pricing for a selection of classes:
-    // 1 -> 30 €, 2 -> 55 €, 3 -> 70 €, 4 -> 85 €; every extra class 20 €.
+    // Mixed pricing: adult classes use the monthly tiers (1→30€, 2→55€, 3→70€, 4→85€, extras 20€),
+    // kids classes (lunes 17:00, 1h) are priced individually at 12€.
     const lineItems: { price: string; quantity: number }[] = [];
     let totalCents = 0;
     if (purpose === "drop_in") {
-      const tier = Math.min(dropInCount, 4);
-      const tierPrice = await resolvePrice(`plan_${tier}_class_month`);
-      lineItems.push({ price: tierPrice.id, quantity: 1 });
-      totalCents += tierPrice.unit_amount ?? 0;
-      const extras = dropInCount - tier;
-      if (extras > 0) {
+      const adultTier = Math.min(adultCount, 4);
+      if (adultTier > 0) {
+        const tierPrice = await resolvePrice(`plan_${adultTier}_class_month`);
+        lineItems.push({ price: tierPrice.id, quantity: 1 });
+        totalCents += tierPrice.unit_amount ?? 0;
+      }
+      const adultExtras = adultCount - adultTier;
+      if (adultExtras > 0) {
         const extraPrice = await resolvePrice("drop_in_class_single");
-        lineItems.push({ price: extraPrice.id, quantity: extras });
-        totalCents += (extraPrice.unit_amount ?? 0) * extras;
+        lineItems.push({ price: extraPrice.id, quantity: adultExtras });
+        totalCents += (extraPrice.unit_amount ?? 0) * adultExtras;
+      }
+      if (kidsCount > 0) {
+        const kidsPrice = await resolvePrice("kids_class_single");
+        lineItems.push({ price: kidsPrice.id, quantity: kidsCount });
+        totalCents += (kidsPrice.unit_amount ?? 0) * kidsCount;
       }
     } else {
       const planPrice = await resolvePrice(priceId);
