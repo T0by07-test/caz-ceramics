@@ -48,10 +48,10 @@ Deno.serve(async (req) => {
       const adminPublic = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
       const { data: klass, error: cErr } = await adminPublic
         .from("classes")
-        .select("id, date, start_time, status, capacity_max")
+        .select("id, date, start_time, status, capacity_max, audience")
         .eq("id", classId)
         .single();
-      if (cErr || !klass || klass.status !== "scheduled") {
+      if (cErr || !klass || klass.status !== "scheduled" || klass.audience !== "adults") {
         return jsonResponse({ error: "Class not available" }, 404);
       }
 
