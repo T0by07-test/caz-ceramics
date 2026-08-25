@@ -444,6 +444,7 @@ function TrialBooking() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [loadingPay, setLoadingPay] = useState(false);
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -481,6 +482,20 @@ function TrialBooking() {
 
   const selectedIds = useMemo(() => new Set(selectedId ? [selectedId] : []), [selectedId]);
 
+  const openBlankCheckoutTab = () => {
+    try {
+      const tab = window.open("", "_blank");
+      if (!tab) return null;
+      tab.document.write(
+        '<!doctype html><html lang="es"><head><title>Abriendo pago…</title></head><body><p>Abriendo el pago seguro…</p></body></html>',
+      );
+      tab.document.close();
+      return tab;
+    } catch {
+      return null;
+    }
+  };
+
   const handlePay = async () => {
     if (!selectedId) {
       toast.error("Elige un día y un horario para tu clase de prueba");
@@ -490,11 +505,9 @@ function TrialBooking() {
       toast.error("Completa tu nombre y un correo válido");
       return;
     }
+    setCheckoutUrl(null);
+    const checkoutWindow = openBlankCheckoutTab();
     setLoadingPay(true);
-    const checkoutWindow = window.open("about:blank", "_blank");
-    if (checkoutWindow) {
-      checkoutWindow.opener = null;
-    }
     try {
       const { url } = await createTrialCheckout({
         classId: selectedId,
@@ -502,10 +515,24 @@ function TrialBooking() {
         name: name.trim(),
         returnUrl: `${window.location.origin}/`,
       });
+      setCheckoutUrl(url);
+      let opened = false;
       if (checkoutWindow) {
-        checkoutWindow.location.href = url;
-      } else {
-        window.open(url, "_blank", "noopener,noreferrer");
+        try {
+          checkoutWindow.location.replace(url);
+          opened = true;
+        } catch {
+          checkoutWindow.close();
+        }
+      }
+      if (!opened) {
+        const directWindow = window.open(url, "_blank", "noopener,noreferrer");
+        opened = Boolean(directWindow);
+      }
+      if (!opened) {
+        toast.message("Pago listo", {
+          description: "Pulsa el botón “Abrir pago en Stripe” para continuar.",
+        });
       }
     } catch (err) {
       checkoutWindow?.close();
@@ -553,6 +580,13 @@ function TrialBooking() {
       <Button className="w-full" disabled={loadingPay} onClick={handlePay}>
         {loadingPay ? "Abriendo el pago…" : "Reservar y pagar 35 €"}
       </Button>
+      {checkoutUrl ? (
+        <Button asChild variant="secondary" className="w-full">
+          <a href={checkoutUrl} target="_blank" rel="noopener noreferrer">
+            Abrir pago en Stripe
+          </a>
+        </Button>
+      ) : null}
       <p className="text-center text-xs text-muted-foreground">
         Pago seguro con Stripe. Recibirás la confirmación por correo.
       </p>
