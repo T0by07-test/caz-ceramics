@@ -29,7 +29,7 @@ import {
 import { useClassesInRange, type ClassWithCount } from "@/hooks/useClassesInRange";
 import { useMyPlan } from "@/hooks/useMyPlan";
 import { bookClass } from "@/lib/booking";
-import { formatEuros, monthlyPriceCents } from "@/lib/pricing";
+import { formatEuros, selectionPriceCents } from "@/lib/pricing";
 import { studioClosureFor } from "@/lib/closures";
 import { joinWaitlist } from "@/lib/waitlist";
 import { createDropInCheckout } from "@/lib/checkout";
@@ -63,6 +63,7 @@ function CalendarioPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
   const [pendingBookingIds, setPendingBookingIds] = useState<string[]>([]);
+  const [pendingTotalCents, setPendingTotalCents] = useState(0);
   const { classes, loading, refresh } = useClassesInRange(range, "student");
   const { hasPlan } = useMyPlan(reference);
 
@@ -143,6 +144,7 @@ function CalendarioPage() {
     }
 
     // Drop-in: hand the reserved (unpaid) bookings off to the payment sheet.
+    setPendingTotalCents(selectionPriceCents(ordered));
     setPendingBookingIds(bookedIds);
   };
 
@@ -197,8 +199,10 @@ function CalendarioPage() {
 
       <DropInPaymentFlow
         bookingIds={pendingBookingIds}
+        totalCents={pendingTotalCents}
         onClose={() => {
           setPendingBookingIds([]);
+          setPendingTotalCents(0);
           void refresh();
         }}
       />
@@ -220,7 +224,7 @@ function SelectionBar({
   onConfirm: () => void;
 }) {
   const count = classes.length;
-  const totalLabel = formatEuros(monthlyPriceCents(count));
+  const totalLabel = formatEuros(selectionPriceCents(classes));
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 p-3 shadow-card backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center gap-3">
@@ -377,13 +381,21 @@ function WaitlistSheet({
   );
 }
 
-function DropInPaymentFlow({ bookingIds, onClose }: { bookingIds: string[]; onClose: () => void }) {
+function DropInPaymentFlow({
+  bookingIds,
+  totalCents,
+  onClose,
+}: {
+  bookingIds: string[];
+  totalCents: number;
+  onClose: () => void;
+}) {
   const [methodOpen, setMethodOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [dropInMethod, setDropInMethod] = useState<"card" | "bizum">("card");
   const [cashLoading, setCashLoading] = useState(false);
   const count = bookingIds.length;
-  const totalLabel = formatEuros(monthlyPriceCents(count));
+  const totalLabel = formatEuros(totalCents);
 
   useEffect(() => {
     if (count > 0) setMethodOpen(true);
