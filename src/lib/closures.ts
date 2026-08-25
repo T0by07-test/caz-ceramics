@@ -3,7 +3,7 @@
  * Classes inside these ranges are hidden from students and cannot be selected.
  */
 export const STUDIO_CLOSURES: { startIso: string; endIso: string; label: string }[] = [
-  { startIso: "2026-09-28", endIso: "2026-10-04", label: "Cerrado del 28/09 al 04/10" },
+  { startIso: "2026-09-29", endIso: "2026-10-04", label: "Cerrado del 29/09 al 04/10" },
 ];
 
 export function studioClosureFor(dateIso: string) {
