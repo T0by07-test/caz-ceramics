@@ -379,8 +379,8 @@ function InfoDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: b
 
         <ul className="space-y-2 rounded-xl border border-border bg-surface p-4 text-sm">
           <li>
-            <span aria-hidden>📍</span> <strong>Dónde:</strong> Taller Cazú Ceramics, Ruzafa,
-            Valencia
+            <span aria-hidden>📍</span> <strong>Dónde:</strong> Taller Cazú Ceramics, Calle del Dr.
+            Sumsi 9, Ruzafa, Valencia
           </li>
           <li>
             <span aria-hidden>⏰</span> <strong>Duración:</strong> 2 horas por clase (las clases de
@@ -388,18 +388,19 @@ function InfoDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: b
           </li>
           <li>
             <span aria-hidden>👩‍🏫</span> <strong>Profesoras:</strong> Sofi (lunes y viernes) y Cande
-            (miércoles y jueves)
+            (martes, miércoles, jueves y viernes)
           </li>
           <li>
-            <span aria-hidden>📅</span> <strong>Frecuencia:</strong> puedes elegir entre diferentes
-            planes de 1 a 4 clases al mes, según el ritmo que quieras llevar.
+            <span aria-hidden>📅</span> <strong>Frecuencia:</strong> tú eliges cuántas veces quieres
+            venir al mes, según el ritmo que quieras llevar.
           </li>
         </ul>
 
         <p className="text-sm text-muted-foreground">
-          Todos los materiales y las cocciones en horno cerámico están incluidos. La clase de niños
-          (lunes 17:00, 1 h) tiene un precio aparte de 12 €.
+          Todas las herramientas, materiales y cocciones en el horno de cerámica están incluidos. La
+          clase de niños (lunes 17:00, 1 h) tiene un precio aparte de 12 €.
         </p>
+
 
         <div className="mt-2 space-y-3">
           <h3 className="text-base font-semibold">¿Qué te gustaría hacer?</h3>
