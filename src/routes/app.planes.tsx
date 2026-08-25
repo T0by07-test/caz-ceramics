@@ -293,6 +293,12 @@ function PlanesPage() {
           if (!o) setActivePlan(null);
         }}
         title={activePlan ? `Comprar ${activePlan.name}` : "Comprar plan"}
+        notice={
+          paymentMethod === "bizum"
+            ? "Si pagas con Bizum, envía el importe al 627 093 463."
+            : undefined
+        }
+
         fetchClientSecret={fetchClientSecret}
         fetchHostedUrl={fetchHostedUrl}
       />
