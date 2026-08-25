@@ -4,6 +4,7 @@ import {
   capacityLevel,
   ES_WEEKDAYS_SHORT,
   formatTime,
+  teacherShort,
 } from "@/lib/calendar";
 import type { ClassWithCount } from "@/hooks/useMonthClasses";
 
@@ -27,10 +28,7 @@ export function MonthGrid({ reference, classes, onSelectClass, selectedIds }: Pr
     <div className="rounded-xl border border-border bg-surface shadow-card">
       <div className="grid grid-cols-7 border-b border-border">
         {ES_WEEKDAYS_SHORT.map((d) => (
-          <div
-            key={d}
-            className="px-2 py-2 text-center text-label uppercase"
-          >
+          <div key={d} className="px-1 py-2 text-center text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:text-label">
             {d}
           </div>
         ))}
@@ -42,15 +40,15 @@ export function MonthGrid({ reference, classes, onSelectClass, selectedIds }: Pr
             <div
               key={cell.iso + idx}
               className={[
-                "min-h-[110px] border-b border-r border-border p-1.5 last:border-r-0",
+                "min-h-[86px] border-b border-r border-border p-1 sm:min-h-[120px] sm:p-1.5",
                 cell.inMonth ? "bg-surface" : "bg-background/60",
                 (idx + 1) % 7 === 0 ? "border-r-0" : "",
               ].join(" ")}
             >
-              <div className="mb-1 flex items-center justify-between px-1">
+              <div className="mb-1 flex items-center justify-center sm:justify-start sm:px-1">
                 <span
                   className={[
-                    "inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-full text-xs font-medium",
+                    "inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full text-[11px] font-medium sm:h-6 sm:min-w-[1.5rem] sm:text-xs",
                     cell.isToday
                       ? "bg-primary text-primary-foreground"
                       : cell.inMonth
@@ -72,7 +70,7 @@ export function MonthGrid({ reference, classes, onSelectClass, selectedIds }: Pr
                         type="button"
                         onClick={() => onSelectClass(c)}
                         className={[
-                          "flex w-full flex-col gap-0.5 rounded-md border border-border px-1.5 py-1 text-left text-xs transition-colors",
+                          "flex w-full flex-col gap-0.5 rounded-md border border-border px-1 py-1 text-left leading-tight transition-colors sm:px-1.5",
                           cancelled
                             ? "bg-muted text-muted-foreground line-through"
                             : picked
@@ -80,26 +78,31 @@ export function MonthGrid({ reference, classes, onSelectClass, selectedIds }: Pr
                               : "bg-background hover:bg-accent hover:text-foreground",
                         ].join(" ")}
                       >
-                        <span className="flex w-full items-center gap-1.5">
+                        <span className="flex w-full items-center gap-1">
                           <span
                             className={[
-                              "h-2 w-2 shrink-0 rounded-full",
+                              "h-1.5 w-1.5 shrink-0 rounded-full sm:h-2 sm:w-2",
                               cancelled ? "bg-muted-foreground" : capacityDotClass(level),
                             ].join(" ")}
                             aria-hidden
                           />
-                          <span className="font-medium">{formatTime(c.start_time)}</span>
-                          <span className="ml-auto shrink-0 tabular-nums text-muted-foreground">
+                          <span className="text-[10px] font-semibold tabular-nums sm:text-xs">
+                            {formatTime(c.start_time)}
+                          </span>
+                          <span className="ml-auto hidden shrink-0 tabular-nums text-xs text-muted-foreground sm:inline">
                             {c.booked_count}/{c.capacity_max}
                           </span>
                         </span>
                         {c.teacher ? (
-                          <span className="block truncate pl-3.5 text-[11px] leading-tight text-muted-foreground">
-                            Profe {c.teacher}
-                            {c.audience === "kids" ? " · niños" : ""}
+                          <span className="block truncate text-[9px] text-muted-foreground sm:pl-3.5 sm:text-[11px]">
+                            {teacherShort(c.teacher)}
                           </span>
                         ) : null}
-
+                        {c.audience === "kids" ? (
+                          <span className="block truncate text-[9px] text-muted-foreground sm:pl-3.5 sm:text-[11px]">
+                            niños
+                          </span>
+                        ) : null}
                       </button>
                     </li>
                   );
