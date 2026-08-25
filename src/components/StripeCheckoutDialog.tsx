@@ -38,7 +38,9 @@ export function StripeCheckoutDialog({
   title,
   fetchClientSecret,
   fetchHostedUrl,
+  notice,
 }: Props) {
+
   // Cache the clientSecret for as long as the dialog stays open. EmbeddedCheckoutProvider
   // throws "you cannot change the client secret after creation" if the function reference
   // changes between renders, so we resolve once per open and remount on close.
