@@ -290,7 +290,7 @@ function Index() {
               <p className="mt-1.5 text-sm text-muted-foreground">
                 10:30 a 12:30 — adultos · Profe Cande
                 <br />
-                15:00 a 16:00 — adultos · Profe Cande
+                15:00 a 17:00 — adultos · Profe Cande
                 <br />
                 18:30 a 20:30 — adultos · Profe Cande
               </p>
