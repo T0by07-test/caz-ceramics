@@ -256,8 +256,7 @@ function BookingList({
               {r.classes ? formatLongDate(r.classes.date) : "Clase"}
             </div>
             <div className="text-xs text-muted-foreground">
-              {r.classes ? formatTimeRange(r.classes.start_time, r.classes.end_time) : ""} ·{" "}
-              {r.source === "plan" ? "Plan mensual" : "Clase suelta"}
+              {r.classes ? formatTimeRange(r.classes.start_time, r.classes.end_time) : ""}
             </div>
             <div className="mt-2">{statusBadge(r.status)}</div>
           </div>
