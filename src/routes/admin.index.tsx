@@ -113,7 +113,7 @@ function AdminDashboardPage() {
   const [payments, setPayments] = useState<RecentPayment[]>([]);
 
   useEffect(() => {
-    let cancelled = false;
+    let aborted = false;
     const load = async () => {
       setLoading(true);
       const now = new Date();
@@ -246,7 +246,7 @@ function AdminDashboardPage() {
         };
       });
 
-      if (cancelled) return;
+      if (aborted) return;
       setKpis({
         total,
         confirmed,
@@ -264,7 +264,7 @@ function AdminDashboardPage() {
     };
     void load();
     return () => {
-      cancelled = true;
+      aborted = true;
     };
   }, []);
 
