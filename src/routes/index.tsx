@@ -143,6 +143,19 @@ function Index() {
           <InfoDialog open={infoOpen} onOpenChange={setInfoOpen} />
         </section>
 
+        {/* Imagen del taller */}
+        <section className="mt-12 sm:mt-16">
+          <figure className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
+            <img
+              src={piezasAsset.url}
+              alt="Piezas de cerámica hechas a mano en el taller de Cazú Ceramics"
+              loading="lazy"
+              className="aspect-[4/3] w-full object-cover sm:aspect-[16/9]"
+            />
+          </figure>
+        </section>
+
+
         {/* Cómo funciona */}
         <section className="mt-20 sm:mt-28">
           <div className="text-center">
