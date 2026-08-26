@@ -4,6 +4,7 @@ import type { LucideIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
+import logoAsset from "@/assets/logo-cazu.png.asset.json";
 
 type NavItem = {
   to: string;
@@ -41,9 +42,10 @@ export function AppShell({ brand, items }: Props) {
       <header className="sticky top-0 z-30 border-b border-border bg-surface/90 backdrop-blur">
         <div className="mx-auto grid h-14 w-full max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 sm:px-5 lg:px-8">
           <div className="flex min-w-0 items-center gap-2">
-            <div className="h-7 w-7 shrink-0 rounded-full bg-primary" aria-hidden />
+            <img src={logoAsset.url} alt="Cazú Ceramics" className="h-9 w-auto shrink-0" />
             <span className="text-h3 truncate">{brand}</span>
           </div>
+
           <button
             type="button"
             onClick={handleSignOut}

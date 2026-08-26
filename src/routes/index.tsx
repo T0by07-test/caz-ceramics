@@ -10,6 +10,8 @@ import { withoutClosedDates } from "@/lib/closures";
 import { createTrialCheckout } from "@/lib/checkout";
 import { startOfMonth, toIsoDate } from "@/lib/calendar";
 import { PublicClassCalendar, type UpcomingClass } from "@/components/PublicClassCalendar";
+import logoAsset from "@/assets/logo-cazu.png.asset.json";
+import piezasAsset from "@/assets/piezas-ceramica.jpg.asset.json";
 import {
   Dialog,
   DialogContent,
@@ -96,9 +98,14 @@ function Index() {
     <div className="min-h-screen bg-background text-foreground">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-primary" aria-hidden />
-          <span className="text-h3">Cazú Ceramics</span>
+          <img
+            src={logoAsset.url}
+            alt="Logo de Cazú Ceramics"
+            className="h-10 w-auto sm:h-12"
+          />
+          <span className="sr-only">Cazú Ceramics</span>
         </div>
+
         <nav className="flex items-center gap-5">
           <Link
             to="/login"
@@ -135,6 +142,19 @@ function Index() {
 
           <InfoDialog open={infoOpen} onOpenChange={setInfoOpen} />
         </section>
+
+        {/* Imagen del taller */}
+        <section className="mt-12 sm:mt-16">
+          <figure className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
+            <img
+              src={piezasAsset.url}
+              alt="Piezas de cerámica hechas a mano en el taller de Cazú Ceramics"
+              loading="lazy"
+              className="aspect-[4/3] w-full object-cover sm:aspect-[16/9]"
+            />
+          </figure>
+        </section>
+
 
         {/* Cómo funciona */}
         <section className="mt-20 sm:mt-28">
