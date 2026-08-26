@@ -11,9 +11,11 @@ import { createTrialCheckout } from "@/lib/checkout";
 import { startOfMonth, toIsoDate } from "@/lib/calendar";
 import { PublicClassCalendar, type UpcomingClass } from "@/components/PublicClassCalendar";
 import logoAsset from "@/assets/logo-cazu-v2.png.asset.json";
-import piezasAsset from "@/assets/piezas-ceramica.jpg.asset.json";
 import tallerAsset from "@/assets/taller-cazu.jpg.asset.json";
 import espacioAsset from "@/assets/espacio-cazu.jpg.asset.json";
+import manosAsset from "@/assets/manos-barro.jpg.asset.json";
+import piezasCrudasAsset from "@/assets/piezas-crudas.jpg.asset.json";
+import piezasEsmaltadasAsset from "@/assets/piezas-esmaltadas.jpg.asset.json";
 import {
   Dialog,
   DialogContent,
