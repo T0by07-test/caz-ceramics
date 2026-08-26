@@ -10,6 +10,8 @@ import { withoutClosedDates } from "@/lib/closures";
 import { createTrialCheckout } from "@/lib/checkout";
 import { startOfMonth, toIsoDate } from "@/lib/calendar";
 import { PublicClassCalendar, type UpcomingClass } from "@/components/PublicClassCalendar";
+import logoAsset from "@/assets/logo-cazu.png.asset.json";
+import piezasAsset from "@/assets/piezas-ceramica.jpg.asset.json";
 import {
   Dialog,
   DialogContent,
@@ -96,9 +98,14 @@ function Index() {
     <div className="min-h-screen bg-background text-foreground">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-primary" aria-hidden />
-          <span className="text-h3">Cazú Ceramics</span>
+          <img
+            src={logoAsset.url}
+            alt="Logo de Cazú Ceramics"
+            className="h-10 w-auto sm:h-12"
+          />
+          <span className="sr-only">Cazú Ceramics</span>
         </div>
+
         <nav className="flex items-center gap-5">
           <Link
             to="/login"
