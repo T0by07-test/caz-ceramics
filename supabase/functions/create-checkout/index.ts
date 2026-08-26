@@ -258,7 +258,20 @@ Deno.serve(async (req) => {
     if (paymentMethod) {
       sessionParams.payment_method_types = [paymentMethod];
     }
-    const session = await stripe.checkout.sessions.create(sessionParams);
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create(sessionParams);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      // Bizum may not be activated on the Stripe account yet: fall back to card.
+      if (paymentMethod === "bizum" && msg.includes("bizum")) {
+        delete sessionParams.payment_method_types;
+        session = await stripe.checkout.sessions.create(sessionParams);
+      } else {
+        throw err;
+      }
+    }
+
 
     // Insert pending payment row(s). Idempotency on (stripe_session_id, booking_id).
     // Adults share the tiered total evenly; each kids class is 12 €.
