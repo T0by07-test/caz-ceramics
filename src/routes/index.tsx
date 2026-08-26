@@ -12,6 +12,9 @@ import { startOfMonth, toIsoDate } from "@/lib/calendar";
 import { PublicClassCalendar, type UpcomingClass } from "@/components/PublicClassCalendar";
 import logoAsset from "@/assets/logo-cazu-v2.png.asset.json";
 import piezasCrudasAsset from "@/assets/piezas-crudas.jpg.asset.json";
+import tazasCrudasAsset from "@/assets/tazas-crudas.jpg.asset.json";
+import piezasBlancoTerracotaAsset from "@/assets/piezas-blanco-terracota.jpg.asset.json";
+import bolTerracotaAsset from "@/assets/bol-terracota.jpg.asset.json";
 import {
   Dialog,
   DialogContent,
