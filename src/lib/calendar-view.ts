@@ -9,11 +9,12 @@ import {
   formatWeekTitle,
   monthGridRange,
   weekRange,
+  DEFAULT_CALENDAR_MONTH,
 } from "@/lib/calendar";
 
 export type CalendarView = "month" | "week" | "day";
 
-// Bad/missing params fall back to month + undefined date (no throw on navigation).
+// Bad/missing params fall back to the default month (no throw on navigation).
 export const calendarSearchSchema = z.object({
   view: z.enum(["month", "week", "day"]).optional().catch(undefined),
   date: z
@@ -24,15 +25,16 @@ export const calendarSearchSchema = z.object({
 });
 export type CalendarSearch = z.infer<typeof calendarSearchSchema>;
 
-/** ISO date param → local Date; falls back to "now" when absent/invalid. */
+/** ISO date param → local Date; falls back to the default calendar month when absent/invalid. */
 export function parseReference(dateParam?: string): Date {
   if (dateParam) {
     const [y, m, d] = dateParam.split("-").map(Number);
     const dt = new Date(y, m - 1, d);
     if (!Number.isNaN(dt.getTime())) return dt;
   }
-  return new Date();
+  return new Date(DEFAULT_CALENDAR_MONTH);
 }
+
 
 /** week → Mon..Sun; day → single day; month → 6-week grid range. */
 export function rangeForView(view: CalendarView, reference: Date): { startIso: string; endIso: string } {
