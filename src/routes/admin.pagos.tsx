@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ExternalLink } from "lucide-react";
+import { Check, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
 import { RouteGuard } from "@/components/RouteGuard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -41,6 +43,7 @@ type Row = {
   student_id: string;
   subscription_id: string | null;
   booking_id: string | null;
+  method: string | null;
   student_name: string;
 };
 
@@ -55,6 +58,13 @@ function statusBadge(status: string) {
     return <Badge className="bg-success text-success-foreground">Confirmado</Badge>;
   if (status === "failed") return <Badge variant="destructive">Fallido</Badge>;
   return <Badge variant="secondary">Pendiente</Badge>;
+}
+
+function methodLabel(method: string | null) {
+  if (method === "bizum") return "Bizum";
+  if (method === "card") return "Tarjeta";
+  if (method === "cash") return "Efectivo";
+  return "—";
 }
 
 function AdminPaymentsRoute() {
@@ -81,7 +91,7 @@ function AdminPaymentsPage() {
       let q = supabase
         .from("payments")
         .select(
-          "id, amount_cents, status, created_at, stripe_session_id, student_id, subscription_id, booking_id",
+          "id, amount_cents, status, created_at, stripe_session_id, student_id, subscription_id, booking_id, method",
         )
         .gte("created_at", `${from}T00:00:00`)
         .lte("created_at", `${to}T23:59:59`)
@@ -112,6 +122,22 @@ function AdminPaymentsPage() {
     };
   }, [status, from, to]);
 
+  const [confirming, setConfirming] = useState<string | null>(null);
+
+  const confirmPayment = async (id: string) => {
+    setConfirming(id);
+    const { error } = await supabase.rpc("admin_confirm_payment", { p_payment_id: id });
+    setConfirming(null);
+    if (error) {
+      toast.error("No se pudo confirmar el pago", { description: error.message });
+      return;
+    }
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, status: "confirmed" } : r)));
+    toast.success("Pago confirmado", {
+      description: "La reserva de la alumna queda confirmada.",
+    });
+  };
+
   const totals = useMemo(() => {
     const confirmed = rows.filter((r) => r.status === "confirmed");
     return {
@@ -126,7 +152,8 @@ function AdminPaymentsPage() {
         <span className="text-label uppercase">Finanzas</span>
         <h1 className="text-h1 mt-1">Pagos</h1>
         <p className="text-body mt-2 text-muted-foreground">
-          Filtra por estado y fechas. Abre la sesión en Stripe para más detalles.
+          Filtra por estado y fechas. Cuando recibas un Bizum o efectivo, marca el pago como
+          pagado y la reserva de la alumna quedará confirmada.
         </p>
       </div>
 
@@ -188,13 +215,24 @@ function AdminPaymentsPage() {
                       <p className="truncate font-medium">{r.student_name}</p>
                       <p className="text-xs text-muted-foreground">
                         {new Date(r.created_at).toLocaleDateString("es-ES")} ·{" "}
-                        {r.subscription_id ? "Plan" : r.booking_id ? "Clase suelta" : "—"}
+                        {r.subscription_id ? "Plan" : r.booking_id ? "Clase suelta" : "—"} ·{" "}
+                        {methodLabel(r.method)}
                       </p>
                     </div>
                     <span className="shrink-0 font-semibold tabular-nums">{formatEur(r.amount_cents)}</span>
                   </div>
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     {statusBadge(r.status)}
+                    {r.status === "pending" ? (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={confirming === r.id}
+                        onClick={() => void confirmPayment(r.id)}
+                      >
+                        <Check className="mr-1 h-3.5 w-3.5" /> Marcar como pagado
+                      </Button>
+                    ) : null}
                     {r.stripe_session_id ? (
                       <a
                         href={`https://dashboard.stripe.com/test/payments/${r.stripe_session_id}`}
@@ -216,9 +254,11 @@ function AdminPaymentsPage() {
                   <TableHead>Fecha</TableHead>
                   <TableHead>Alumna</TableHead>
                   <TableHead>Concepto</TableHead>
+                  <TableHead>Método</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead className="text-right">Importe</TableHead>
                   <TableHead className="text-right">Stripe</TableHead>
+                  <TableHead className="text-right">Acción</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -231,6 +271,7 @@ function AdminPaymentsPage() {
                     <TableCell>
                       {r.subscription_id ? "Plan" : r.booking_id ? "Clase suelta" : "—"}
                     </TableCell>
+                    <TableCell className="text-muted-foreground">{methodLabel(r.method)}</TableCell>
                     <TableCell>{statusBadge(r.status)}</TableCell>
                     <TableCell className="text-right font-semibold">
                       {formatEur(r.amount_cents)}
@@ -246,6 +287,20 @@ function AdminPaymentsPage() {
                         >
                           Ver <ExternalLink className="h-3 w-3" />
                         </a>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {r.status === "pending" ? (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          disabled={confirming === r.id}
+                          onClick={() => void confirmPayment(r.id)}
+                        >
+                          <Check className="mr-1 h-3.5 w-3.5" /> Marcar como pagado
+                        </Button>
                       ) : (
                         <span className="text-xs text-muted-foreground">—</span>
                       )}

@@ -893,6 +893,10 @@ export type Database = {
         Args: { p_request_id: string }
         Returns: string
       }
+      admin_confirm_payment: {
+        Args: { p_payment_id: string }
+        Returns: undefined
+      }
       admin_grant_makeup: {
         Args: { p_reason: string; p_student_id: string }
         Returns: string
