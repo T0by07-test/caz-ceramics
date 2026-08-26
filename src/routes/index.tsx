@@ -250,6 +250,27 @@ function Index() {
           </div>
         </section>
 
+        {/* Galería: piezas del taller */}
+        <section className="mt-16 grid gap-4 sm:mt-20 sm:grid-cols-2">
+          <figure className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
+            <img
+              src={tazasCrudasAsset.url}
+              alt="Tazas y bols de cerámica sin esmaltar vistos desde arriba"
+              loading="lazy"
+              className="aspect-[4/5] w-full object-cover"
+            />
+          </figure>
+          <figure className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
+            <img
+              src={piezasBlancoTerracotaAsset.url}
+              alt="Piezas de cerámica en barro blanco y terracota secándose en el taller"
+              loading="lazy"
+              className="aspect-[4/5] w-full object-cover"
+            />
+          </figure>
+        </section>
+
+
         {/* Política de cancelación */}
         <section className="mt-20 sm:mt-28">
           <div className="text-center">
