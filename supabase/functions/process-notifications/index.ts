@@ -87,21 +87,19 @@ function fmtClassesList(
     const date = fmtDate(c.date as string | undefined);
     const start = fmtTime(c.start_time as string | undefined);
     const end = fmtTime(c.end_time as string | undefined);
-    const teacher = (c.teacher as string | undefined)?.trim();
-    return `  · ${date}${start ? ` de ${start}${end ? ` a ${end}` : ""}` : ""}${teacher ? ` · ${teacher}` : ""}`;
+    return `${date} — ${start}${end ? ` a ${end}` : ""}`;
   });
 
   const htmlLines = list.map((c: Record<string, unknown>) => {
     const date = escapeHtml(fmtDate(c.date as string | undefined));
     const start = escapeHtml(fmtTime(c.start_time as string | undefined));
     const end = escapeHtml(fmtTime(c.end_time as string | undefined));
-    const teacher = escapeHtml((c.teacher as string | undefined)?.trim() ?? "");
-    return `<li style="margin-bottom:6px">${date}${start ? ` de ${start}${end ? ` a ${end}` : ""}` : ""}${teacher ? ` · <strong>${teacher}</strong>` : ""}</li>`;
+    return `<li style="margin-bottom:6px">${date} — ${start}${end ? ` a ${end}` : ""}</li>`;
   });
 
   return {
-    text: `Clases reservadas:\n${textLines.join("\n")}`,
-    html: `<h2 style="font-size:16px;margin:20px 0 8px;font-weight:600;color:#2E2419">Clases reservadas</h2><ul style="padding-left:18px;margin:0 0 20px;font-size:15px;line-height:1.5;color:#2E2419">${htmlLines.join("")}</ul>`,
+    text: textLines.join("\n"),
+    html: `<ul style="padding-left:18px;margin:0 0 20px;font-size:15px;line-height:1.5;color:#2E2419">${htmlLines.join("")}</ul>`,
     count,
   };
 }
@@ -115,23 +113,48 @@ function render(type: string, payload: Record<string, unknown>, profile: Profile
   switch (type) {
     case "reservation_confirmed": {
       const classesList = fmtClassesList(payload);
-      const cashIntro =
-        `Hola ${name}, hemos reservado tus clases. Si has elegido pagar tus clases en efectivo, puedes realizar el pago directamente en el taller el primer día de clase del mes al que corresponden tus clases. No necesitas realizar ningún pago por adelantado para reservar tu plaza. Si necesitas cancelar, recuerda hacerlo con más de 12 horas de antelación para poder recuperar la clase.`;
-      const paidIntro =
-        `Hola ${name}, tu reserva está confirmada. Ya hemos recibido tu pago y te esperamos en el estudio. Si necesitas cancelar, recuerda hacerlo con más de 12 horas de antelación para poder recuperar la clase.`;
       const isCash = payload.method === "cash";
-      const intro = isCash ? cashIntro : paidIntro;
+      const paymentMethod = isCash ? "en efectivo" : "con tarjeta";
 
-      if (classesList.count > 0) {
-        const text = `${intro}\n\n${classesList.text}`;
-        const html = `<p style="font-size:15px;line-height:1.55;margin:0 0 20px;color:#2E2419">${escapeHtml(intro)}</p>${classesList.html}`;
-        return wrap(isCash ? "Reserva confirmada · pago en efectivo" : "Reserva confirmada", text, html);
-      }
-      return wrap(
-        isCash ? "Reserva confirmada · pago en efectivo" : "Reserva confirmada",
-        intro,
-      );
+      const greetingText = `Hola ${name},\n\n¡Tu reserva está confirmada! 🤎\n\nTe esperamos en el estudio para tus próximas clases de cerámica.`;
+      const classesText = classesList.count > 0
+        ? `\n\nClases reservadas\nAquí encontrarás el detalle de las clases que has reservado:\n\n${classesList.text}`
+        : "";
+      const paymentText = `\n\nPago\nHas elegido pagar ${paymentMethod}.`;
+      const cashNoteText = isCash
+        ? `\n\nSi has elegido pago en efectivo, podrás realizarlo directamente en el taller el primer día de clase del mes al que corresponden tus clases.`
+        : "";
+      const cancelText = `\n\n¿Necesitas cancelar una clase?\nRecuerda hacerlo con al menos 12 horas de antelación para poder recuperar la clase.`;
+      const closingText = `\n\nNos vemos en el estudio ✨\n\nSaludos,\nCazú Ceramics`;
+
+      const text = greetingText + classesText + paymentText + cashNoteText + cancelText + closingText;
+
+      const pStyle = `style="font-size:15px;line-height:1.55;margin:0 0 16px;color:#2E2419"`;
+      const h2Style = `style="font-size:16px;margin:24px 0 8px;font-weight:600;color:#2E2419"`;
+      const classesHtml = classesList.count > 0
+        ? `<h2 ${h2Style}>Clases reservadas</h2><p ${pStyle}>Aquí encontrarás el detalle de las clases que has reservado:</p>${classesList.html}`
+        : "";
+      const cashNoteHtml = isCash
+        ? `<p ${pStyle}>Si has elegido pago en efectivo, podrás realizarlo directamente en el taller el primer día de clase del mes al que corresponden tus clases.</p>`
+        : "";
+
+      const htmlBody = `
+        <p ${pStyle}>Hola ${escapeHtml(name)},</p>
+        <p ${pStyle}>¡Tu reserva está confirmada! 🤎</p>
+        <p ${pStyle}>Te esperamos en el estudio para tus próximas clases de cerámica.</p>
+        ${classesHtml}
+        <h2 ${h2Style}>Pago</h2>
+        <p ${pStyle}>Has elegido pagar ${escapeHtml(paymentMethod)}.</p>
+        ${cashNoteHtml}
+        <h2 ${h2Style}>¿Necesitas cancelar una clase?</h2>
+        <p ${pStyle}>Recuerda hacerlo con al menos 12 horas de antelación para poder recuperar la clase.</p>
+        <p ${pStyle}>Nos vemos en el estudio ✨</p>
+        <p ${pStyle}>Saludos,<br>Cazú Ceramics</p>
+      `.trim();
+
+      return wrap("Reserva confirmada", text, htmlBody);
     }
+
 
     case "plan_purchased":
       return wrap(
