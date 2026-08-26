@@ -103,7 +103,7 @@ function Index() {
           <img
             src={logoAsset.url}
             alt="Logo de Cazú Ceramics"
-            className="h-10 w-auto sm:h-12"
+            className="h-16 w-auto sm:h-20 lg:h-24"
           />
           <span className="sr-only">Cazú Ceramics</span>
         </div>
