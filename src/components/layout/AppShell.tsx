@@ -4,7 +4,7 @@ import type { LucideIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
-import logoAsset from "@/assets/logo-cazu.png.asset.json";
+import logoAsset from "@/assets/logo-cazu-v2.png.asset.json";
 
 type NavItem = {
   to: string;
