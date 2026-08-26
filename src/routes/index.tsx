@@ -145,51 +145,18 @@ function Index() {
 
         {/* Imágenes del taller */}
         <section className="mt-12 sm:mt-16">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <figure className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card sm:col-span-2">
-              <img
-                src={espacioAsset.url}
-                alt="Interior del estudio de cerámica Cazú Ceramics"
-                loading="lazy"
-                className="aspect-[4/3] w-full object-cover sm:aspect-[16/10]"
-              />
-            </figure>
-            <figure className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
-              <img
-                src={tallerAsset.url}
-                alt="Estanterías con piezas de cerámica y cartel de Cazú Ceramics"
-                loading="lazy"
-                className="aspect-[4/3] w-full object-cover sm:h-full sm:aspect-auto"
-              />
-            </figure>
-          </div>
-          <div className="mt-4 grid gap-4 sm:grid-cols-3">
-            <figure className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
-              <img
-                src={manosAsset.url}
-                alt="Manos modelando una pieza de barro en el taller"
-                loading="lazy"
-                className="aspect-[4/3] w-full object-cover"
-              />
-            </figure>
-            <figure className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
-              <img
-                src={piezasCrudasAsset.url}
-                alt="Platos, bols y tazas de cerámica sin esmaltar secándose en el taller"
-                loading="lazy"
-                className="aspect-[4/3] w-full object-cover"
-              />
-            </figure>
-            <figure className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
-              <img
-                src={piezasEsmaltadasAsset.url}
-                alt="Set de piezas de cerámica esmaltadas hechas a mano"
-                loading="lazy"
-                className="aspect-[4/3] w-full object-cover"
-              />
-            </figure>
-          </div>
+          <figure className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
+            <img
+              src={piezasCrudasAsset.url}
+              alt="Platos, bols y tazas de cerámica sin esmaltar secándose en el taller"
+              loading="lazy"
+              className="aspect-[4/3] w-full object-cover sm:aspect-[16/10]"
+            />
+          </figure>
         </section>
+
+
+
 
 
 
