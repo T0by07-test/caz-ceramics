@@ -462,7 +462,8 @@ function InfoDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: b
 
         <p className="text-sm text-muted-foreground">
           Todas las herramientas, materiales y cocciones en el horno de cerámica están incluidos. La
-          clase de niños (lunes 17:00, 1 h) tiene un precio aparte de 12 €.
+          clase de niños (lunes 17:00, 1 h) tiene un precio aparte de{" "}
+          <span className="whitespace-nowrap">12 €</span>.
         </p>
 
 
@@ -536,7 +537,6 @@ function TrialBooking() {
         const initialClass = firstAvailableInCurrentMonth ?? availableClasses[0];
         const firstAvailableDate = new Date(`${initialClass.date}T00:00:00`);
         setMonthRef(startOfMonth(firstAvailableDate));
-        setSelectedDay(initialClass.date);
       }
     })();
   }, []);

@@ -90,14 +90,16 @@ export function PublicClassCalendar({
             const isPast = cell.iso < todayIso;
             const usable = slots.length > 0 && !isPast;
             const isSelectedDay = selectedDay === cell.iso;
+            const hasChecked = slots.some((c) => selectedIds.has(c.id));
             return (
               <div
                 key={cell.iso}
                 onClick={() => usable && onSelectDay(isSelectedDay ? null : cell.iso)}
                 className={[
-                  "min-h-[76px] bg-surface p-1 sm:min-h-[96px]",
+                  "min-h-[52px] bg-surface p-1 sm:min-h-[96px]",
                   !cell.inMonth ? "bg-background/60" : "",
                   usable ? "cursor-pointer" : "",
+                  isSelectedDay ? "ring-2 ring-inset ring-primary" : "",
                 ].join(" ")}
               >
                 <div className="mb-1 flex justify-center">
@@ -114,7 +116,32 @@ export function PublicClassCalendar({
                     {cell.date.getDate()}
                   </span>
                 </div>
-                <ul className="space-y-1">
+
+                {/* Mobile: only availability dots; tap the day to see times below */}
+                <div className="flex flex-wrap justify-center gap-0.5 sm:hidden">
+                  {slots.slice(0, 4).map((c) => (
+                    <span
+                      key={c.id}
+                      className={[
+                        "h-1.5 w-1.5 rounded-full",
+                        isPast
+                          ? "bg-muted-foreground/40"
+                          : selectedIds.has(c.id)
+                            ? "bg-primary"
+                            : "bg-success",
+                      ].join(" ")}
+                      aria-hidden
+                    />
+                  ))}
+                  {slots.length > 4 ? (
+                    <span className="text-[8px] leading-none text-muted-foreground">
+                      +{slots.length - 4}
+                    </span>
+                  ) : null}
+                </div>
+
+                {/* Desktop: full chips with time and teacher */}
+                <ul className="hidden space-y-1 sm:block">
                   {slots.map((c) => {
                     const checked = selectedIds.has(c.id);
                     return (
@@ -127,7 +154,7 @@ export function PublicClassCalendar({
                             onToggle(c.id);
                           }}
                           className={[
-                            "flex w-full flex-col gap-0.5 rounded border px-0.5 py-0.5 text-left leading-[1.15] transition-colors sm:px-1",
+                            "flex w-full flex-col gap-0.5 rounded border px-1 py-0.5 text-left leading-[1.15] transition-colors",
                             isPast
                               ? "cursor-not-allowed border-transparent bg-muted/40 text-muted-foreground/60"
                               : checked
@@ -143,17 +170,17 @@ export function PublicClassCalendar({
                               ].join(" ")}
                               aria-hidden
                             />
-                            <span className="text-[9px] font-semibold tabular-nums sm:text-[11px]">
+                            <span className="text-[11px] font-semibold tabular-nums">
                               {formatTime(c.start_time)}
                             </span>
                           </span>
                           {c.teacher ? (
-                            <span className="block text-[8px] text-muted-foreground sm:text-[10px]">
+                            <span className="block text-[10px] text-muted-foreground">
                               {teacherShort(c.teacher)}
                             </span>
                           ) : null}
                           {c.audience === "kids" ? (
-                            <span className="block text-[8px] text-muted-foreground sm:text-[10px]">
+                            <span className="block text-[10px] text-muted-foreground">
                               niños
                             </span>
                           ) : null}
@@ -163,6 +190,7 @@ export function PublicClassCalendar({
                     );
                   })}
                 </ul>
+                {hasChecked ? <span className="sr-only">Día con clases seleccionadas</span> : null}
               </div>
             );
           })}
