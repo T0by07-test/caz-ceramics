@@ -365,6 +365,22 @@ function Index() {
           </p>
         </section>
 
+        {/* Detalle: bol de terracota */}
+        <section className="mt-16 sm:mt-20">
+          <figure className="mx-auto max-w-2xl overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
+            <img
+              src={bolTerracotaAsset.url}
+              alt="Bol de barro rojo con dos asas sobre una tela en la mesa de trabajo"
+              loading="lazy"
+              className="aspect-[4/3] w-full object-cover"
+            />
+            <figcaption className="px-5 py-3 text-center text-xs text-muted-foreground">
+              Cada pieza se modela a mano, a tu ritmo.
+            </figcaption>
+          </figure>
+        </section>
+
+
         {/* Closing CTA */}
         <section className="mt-20 text-center sm:mt-28">
           <h2 className="text-h2">¿List@ para empezar?</h2>
