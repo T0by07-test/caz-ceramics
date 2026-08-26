@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ExternalLink } from "lucide-react";
+import { Check, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
 import { RouteGuard } from "@/components/RouteGuard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -41,6 +43,7 @@ type Row = {
   student_id: string;
   subscription_id: string | null;
   booking_id: string | null;
+  method: string | null;
   student_name: string;
 };
 
@@ -81,7 +84,7 @@ function AdminPaymentsPage() {
       let q = supabase
         .from("payments")
         .select(
-          "id, amount_cents, status, created_at, stripe_session_id, student_id, subscription_id, booking_id",
+          "id, amount_cents, status, created_at, stripe_session_id, student_id, subscription_id, booking_id, method",
         )
         .gte("created_at", `${from}T00:00:00`)
         .lte("created_at", `${to}T23:59:59`)
