@@ -75,13 +75,15 @@ export function MonthGrid({ reference, classes, onSelectClass, selectedIds }: Pr
                             ? "bg-muted text-muted-foreground line-through"
                             : picked
                               ? "border-primary bg-primary/10 text-foreground"
-                              : "bg-background hover:bg-accent hover:text-foreground",
+                              : level === "full"
+                                ? "border-destructive/40 bg-destructive/10 text-foreground"
+                                : "bg-background hover:bg-accent hover:text-foreground",
                         ].join(" ")}
                       >
                         <span className="flex w-full items-center gap-1">
                           <span
                             className={[
-                              "hidden h-2 w-2 shrink-0 rounded-full sm:block",
+                              "h-1.5 w-1.5 shrink-0 rounded-full sm:h-2 sm:w-2",
                               cancelled ? "bg-muted-foreground" : capacityDotClass(level),
                             ].join(" ")}
                             aria-hidden
@@ -93,16 +95,23 @@ export function MonthGrid({ reference, classes, onSelectClass, selectedIds }: Pr
                             {c.booked_count}/{c.capacity_max}
                           </span>
                         </span>
+                        {!cancelled && level === "full" ? (
+                          <span className="block text-[8px] font-medium text-destructive sm:pl-3 sm:text-[11px]">
+                            completa
+                          </span>
+                        ) : null}
                         {c.teacher ? (
-                          <span className="block text-[8px] text-muted-foreground sm:pl-3.5 sm:text-[11px]">
+                          <span className="block text-[8px] text-muted-foreground sm:pl-3 sm:text-[11px]">
                             {teacherShort(c.teacher)}
                           </span>
                         ) : null}
                         {c.audience === "kids" ? (
-                          <span className="block text-[8px] text-muted-foreground sm:pl-3.5 sm:text-[11px]">
+                          <span className="block text-[8px] text-muted-foreground sm:pl-3 sm:text-[11px]">
                             niños
                           </span>
                         ) : null}
+
+
 
                       </button>
                     </li>
