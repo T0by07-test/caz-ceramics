@@ -70,6 +70,42 @@ interface Rendered {
   html: string;
 }
 
+function fmtClassesList(
+  payload: Record<string, unknown>,
+): { text: string; html: string; count: number } {
+  const classes = Array.isArray(payload.classes) ? payload.classes : [];
+  const singleClass =
+    classes.length === 0 && payload.date
+      ? [{ date: payload.date, start_time: payload.start_time, end_time: payload.end_time, teacher: payload.teacher }]
+      : [];
+  const list = classes.length > 0 ? classes : singleClass;
+  const count = list.length;
+
+  if (count === 0) return { text: "", html: "", count: 0 };
+
+  const textLines = list.map((c: Record<string, unknown>) => {
+    const date = fmtDate(c.date as string | undefined);
+    const start = fmtTime(c.start_time as string | undefined);
+    const end = fmtTime(c.end_time as string | undefined);
+    const teacher = (c.teacher as string | undefined)?.trim();
+    return `  · ${date}${start ? ` de ${start}${end ? ` a ${end}` : ""}` : ""}${teacher ? ` · ${teacher}` : ""}`;
+  });
+
+  const htmlLines = list.map((c: Record<string, unknown>) => {
+    const date = escapeHtml(fmtDate(c.date as string | undefined));
+    const start = escapeHtml(fmtTime(c.start_time as string | undefined));
+    const end = escapeHtml(fmtTime(c.end_time as string | undefined));
+    const teacher = escapeHtml((c.teacher as string | undefined)?.trim() ?? "");
+    return `<li style="margin-bottom:6px">${date}${start ? ` de ${start}${end ? ` a ${end}` : ""}` : ""}${teacher ? ` · <strong>${teacher}</strong>` : ""}</li>`;
+  });
+
+  return {
+    text: `Clases reservadas:\n${textLines.join("\n")}`,
+    html: `<h2 style="font-size:16px;margin:20px 0 8px;font-weight:600;color:#2E2419">Clases reservadas</h2><ul style="padding-left:18px;margin:0 0 20px;font-size:15px;line-height:1.5;color:#2E2419">${htmlLines.join("")}</ul>`,
+    count,
+  };
+}
+
 function render(type: string, payload: Record<string, unknown>, profile: Profile): Rendered {
   const name = profile.name?.trim() || "alumna";
   const date = fmtDate(payload.date as string | undefined);
@@ -77,17 +113,25 @@ function render(type: string, payload: Record<string, unknown>, profile: Profile
   const end = fmtTime(payload.end_time as string | undefined);
 
   switch (type) {
-    case "reservation_confirmed":
-      if (payload.method === "cash") {
-        return wrap(
-          "Reserva confirmada · pago en efectivo",
-          `Hola ${name}, hemos reservado tus clases. Si has elegido pagar tus clases en efectivo, puedes realizar el pago directamente en el taller el primer día de clase del mes al que corresponden tus clases. No necesitas realizar ningún pago por adelantado para reservar tu plaza. Si necesitas cancelar, recuerda hacerlo con más de 12 horas de antelación para poder recuperar la clase.`,
-        );
+    case "reservation_confirmed": {
+      const classesList = fmtClassesList(payload);
+      const cashIntro =
+        `Hola ${name}, hemos reservado tus clases. Si has elegido pagar tus clases en efectivo, puedes realizar el pago directamente en el taller el primer día de clase del mes al que corresponden tus clases. No necesitas realizar ningún pago por adelantado para reservar tu plaza. Si necesitas cancelar, recuerda hacerlo con más de 12 horas de antelación para poder recuperar la clase.`;
+      const paidIntro =
+        `Hola ${name}, tu reserva está confirmada. Ya hemos recibido tu pago y te esperamos en el estudio. Si necesitas cancelar, recuerda hacerlo con más de 12 horas de antelación para poder recuperar la clase.`;
+      const isCash = payload.method === "cash";
+      const intro = isCash ? cashIntro : paidIntro;
+
+      if (classesList.count > 0) {
+        const text = `${intro}\n\n${classesList.text}`;
+        const html = `<p style="font-size:15px;line-height:1.55;margin:0 0 20px;color:#2E2419">${escapeHtml(intro)}</p>${classesList.html}`;
+        return wrap(isCash ? "Reserva confirmada · pago en efectivo" : "Reserva confirmada", text, html);
       }
       return wrap(
-        "Reserva confirmada",
-        `Hola ${name}, tu reserva está confirmada. Te esperamos en el estudio. Si necesitas cancelar, recuerda hacerlo con más de 12 horas de antelación para poder recuperar la clase.`,
+        isCash ? "Reserva confirmada · pago en efectivo" : "Reserva confirmada",
+        intro,
       );
+    }
 
     case "plan_purchased":
       return wrap(
@@ -147,12 +191,13 @@ function render(type: string, payload: Record<string, unknown>, profile: Profile
   }
 }
 
-function wrap(subject: string, body: string): Rendered {
+function wrap(subject: string, body: string, htmlBody?: string): Rendered {
+  const bodyHtml = htmlBody ?? `<p style="font-size:15px;line-height:1.55;margin:0 0 20px;color:#2E2419">${escapeHtml(body)}</p>`;
   const html = `<!doctype html><html><body style="margin:0;padding:0;background:#FAF5EE;font-family:Inter,Arial,sans-serif;color:#2E2419">
   <div style="max-width:520px;margin:24px auto;background:#FFFDF8;border:1px solid #E8DFD2;border-radius:12px;padding:28px">
     <div style="height:4px;width:48px;background:#C96F4A;border-radius:2px;margin-bottom:20px"></div>
     <h1 style="font-size:22px;margin:0 0 12px;font-weight:600;color:#2E2419">${escapeHtml(subject)}</h1>
-    <p style="font-size:15px;line-height:1.55;margin:0 0 20px;color:#2E2419">${escapeHtml(body)}</p>
+    ${bodyHtml}
     <p style="font-size:12px;color:#8A7B6B;margin:24px 0 0">Cerámica Studio</p>
   </div>
   </body></html>`;
