@@ -138,7 +138,7 @@ export function PublicClassCalendar({
                           <span className="flex items-center gap-1">
                             <span
                               className={[
-                                "hidden h-1.5 w-1.5 shrink-0 rounded-full sm:block",
+                                "h-1.5 w-1.5 shrink-0 rounded-full",
                                 checked ? "bg-primary" : "bg-success",
                               ].join(" ")}
                               aria-hidden
