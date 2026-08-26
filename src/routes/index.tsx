@@ -11,9 +11,11 @@ import { createTrialCheckout } from "@/lib/checkout";
 import { startOfMonth, toIsoDate } from "@/lib/calendar";
 import { PublicClassCalendar, type UpcomingClass } from "@/components/PublicClassCalendar";
 import logoAsset from "@/assets/logo-cazu-v2.png.asset.json";
-import piezasAsset from "@/assets/piezas-ceramica.jpg.asset.json";
 import tallerAsset from "@/assets/taller-cazu.jpg.asset.json";
 import espacioAsset from "@/assets/espacio-cazu.jpg.asset.json";
+import manosAsset from "@/assets/manos-barro.jpg.asset.json";
+import piezasCrudasAsset from "@/assets/piezas-crudas.jpg.asset.json";
+import piezasEsmaltadasAsset from "@/assets/piezas-esmaltadas.jpg.asset.json";
 import {
   Dialog,
   DialogContent,
@@ -165,15 +167,34 @@ function Index() {
               />
             </figure>
           </div>
-          <figure className="mt-4 overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
-            <img
-              src={piezasAsset.url}
-              alt="Piezas de cerámica hechas a mano en el taller de Cazú Ceramics"
-              loading="lazy"
-              className="aspect-[4/3] w-full object-cover sm:aspect-[16/9]"
-            />
-          </figure>
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            <figure className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
+              <img
+                src={manosAsset.url}
+                alt="Manos modelando una pieza de barro en el taller"
+                loading="lazy"
+                className="aspect-[4/3] w-full object-cover"
+              />
+            </figure>
+            <figure className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
+              <img
+                src={piezasCrudasAsset.url}
+                alt="Platos, bols y tazas de cerámica sin esmaltar secándose en el taller"
+                loading="lazy"
+                className="aspect-[4/3] w-full object-cover"
+              />
+            </figure>
+            <figure className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
+              <img
+                src={piezasEsmaltadasAsset.url}
+                alt="Set de piezas de cerámica esmaltadas hechas a mano"
+                loading="lazy"
+                className="aspect-[4/3] w-full object-cover"
+              />
+            </figure>
+          </div>
         </section>
+
 
 
         {/* Cómo funciona */}
