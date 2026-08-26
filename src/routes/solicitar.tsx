@@ -15,11 +15,12 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { withoutClosedDates } from "@/lib/closures";
 import { createEnrollmentRequest } from "@/lib/requests";
-import { startOfMonth, toIsoDate } from "@/lib/calendar";
+import { startOfMonth, toIsoDate, DEFAULT_CALENDAR_MONTH } from "@/lib/calendar";
 import {
   PublicClassCalendar,
   type UpcomingClass,
 } from "@/components/PublicClassCalendar";
+
 import { z } from "zod";
 
 const searchSchema = z.object({
@@ -62,7 +63,8 @@ function SolicitarPage() {
   const [classes, setClasses] = useState<UpcomingClass[] | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
-  const [monthRef, setMonthRef] = useState<Date>(() => startOfMonth(new Date()));
+  const [monthRef, setMonthRef] = useState<Date>(() => startOfMonth(DEFAULT_CALENDAR_MONTH));
+
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
   useEffect(() => {

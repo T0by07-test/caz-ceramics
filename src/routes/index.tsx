@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { withoutClosedDates } from "@/lib/closures";
 import { createTrialCheckout } from "@/lib/checkout";
-import { startOfMonth, toIsoDate } from "@/lib/calendar";
+import { startOfMonth, toIsoDate, DEFAULT_CALENDAR_MONTH } from "@/lib/calendar";
 import { PublicClassCalendar, type UpcomingClass } from "@/components/PublicClassCalendar";
+
 import logoAsset from "@/assets/logo-cazu-v2.png.asset.json";
 import piezasCrudasAsset from "@/assets/piezas-crudas.jpg.asset.json";
 import tazasCrudasAsset from "@/assets/tazas-crudas.jpg.asset.json";
@@ -503,7 +504,7 @@ function InfoDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: b
 
 function TrialBooking() {
   const [classes, setClasses] = useState<UpcomingClass[] | null>(null);
-  const [monthRef, setMonthRef] = useState<Date>(() => startOfMonth(new Date()));
+  const [monthRef, setMonthRef] = useState<Date>(() => startOfMonth(DEFAULT_CALENDAR_MONTH));
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -517,7 +518,7 @@ function TrialBooking() {
         .from("classes")
         .select("id, date, start_time, end_time, audience, teacher")
         .eq("status", "scheduled")
-        .gte("date", toIsoDate(new Date()))
+        .gte("date", toIsoDate(DEFAULT_CALENDAR_MONTH))
         .order("date", { ascending: true })
         .order("start_time", { ascending: true })
         .limit(500);
@@ -526,20 +527,12 @@ function TrialBooking() {
         setClasses([]);
         return;
       }
-      const availableClasses = withoutClosedDates((data ?? []) as UpcomingClass[]).filter(
-        (c) => c.audience === "adults",
+      setClasses(
+        withoutClosedDates((data ?? []) as UpcomingClass[]).filter((c) => c.audience === "adults"),
       );
-      setClasses(availableClasses);
-      if (availableClasses.length > 0) {
-        const firstAvailableInCurrentMonth = availableClasses.find((c) =>
-          c.date.startsWith(toIsoDate(new Date()).slice(0, 7)),
-        );
-        const initialClass = firstAvailableInCurrentMonth ?? availableClasses[0];
-        const firstAvailableDate = new Date(`${initialClass.date}T00:00:00`);
-        setMonthRef(startOfMonth(firstAvailableDate));
-      }
     })();
   }, []);
+
 
   const byDate = useMemo(() => {
     const map = new Map<string, UpcomingClass[]>();
