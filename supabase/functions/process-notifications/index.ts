@@ -84,19 +84,23 @@ function fmtClassesList(
 
   if (count === 0) return { text: "", html: "", count: 0 };
 
-  const textLines = list.map((c: Record<string, unknown>) => {
+  const label = (c: Record<string, unknown>) => {
     const date = fmtDate(c.date as string | undefined);
     const start = fmtTime(c.start_time as string | undefined);
     const end = fmtTime(c.end_time as string | undefined);
-    return `${date} — ${start}${end ? ` a ${end}` : ""}`;
-  });
+    const teacher = (c.teacher as string | undefined)?.trim();
+    const kids = c.audience === "kids";
+    const extras = [teacher ? `Profe ${teacher}` : "", kids ? "Niños" : ""].filter(Boolean).join(" · ");
+    return `${date}, de ${start}${end ? ` a ${end}` : ""}${extras ? ` (${extras})` : ""}`;
+  };
 
-  const htmlLines = list.map((c: Record<string, unknown>) => {
-    const date = escapeHtml(fmtDate(c.date as string | undefined));
-    const start = escapeHtml(fmtTime(c.start_time as string | undefined));
-    const end = escapeHtml(fmtTime(c.end_time as string | undefined));
-    return `<li style="margin-bottom:6px">${date} — ${start}${end ? ` a ${end}` : ""}</li>`;
-  });
+  const textLines = list.map((c: Record<string, unknown>) => label(c as Record<string, unknown>));
+
+  const htmlLines = list.map(
+    (c: Record<string, unknown>) =>
+      `<li style="margin-bottom:6px">${escapeHtml(label(c as Record<string, unknown>))}</li>`,
+  );
+
 
   return {
     text: textLines.join("\n"),
