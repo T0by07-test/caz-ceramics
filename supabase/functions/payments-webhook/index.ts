@@ -147,8 +147,9 @@ async function handleSessionCompleted(session: any, _env: StripeEnv) {
       studentName,
       item: purpose === "plan"
         ? "Plan mensual"
-        : classCount > 1 ? `${classCount} clases sueltas` : "Clase suelta",
-      category: purpose === "plan" ? "Clases" : "Suelta",
+        : `${classCount} ${classCount === 1 ? "clase" : "clases"}`,
+      category: "Clases",
+      method: md.paymentMethod === "bizum" ? "B" : "T",
       amountCents: amountForLedger,
       stripeSessionId: sessionId,
     });
