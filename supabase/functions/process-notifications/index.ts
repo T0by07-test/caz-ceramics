@@ -36,7 +36,8 @@ const TWILIO_API_KEY_SECRET = Deno.env.get("TWILIO_API_KEY_SECRET");
 const TWILIO_WHATSAPP_FROM = Deno.env.get("TWILIO_WHATSAPP_FROM");
 // Resend (real email send, A1.2)
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const EMAIL_FROM = Deno.env.get("EMAIL_FROM") ?? "Cazu Ceramics <noreply@cazuceramics.com>";
+const EMAIL_FROM = Deno.env.get("EMAIL_FROM") ?? "Cazú Ceramics <noreply@cazuceramics.com>";
+const EMAIL_SENDER_DOMAIN = Deno.env.get("EMAIL_SENDER_DOMAIN") ?? "notify.cazuceramics.com";
 // Cron hardening (A2.3) — see shared contract: header "x-cron-secret".
 const CRON_SECRET = Deno.env.get("CRON_SECRET");
 
@@ -83,19 +84,23 @@ function fmtClassesList(
 
   if (count === 0) return { text: "", html: "", count: 0 };
 
-  const textLines = list.map((c: Record<string, unknown>) => {
+  const label = (c: Record<string, unknown>) => {
     const date = fmtDate(c.date as string | undefined);
     const start = fmtTime(c.start_time as string | undefined);
     const end = fmtTime(c.end_time as string | undefined);
-    return `${date} — ${start}${end ? ` a ${end}` : ""}`;
-  });
+    const teacher = (c.teacher as string | undefined)?.trim();
+    const kids = c.audience === "kids";
+    const extras = [teacher ? `Profe ${teacher}` : "", kids ? "Niños" : ""].filter(Boolean).join(" · ");
+    return `${date}, de ${start}${end ? ` a ${end}` : ""}${extras ? ` (${extras})` : ""}`;
+  };
 
-  const htmlLines = list.map((c: Record<string, unknown>) => {
-    const date = escapeHtml(fmtDate(c.date as string | undefined));
-    const start = escapeHtml(fmtTime(c.start_time as string | undefined));
-    const end = escapeHtml(fmtTime(c.end_time as string | undefined));
-    return `<li style="margin-bottom:6px">${date} — ${start}${end ? ` a ${end}` : ""}</li>`;
-  });
+  const textLines = list.map((c: Record<string, unknown>) => label(c as Record<string, unknown>));
+
+  const htmlLines = list.map(
+    (c: Record<string, unknown>) =>
+      `<li style="margin-bottom:6px">${escapeHtml(label(c as Record<string, unknown>))}</li>`,
+  );
+
 
   return {
     text: textLines.join("\n"),
@@ -345,12 +350,44 @@ function buildContentVariables(
 }
 
 // ---------- Senders ----------
+// Primary path: Lovable managed email (verified sender domain notify.cazuceramics.com).
+// Fallback: Resend, if a key is configured for this project.
 async function sendEmail(
   to: string,
   rendered: Rendered,
+  idempotencyKey: string,
 ): Promise<{ ok: boolean; error?: string; skipped?: boolean }> {
-  // Safe before configuration: skip (but mark sent) until the API key is set.
-  if (!RESEND_API_KEY) return { ok: true, skipped: true, error: "channel_not_configured: resend" };
+  if (LOVABLE_API_KEY) {
+    try {
+      const res = await fetch("https://api.lovable.dev/v1/messaging/email/send", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+          "Idempotency-Key": idempotencyKey,
+        },
+        body: JSON.stringify({
+          to,
+          from: EMAIL_FROM,
+          sender_domain: EMAIL_SENDER_DOMAIN,
+          subject: rendered.subject,
+          html: rendered.html,
+          text: rendered.text,
+          purpose: "transactional",
+          idempotency_key: idempotencyKey,
+        }),
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        return { ok: false, error: `lovable-email ${res.status}: ${txt.slice(0, 240)}` };
+      }
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    }
+  }
+  // Safe before configuration: skip (but mark sent) until a provider is set.
+  if (!RESEND_API_KEY) return { ok: true, skipped: true, error: "channel_not_configured: email" };
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -374,6 +411,7 @@ async function sendEmail(
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
 }
+
 
 async function sendWhatsApp(
   to: string,
@@ -447,7 +485,7 @@ async function processOne(row: QueueRow): Promise<void> {
     if (!profile.email) {
       result = { ok: false, error: "missing_email" };
     } else {
-      result = await sendEmail(profile.email, rendered);
+      result = await sendEmail(profile.email, rendered, `notif-${row.id}`);
     }
   } else if (row.channel === "whatsapp") {
     if (!profile.whatsapp) {
