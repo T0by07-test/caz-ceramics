@@ -345,12 +345,44 @@ function buildContentVariables(
 }
 
 // ---------- Senders ----------
+// Primary path: Lovable managed email (verified sender domain notify.cazuceramics.com).
+// Fallback: Resend, if a key is configured for this project.
 async function sendEmail(
   to: string,
   rendered: Rendered,
+  idempotencyKey: string,
 ): Promise<{ ok: boolean; error?: string; skipped?: boolean }> {
-  // Safe before configuration: skip (but mark sent) until the API key is set.
-  if (!RESEND_API_KEY) return { ok: true, skipped: true, error: "channel_not_configured: resend" };
+  if (LOVABLE_API_KEY) {
+    try {
+      const res = await fetch("https://api.lovable.dev/v1/messaging/email/send", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+          "Idempotency-Key": idempotencyKey,
+        },
+        body: JSON.stringify({
+          to,
+          from: EMAIL_FROM,
+          sender_domain: EMAIL_SENDER_DOMAIN,
+          subject: rendered.subject,
+          html: rendered.html,
+          text: rendered.text,
+          purpose: "transactional",
+          idempotency_key: idempotencyKey,
+        }),
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        return { ok: false, error: `lovable-email ${res.status}: ${txt.slice(0, 240)}` };
+      }
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    }
+  }
+  // Safe before configuration: skip (but mark sent) until a provider is set.
+  if (!RESEND_API_KEY) return { ok: true, skipped: true, error: "channel_not_configured: email" };
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -374,6 +406,7 @@ async function sendEmail(
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
 }
+
 
 async function sendWhatsApp(
   to: string,
