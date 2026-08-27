@@ -36,7 +36,8 @@ const TWILIO_API_KEY_SECRET = Deno.env.get("TWILIO_API_KEY_SECRET");
 const TWILIO_WHATSAPP_FROM = Deno.env.get("TWILIO_WHATSAPP_FROM");
 // Resend (real email send, A1.2)
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const EMAIL_FROM = Deno.env.get("EMAIL_FROM") ?? "Cazu Ceramics <noreply@cazuceramics.com>";
+const EMAIL_FROM = Deno.env.get("EMAIL_FROM") ?? "Cazú Ceramics <noreply@cazuceramics.com>";
+const EMAIL_SENDER_DOMAIN = Deno.env.get("EMAIL_SENDER_DOMAIN") ?? "notify.cazuceramics.com";
 // Cron hardening (A2.3) — see shared contract: header "x-cron-secret".
 const CRON_SECRET = Deno.env.get("CRON_SECRET");
 
