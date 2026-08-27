@@ -257,6 +257,8 @@ Deno.serve(async (req) => {
     }
     if (paymentMethod) {
       sessionParams.payment_method_types = [paymentMethod];
+      // Mirrored into the income ledger so the admin sees Tarjeta (T) vs Bizum (B).
+      metadata.paymentMethod = paymentMethod;
     }
     let session;
     try {
