@@ -22,6 +22,7 @@ async function recordLedgerIncome(params: {
   item: string;
   category: string;
   amountCents: number;
+  method?: string;
   notes?: string;
   /** Idempotency key so Stripe retries don't duplicate the income row. */
   stripeSessionId?: string;
@@ -34,7 +35,7 @@ async function recordLedgerIncome(params: {
     item: params.item,
     category: params.category,
     amount_cents: params.amountCents,
-    method: "T",
+    method: params.method ?? "T",
     status: "Pagado",
     notes: params.notes ?? "Cobro automático con Stripe",
     stripe_session_id: params.stripeSessionId ?? null,
