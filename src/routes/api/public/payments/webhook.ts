@@ -24,6 +24,7 @@ async function recordLedgerIncome(params: {
   item: string;
   category: string;
   amountCents: number;
+  method?: string;
   notes?: string;
   stripeSessionId?: string;
 }) {
@@ -35,7 +36,7 @@ async function recordLedgerIncome(params: {
     item: params.item,
     category: params.category,
     amount_cents: params.amountCents,
-    method: "T",
+    method: params.method ?? "T",
     status: "Pagado",
     notes: params.notes ?? "Cobro automático con Stripe",
     stripe_session_id: params.stripeSessionId ?? null,
@@ -145,8 +146,9 @@ async function handleSessionCompleted(session: any) {
       studentName,
       item: purpose === "plan"
         ? "Plan mensual"
-        : classCount > 1 ? `${classCount} clases sueltas` : "Clase suelta",
-      category: purpose === "plan" ? "Clases" : "Suelta",
+        : `${classCount} ${classCount === 1 ? "clase" : "clases"}`,
+      category: "Clases",
+      method: md.paymentMethod === "bizum" ? "B" : "T",
       amountCents: amountForLedger,
       stripeSessionId: sessionId,
     });
