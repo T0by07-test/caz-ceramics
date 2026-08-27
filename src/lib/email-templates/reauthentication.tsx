@@ -7,25 +7,30 @@ import {
   Heading,
   Html,
   Preview,
+  Section,
   Text,
 } from '@react-email/components'
+
+import { accent, code, container, footer, h1, main, text } from './theme'
 
 interface ReauthenticationEmailProps {
   token: string
 }
 
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="es" dir="ltr">
     <Head />
-    <Preview>Your verification code</Preview>
+    <Preview>Tu código de verificación</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm reauthentication</Heading>
-        <Text style={text}>Use the code below to confirm your identity:</Text>
-        <Text style={codeStyle}>{token}</Text>
+        <Section style={accent} />
+        <Heading style={h1}>Tu código de verificación</Heading>
+        <Text style={text}>Introduce este código para confirmar tu identidad:</Text>
+        <Text style={code}>{token}</Text>
         <Text style={footer}>
-          This code will expire shortly. If you didn't request this, you can
-          safely ignore this email.
+          Si no has solicitado este código, puedes ignorar este mensaje.
+          <br />
+          Cazú Ceramics
         </Text>
       </Container>
     </Body>
@@ -33,26 +38,3 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
 )
 
 export default ReauthenticationEmail
-
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
-}
-const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
-const codeStyle = {
-  fontFamily: 'Courier, monospace',
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 30px',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
