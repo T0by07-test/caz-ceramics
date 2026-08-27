@@ -1,4 +1,4 @@
-import * as React from 'react'
+import * as React from "react";
 
 import {
   Body,
@@ -10,16 +10,16 @@ import {
   Preview,
   Section,
   Text,
-} from '@react-email/components'
+} from "@react-email/components";
 
-import { accent, button, container, footer, h1, main, text } from './theme'
+import { accent, button, container, footer, h1, main, text } from "./theme";
 
 interface EmailChangeEmailProps {
-  siteName: string
-  oldEmail: string
-  email: string
-  newEmail: string
-  confirmationUrl: string
+  siteName: string;
+  oldEmail: string;
+  email: string;
+  newEmail: string;
+  confirmationUrl: string;
 }
 
 export const EmailChangeEmail = ({
@@ -37,8 +37,8 @@ export const EmailChangeEmail = ({
         <Heading style={h1}>Confirma tu nuevo email</Heading>
         <Text style={text}>
           Has solicitado cambiar el email de tu cuenta en <strong>{siteName}</strong>
-          {oldEmail ? ` de ${oldEmail}` : ''}
-          {newEmail ? ` a ${newEmail}` : ''}.
+          {oldEmail ? ` de ${oldEmail}` : ""}
+          {newEmail ? ` a ${newEmail}` : ""}.
         </Text>
         <Text style={text}>Confirma el cambio haciendo clic en el botón:</Text>
         <Button style={button} href={confirmationUrl}>
@@ -52,6 +52,6 @@ export const EmailChangeEmail = ({
       </Container>
     </Body>
   </Html>
-)
+);
 
-export default EmailChangeEmail
+export default EmailChangeEmail;

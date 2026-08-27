@@ -111,24 +111,24 @@ function PerfilPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col gap-6">
         <div className="h-8 w-48 animate-pulse rounded bg-surface" />
-        <div className="h-64 animate-pulse rounded-xl border border-border bg-surface" />
+        <div className="h-64 animate-pulse rounded-none border border-border bg-surface" />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-xl space-y-6">
+    <div className="flex flex-col mx-auto max-w-xl gap-6">
       <div>
-        <span className="text-label uppercase">Cuenta</span>
+        <span className="text-label">Cuenta</span>
         <h1 className="text-h1 mt-1">Mi perfil</h1>
         <p className="text-body mt-2 text-muted-foreground">
           Actualiza tus datos y elige cómo prefieres recibir los avisos.
         </p>
       </div>
 
-      <Card className="space-y-5 p-6">
+      <Card className="flex flex-col gap-6 p-6">
         <div className="grid gap-2">
           <Label htmlFor="name">Nombre</Label>
           <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
@@ -149,7 +149,7 @@ function PerfilPage() {
         </div>
       </Card>
 
-      <Card className="space-y-4 p-6">
+      <Card className="flex flex-col gap-4 p-6">
         <div>
           <h2 className="text-h3">Recibir avisos por</h2>
           <p className="text-label mt-1 uppercase">
@@ -178,7 +178,7 @@ function PerfilPage() {
         </Button>
       </div>
 
-      <Card className="space-y-4 p-6">
+      <Card className="flex flex-col gap-4 p-6">
         <div>
           <h2 className="text-h3">Mis pagos</h2>
           <p className="text-label mt-1 uppercase">Últimos movimientos</p>
@@ -205,7 +205,7 @@ function PerfilPage() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-semibold tabular-nums">
+                  <p className="text-sm font-normal tabular-nums">
                     {(p.amount_cents / 100).toLocaleString("es-ES", {
                       style: "currency",
                       currency: "EUR",

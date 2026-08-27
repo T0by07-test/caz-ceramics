@@ -22,11 +22,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { MultiTeacherSelect } from "@/components/finance/MultiTeacherSelect";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
-import {
-  normalizeVoiceFields,
-  validateVoiceForm,
-  type VoiceExtracted,
-} from "@/lib/finance/voice";
+import { normalizeVoiceFields, validateVoiceForm, type VoiceExtracted } from "@/lib/finance/voice";
 import { MONTHS } from "@/lib/finance/types";
 
 // --- Fuzzy student name matching ---
@@ -37,9 +33,8 @@ function levenshtein(a: string, b: string): number {
   for (let i = 1; i <= a.length; i++) {
     curr[0] = i;
     for (let j = 1; j <= b.length; j++) {
-      curr[j] = a[i - 1] === b[j - 1]
-        ? prev[j - 1]
-        : 1 + Math.min(prev[j], curr[j - 1], prev[j - 1]);
+      curr[j] =
+        a[i - 1] === b[j - 1] ? prev[j - 1] : 1 + Math.min(prev[j], curr[j - 1], prev[j - 1]);
     }
     prev.splice(0, b.length + 1, ...curr);
   }
@@ -95,7 +90,7 @@ function StudentCombobox({
   return (
     <div>
       <Input
-        className={value == null ? "border-yellow-400" : ""}
+        className={value == null ? "border-warning" : ""}
         value={query}
         onChange={(e) => {
           const v = e.target.value;
@@ -110,7 +105,10 @@ function StudentCombobox({
             <button
               key={s}
               type="button"
-              onClick={() => { setQuery(s); onChange(s); }}
+              onClick={() => {
+                setQuery(s);
+                onChange(s);
+              }}
               className="rounded-full border border-primary/40 bg-primary/10 px-2.5 py-0.5 text-xs text-primary hover:bg-primary/20"
             >
               {s}
@@ -164,17 +162,26 @@ export function VoiceFAB() {
       .not("student_name", "is", null)
       .then(({ data }) => {
         const names = [
-          ...new Set(
-            (data ?? []).map((d) => d.student_name).filter(Boolean) as string[],
-          ),
+          ...new Set((data ?? []).map((d) => d.student_name).filter(Boolean) as string[]),
         ];
         setStudents(names.sort());
       });
 
     // Load profiles for instructor auto-fill (best-effort; column may not exist yet)
-    (supabase.from as unknown as (t: string) => {
-      select: (cols: string) => { eq: (c: string, v: string) => Promise<{ data: { name: string; surname: string | null; assigned_instructor: string | null }[] | null }> }
-    })("profiles")
+    (
+      supabase.from as unknown as (t: string) => {
+        select: (cols: string) => {
+          eq: (
+            c: string,
+            v: string,
+          ) => Promise<{
+            data:
+              | { name: string; surname: string | null; assigned_instructor: string | null }[]
+              | null;
+          }>;
+        };
+      }
+    )("profiles")
       .select("name, surname, assigned_instructor")
       .eq("role", "student")
       .then(({ data }) => {
@@ -198,8 +205,14 @@ export function VoiceFAB() {
       if (key === q) score = 100;
       else if (key.startsWith(q) || q.startsWith(key)) score = 80;
       else if (key.includes(q)) score = 60;
-      else { const dist = levenshtein(q, key); score = (1 - dist / Math.max(q.length, key.length)) * 50; }
-      if (score > bestScore) { bestScore = score; best = instructor; }
+      else {
+        const dist = levenshtein(q, key);
+        score = (1 - dist / Math.max(q.length, key.length)) * 50;
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        best = instructor;
+      }
     });
     return best;
   }
@@ -221,29 +234,28 @@ export function VoiceFAB() {
       return;
     }
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.access_token) {
         toast.error("Sesión expirada. Por favor, recarga la página.");
         resetRef.current();
         return;
       }
 
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/finance-voice`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            transcript,
-            today: new Date().toISOString().slice(0, 10),
-          }),
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/finance-voice`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          transcript,
+          today: new Date().toISOString().slice(0, 10),
+        }),
+      });
 
-      const json = await res.json() as {
+      const json = (await res.json()) as {
         fields?: unknown;
         transcript?: string;
         error?: string;
@@ -266,7 +278,9 @@ export function VoiceFAB() {
         return;
       }
       setForm(normalized);
-      setAmountEur(normalized.amount_cents !== null ? (normalized.amount_cents / 100).toFixed(2) : "");
+      setAmountEur(
+        normalized.amount_cents !== null ? (normalized.amount_cents / 100).toFixed(2) : "",
+      );
       setOpen(true);
       // state stays "processing" (FAB disabled) while dialog is open; closeDialog() resets to idle
     } catch {
@@ -283,16 +297,19 @@ export function VoiceFAB() {
   }, [speechError]);
 
   const handleFabClick = () => {
-    if (state === "idle") { start(); return; }
-    if (state === "listening") { stop(); }
+    if (state === "idle") {
+      start();
+      return;
+    }
+    if (state === "listening") {
+      stop();
+    }
   };
 
   const openManualEntry = () => {
     const today = new Date();
     const isoDate = today.toISOString().slice(0, 10);
-    const monthName = today
-      .toLocaleString("es-ES", { month: "long" })
-      .toUpperCase();
+    const monthName = today.toLocaleString("es-ES", { month: "long" }).toUpperCase();
     setForm({
       ...emptyForm(),
       entry_date: isoDate,
@@ -342,15 +359,14 @@ export function VoiceFAB() {
     return <Mic className="h-6 w-6" />;
   };
 
-  const fieldBorder = (value: string | null | undefined) =>
-    value == null ? "border-yellow-400" : "";
+  const fieldBorder = (value: string | null | undefined) => (value == null ? "border-warning" : "");
 
   return (
     <>
       <Button
         onClick={openManualEntry}
         variant="outline"
-        className="fixed bottom-24 right-20 z-50 h-11 w-11 rounded-full shadow-md lg:bottom-6 lg:right-24"
+        className="fixed bottom-24 right-20 z-50 h-11 w-11 rounded-full lg:bottom-6 lg:right-24"
         size="icon"
         aria-label="Añadir ingreso manualmente"
         title="Añadir manualmente"
@@ -362,8 +378,8 @@ export function VoiceFAB() {
         onClick={handleFabClick}
         disabled={state === "processing"}
         className={[
-          "fixed bottom-24 right-4 z-50 h-14 w-14 rounded-full shadow-lg lg:bottom-6 lg:right-6",
-          state === "listening" ? "bg-red-500 hover:bg-red-600 animate-pulse" : "",
+          "fixed bottom-24 right-4 z-50 h-14 w-14 rounded-full lg:bottom-6 lg:right-6",
+          state === "listening" ? "bg-destructive hover:bg-destructive/90 animate-pulse" : "",
         ].join(" ")}
         size="icon"
         aria-label={state === "listening" ? "Detener grabación" : "Registrar pago por voz"}
@@ -371,7 +387,12 @@ export function VoiceFAB() {
         {fabIcon()}
       </Button>
 
-      <Dialog open={open} onOpenChange={(v) => { if (!v && !saving) closeDialog(); }}>
+      <Dialog
+        open={open}
+        onOpenChange={(v) => {
+          if (!v && !saving) closeDialog();
+        }}
+      >
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Confirmar ingreso</DialogTitle>
@@ -387,7 +408,8 @@ export function VoiceFAB() {
                   setForm((prev) => ({
                     ...prev,
                     student_name: v,
-                    collector: instructor && prev.collector.length === 0 ? [instructor] : prev.collector,
+                    collector:
+                      instructor && prev.collector.length === 0 ? [instructor] : prev.collector,
                   }));
                 }}
                 students={students}
@@ -418,7 +440,9 @@ export function VoiceFAB() {
                   </SelectTrigger>
                   <SelectContent>
                     {STATUSES.map((s) => (
-                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                      <SelectItem key={s.value} value={s.value}>
+                        {s.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -437,7 +461,9 @@ export function VoiceFAB() {
                   </SelectTrigger>
                   <SelectContent>
                     {METHODS.map((m) => (
-                      <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                      <SelectItem key={m.value} value={m.value}>
+                        {m.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -453,7 +479,9 @@ export function VoiceFAB() {
                   </SelectTrigger>
                   <SelectContent>
                     {MONTHS.map((m) => (
-                      <SelectItem key={m} value={m}>{m}</SelectItem>
+                      <SelectItem key={m} value={m}>
+                        {m}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

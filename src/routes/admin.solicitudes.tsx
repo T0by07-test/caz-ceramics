@@ -155,17 +155,19 @@ function AdminRequestsPage() {
   }, [rows]);
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <span className="text-label uppercase">Admisiones</span>
+          <span className="text-label">Admisiones</span>
           <h1 className="text-h1 mt-1">Solicitudes</h1>
           <p className="text-body mt-2 text-muted-foreground">
             Revisa las solicitudes de inscripción, aprueba las clases y envía la invitación.
           </p>
         </div>
         <div className="flex items-center gap-2 sm:shrink-0">
-          <Badge variant="outline" className="shrink-0">Pendientes: {counts.pending}</Badge>
+          <Badge variant="outline" className="shrink-0">
+            Pendientes: {counts.pending}
+          </Badge>
           <Select value={filter} onValueChange={(v) => setFilter(v as StatusFilter)}>
             <SelectTrigger className="w-full sm:w-44">
               <SelectValue />
@@ -178,10 +180,10 @@ function AdminRequestsPage() {
         </div>
       </div>
 
-      <Card className="shadow-card">
+      <Card className="">
         <CardContent className="p-0 overflow-x-auto">
           {rows === null ? (
-            <div className="space-y-2 p-6">
+            <div className="flex flex-col gap-2 p-6">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} className="h-10 w-full" />
               ))}
@@ -342,7 +344,7 @@ function RequestDetailSheet({
               </SheetDescription>
             </SheetHeader>
 
-            <div className="mt-6 flex-1 space-y-6">
+            <div className="flex flex-col mt-6 flex-1 gap-6">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant={STATUS_BADGE[request.status].variant}>
                   {STATUS_BADGE[request.status].label}
@@ -361,16 +363,16 @@ function RequestDetailSheet({
               </div>
 
               {request.message ? (
-                <section className="space-y-1.5">
-                  <h3 className="text-label uppercase">Mensaje</h3>
+                <section className="flex flex-col gap-2">
+                  <h3 className="text-label">Mensaje</h3>
                   <p className="whitespace-pre-wrap rounded-lg border border-border bg-surface p-3 text-sm text-muted-foreground">
                     {request.message}
                   </p>
                 </section>
               ) : null}
 
-              <section className="space-y-2">
-                <h3 className="text-label uppercase">
+              <section className="flex flex-col gap-2">
+                <h3 className="text-label">
                   Clases solicitadas {isPending ? "— marca las que apruebas" : ""}
                 </h3>
                 {requestedClasses.length === 0 ? (
@@ -415,8 +417,8 @@ function RequestDetailSheet({
               </section>
 
               {inviteUrl ? (
-                <section className="space-y-2 rounded-lg border border-border bg-surface p-3">
-                  <h3 className="text-label uppercase">Enlace de invitación</h3>
+                <section className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-3">
+                  <h3 className="text-label">Enlace de invitación</h3>
                   <p className="text-xs text-muted-foreground">
                     Se envió por email. También puedes copiarlo y compartirlo por WhatsApp.
                   </p>

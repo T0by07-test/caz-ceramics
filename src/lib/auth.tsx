@@ -48,12 +48,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function fetchRole(userId: string) {
-    const { data } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", userId)
-      .maybeSingle();
-    setRole(((data?.role as Role) ?? "user"));
+    const { data } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
+    setRole((data?.role as Role) ?? "user");
     setLoading(false);
   }
 
@@ -63,9 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider
-      value={{ session, user: session?.user ?? null, role, loading, signOut }}
-    >
+    <AuthContext.Provider value={{ session, user: session?.user ?? null, role, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );

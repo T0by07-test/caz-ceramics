@@ -11,10 +11,42 @@ const SETTINGS: FinanceSettings = {
 };
 
 const TAX_LEDGER: LedgerRow[] = [
-  { month: "TEST", category: "Adulto", amount_cents: 10000, method: "T", status: "Pagado", collector: null, commission_pct_override: null },
-  { month: "TEST", category: "Adulto", amount_cents: 5000, method: "E", status: "Pagado", collector: null, commission_pct_override: null },
-  { month: "TEST", category: "Adulto", amount_cents: 8000, method: "B", status: "Pendiente", collector: null, commission_pct_override: null },
-  { month: "OTRO", category: "Adulto", amount_cents: 9999, method: "E", status: "Pagado", collector: null, commission_pct_override: null },
+  {
+    month: "TEST",
+    category: "Adulto",
+    amount_cents: 10000,
+    method: "T",
+    status: "Pagado",
+    collector: null,
+    commission_pct_override: null,
+  },
+  {
+    month: "TEST",
+    category: "Adulto",
+    amount_cents: 5000,
+    method: "E",
+    status: "Pagado",
+    collector: null,
+    commission_pct_override: null,
+  },
+  {
+    month: "TEST",
+    category: "Adulto",
+    amount_cents: 8000,
+    method: "B",
+    status: "Pendiente",
+    collector: null,
+    commission_pct_override: null,
+  },
+  {
+    month: "OTRO",
+    category: "Adulto",
+    amount_cents: 9999,
+    method: "E",
+    status: "Pagado",
+    collector: null,
+    commission_pct_override: null,
+  },
 ];
 const TAX_EXPENSES: ExpenseRow[] = [
   { month: "TEST", amount_cents: 3000, vat_cents: 630 },
@@ -52,7 +84,13 @@ describe("computeMonth — tax derivations", () => {
   });
 
   it("applies processor fees on T and B", () => {
-    const m = computeMonth("TEST", TAX_LEDGER, TAX_EXPENSES, { ...SETTINGS, fee_revolut_pct: 0.01 }, []);
+    const m = computeMonth(
+      "TEST",
+      TAX_LEDGER,
+      TAX_EXPENSES,
+      { ...SETTINGS, fee_revolut_pct: 0.01 },
+      [],
+    );
     // fee = round(10000*0.01 + 0) = 100
     expect(m.comision_cobro).toBe(100);
     expect(m.beneficio_neto).toBe(8660); // 8760 - 100
@@ -64,11 +102,51 @@ const RATES: CommissionRate[] = [
   { teacher: "Martu", default_pct: 0.4 },
 ];
 const COM_LEDGER: LedgerRow[] = [
-  { month: "COM", category: "Adulto", amount_cents: 8000, method: "E", status: "Pagado", collector: ["Sofi"], commission_pct_override: null },
-  { month: "COM", category: "Taller", amount_cents: 6000, method: "E", status: "Pagado", collector: ["Sofi", "Martu"], commission_pct_override: null },
-  { month: "COM", category: "Adulto", amount_cents: 5000, method: "E", status: "Pagado", collector: ["Sofi"], commission_pct_override: 0.5 },
-  { month: "COM", category: "Adulto", amount_cents: 9000, method: "E", status: "Pagado", collector: ["Cande"], commission_pct_override: null },
-  { month: "COM", category: "Adulto", amount_cents: 4000, method: "E", status: "Pendiente", collector: ["Sofi"], commission_pct_override: null },
+  {
+    month: "COM",
+    category: "Adulto",
+    amount_cents: 8000,
+    method: "E",
+    status: "Pagado",
+    collector: ["Sofi"],
+    commission_pct_override: null,
+  },
+  {
+    month: "COM",
+    category: "Taller",
+    amount_cents: 6000,
+    method: "E",
+    status: "Pagado",
+    collector: ["Sofi", "Martu"],
+    commission_pct_override: null,
+  },
+  {
+    month: "COM",
+    category: "Adulto",
+    amount_cents: 5000,
+    method: "E",
+    status: "Pagado",
+    collector: ["Sofi"],
+    commission_pct_override: 0.5,
+  },
+  {
+    month: "COM",
+    category: "Adulto",
+    amount_cents: 9000,
+    method: "E",
+    status: "Pagado",
+    collector: ["Cande"],
+    commission_pct_override: null,
+  },
+  {
+    month: "COM",
+    category: "Adulto",
+    amount_cents: 4000,
+    method: "E",
+    status: "Pendiente",
+    collector: ["Sofi"],
+    commission_pct_override: null,
+  },
 ];
 
 describe("computeMonth — teacher commissions", () => {
@@ -95,8 +173,24 @@ describe("computeFinanceMonthly + sumMonthly", () => {
   it("sums only months with real income for YTD totals", () => {
     const months = computeFinanceMonthly(
       [
-        { month: "ENERO", category: null, amount_cents: 10000, method: "E", status: "Pagado", collector: null, commission_pct_override: null },
-        { month: "FEBRERO", category: null, amount_cents: 20000, method: "E", status: "Pagado", collector: null, commission_pct_override: null },
+        {
+          month: "ENERO",
+          category: null,
+          amount_cents: 10000,
+          method: "E",
+          status: "Pagado",
+          collector: null,
+          commission_pct_override: null,
+        },
+        {
+          month: "FEBRERO",
+          category: null,
+          amount_cents: 20000,
+          method: "E",
+          status: "Pagado",
+          collector: null,
+          commission_pct_override: null,
+        },
       ],
       [],
       SETTINGS,

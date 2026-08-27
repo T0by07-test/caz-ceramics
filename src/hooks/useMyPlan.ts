@@ -45,7 +45,12 @@ export function useMyPlan(month?: Date) {
       .channel(`my-subs-${user.id}-${monthIso}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "subscriptions", filter: `student_id=eq.${user.id}` },
+        {
+          event: "*",
+          schema: "public",
+          table: "subscriptions",
+          filter: `student_id=eq.${user.id}`,
+        },
         () => void fetchPlan(),
       )
       .subscribe();

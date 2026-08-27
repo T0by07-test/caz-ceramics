@@ -127,9 +127,9 @@ function PlanesPage() {
   }, [activePlan, paymentMethod, month]);
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div>
-        <span className="text-label uppercase">Suscripciones</span>
+        <span className="text-label">Suscripciones</span>
         <h1 className="text-h1 mt-1">Planes mensuales</h1>
         <p className="text-body mt-2 text-muted-foreground">
           Compra tu plan del mes y reserva las clases que quieras según disponibilidad.
@@ -137,8 +137,8 @@ function PlanesPage() {
       </div>
 
       {months.length > 1 ? (
-        <div className="space-y-2">
-          <span className="text-label uppercase">¿Para qué mes?</span>
+        <div className="flex flex-col gap-2">
+          <span className="text-label">¿Para qué mes?</span>
           <div className="flex flex-wrap gap-2">
             {months.map((m) => (
               <Button
@@ -160,7 +160,7 @@ function PlanesPage() {
           {[0, 1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-44 animate-pulse rounded-xl border border-border bg-surface"
+              className="h-44 animate-pulse rounded-none border border-border bg-surface"
             />
           ))}
         </div>
@@ -179,7 +179,7 @@ function PlanesPage() {
                   Pago único
                 </Badge>
               </div>
-              <p className="text-3xl font-semibold tabular-nums">
+              <p className="text-3xl font-normal tabular-nums">
                 {(p.price_cents / 100).toLocaleString("es-ES", {
                   style: "currency",
                   currency: "EUR",
@@ -254,7 +254,6 @@ function PlanesPage() {
               <span className="flex flex-col">
                 <span className="font-medium">Bizum</span>
                 <span className="text-sm text-muted-foreground">Paga ahora con Bizum</span>
-
               </span>
             </Button>
           </div>
@@ -298,7 +297,6 @@ function PlanesPage() {
             ? "Si pagas con Bizum, envía el importe al 627 093 463."
             : undefined
         }
-
         fetchClientSecret={fetchClientSecret}
         fetchHostedUrl={fetchHostedUrl}
       />

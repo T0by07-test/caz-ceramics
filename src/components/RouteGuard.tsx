@@ -16,19 +16,12 @@ function isAllowed(
   if (requireAdmin) return role === "admin";
   if (requireStaff) return isStaff(role);
   if (requireRole) {
-    return Array.isArray(requireRole)
-      ? requireRole.includes(role as Role)
-      : role === requireRole;
+    return Array.isArray(requireRole) ? requireRole.includes(role as Role) : role === requireRole;
   }
   return true;
 }
 
-export function RouteGuard({
-  children,
-  requireRole,
-  requireStaff,
-  requireAdmin,
-}: Props) {
+export function RouteGuard({ children, requireRole, requireStaff, requireAdmin }: Props) {
   const { session, role, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -43,11 +36,7 @@ export function RouteGuard({
     }
   }, [session, role, loading, requireRole, requireStaff, requireAdmin, navigate]);
 
-  if (
-    loading ||
-    !session ||
-    !isAllowed(role, { requireRole, requireStaff, requireAdmin })
-  ) {
+  if (loading || !session || !isAllowed(role, { requireRole, requireStaff, requireAdmin })) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground">
         Cargando…

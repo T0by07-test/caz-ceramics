@@ -39,7 +39,17 @@ function AdminLayout() {
 
   const items =
     role === "admin"
-      ? [dashboard, solicitudes, clases, miembros, mensajes, finanzas, ingresos, gastos, notificaciones]
+      ? [
+          dashboard,
+          solicitudes,
+          clases,
+          miembros,
+          mensajes,
+          finanzas,
+          ingresos,
+          gastos,
+          notificaciones,
+        ]
       : [clases, miembros, mensajes]; // instructora: Clases, Miembros, Mensajes only
 
   return (

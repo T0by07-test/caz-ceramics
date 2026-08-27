@@ -136,9 +136,15 @@ function AdminStudentsPage() {
     const monthStart = toIsoDate(startOfMonth(now));
     const monthEndIso = toIsoDate(endOfMonth(now));
     type ProfileRow = {
-      id: string; role: string | null; name: string | null; surname: string | null;
-      email: string | null; whatsapp: string | null; membership_status: string | null;
-      is_regular: boolean | null; assigned_instructor: string | null;
+      id: string;
+      role: string | null;
+      name: string | null;
+      surname: string | null;
+      email: string | null;
+      whatsapp: string | null;
+      membership_status: string | null;
+      is_regular: boolean | null;
+      assigned_instructor: string | null;
       profile_tags: { tags: { id: string; name: string } | null }[];
       recurring_slots: { id: string; weekday: number; start_time: string }[];
     };
@@ -147,13 +153,12 @@ function AdminStudentsPage() {
       .select(
         "id, role, name, surname, email, whatsapp, membership_status, is_regular, assigned_instructor, profile_tags(tags(id,name)), recurring_slots(id,weekday,start_time)",
       )
-      .order("created_at", { ascending: false }) as unknown as Promise<{ data: ProfileRow[] | null }>);
+      .order("created_at", { ascending: false }) as unknown as Promise<{
+      data: ProfileRow[] | null;
+    }>);
     const [{ data: subs }, { data: makeups }, { data: plansList }, { data: monthBookings }] =
       await Promise.all([
-        supabase
-          .from("subscriptions")
-          .select("student_id, plan_id")
-          .eq("month", monthStart),
+        supabase.from("subscriptions").select("student_id, plan_id").eq("month", monthStart),
         supabase
           .from("makeups")
           .select("student_id")
@@ -169,10 +174,7 @@ function AdminStudentsPage() {
       ]);
     const planNameById = new Map((plansList ?? []).map((p) => [p.id, p.name]));
     const subByStudent = new Map(
-      (subs ?? []).map((s) => [
-        s.student_id,
-        { plan_name: planNameById.get(s.plan_id) ?? null },
-      ]),
+      (subs ?? []).map((s) => [s.student_id, { plan_name: planNameById.get(s.plan_id) ?? null }]),
     );
     const makeupCount = new Map<string, number>();
     for (const m of makeups ?? [])
@@ -227,10 +229,10 @@ function AdminStudentsPage() {
   }, [rows, search, roleFilter, tagFilter, estadoFilter]);
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <span className="text-label uppercase">Personas</span>
+          <span className="text-label">Personas</span>
           <h1 className="text-h1 mt-1">Miembros</h1>
           <p className="text-body mt-2 text-muted-foreground">
             Busca, filtra por rol, tag o estado y revisa su actividad.
@@ -296,10 +298,10 @@ function AdminStudentsPage() {
         ) : null}
       </div>
 
-      <Card className="shadow-card">
+      <Card className="">
         <CardContent className="p-0 overflow-x-auto">
           {loading ? (
-            <div className="space-y-2 p-6">
+            <div className="flex flex-col gap-2 p-6">
               {Array.from({ length: 6 }).map((_, i) => (
                 <Skeleton key={i} className="h-10 w-full" />
               ))}
@@ -318,171 +320,173 @@ function AdminStudentsPage() {
             </div>
           ) : (
             <>
-            <ul className="divide-y divide-border md:hidden">
-              {filtered.map((r) => (
-                <li
-                  key={`m-${r.id}`}
-                  className="cursor-pointer space-y-2 p-4"
-                  onClick={() => setSelected(r)}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">{fullName(r)}</p>
-                      {r.email ? (
-                        <p className="truncate text-xs text-muted-foreground">{r.email}</p>
+              <ul className="divide-y divide-border md:hidden">
+                {filtered.map((r) => (
+                  <li
+                    key={`m-${r.id}`}
+                    className="flex flex-col cursor-pointer gap-2 p-4"
+                    onClick={() => setSelected(r)}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{fullName(r)}</p>
+                        {r.email ? (
+                          <p className="truncate text-xs text-muted-foreground">{r.email}</p>
+                        ) : null}
+                      </div>
+                      <Badge variant={ESTADO_BADGE[r.estado]} className="shrink-0">
+                        {ESTADO_LABELS[r.estado]}
+                      </Badge>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                      <Badge variant="outline">{ROLE_LABELS[r.role]}</Badge>
+                      {r.plan_name ? <Badge variant="secondary">{r.plan_name}</Badge> : null}
+                      {viewerRole === "admin" && r.pending_makeups > 0 ? (
+                        <span className="text-muted-foreground">{r.pending_makeups} recup.</span>
                       ) : null}
                     </div>
-                    <Badge variant={ESTADO_BADGE[r.estado]} className="shrink-0">
-                      {ESTADO_LABELS[r.estado]}
-                    </Badge>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                    <Badge variant="outline">{ROLE_LABELS[r.role]}</Badge>
-                    {r.plan_name ? <Badge variant="secondary">{r.plan_name}</Badge> : null}
-                    {viewerRole === "admin" && r.pending_makeups > 0 ? (
-                      <span className="text-muted-foreground">
-                        {r.pending_makeups} recup.
-                      </span>
+                    {viewerRole === "admin" ? (
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setReminderStudent(r);
+                            setReminderOpen(true);
+                          }}
+                          aria-label="Enviar recordatorio de pago"
+                        >
+                          <BellRing className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setGrantStudent(r);
+                            setGrantOpen(true);
+                          }}
+                          aria-label="Conceder recuperación"
+                        >
+                          <Gift className="h-4 w-4" />
+                        </Button>
+                      </div>
                     ) : null}
-                  </div>
-                  {viewerRole === "admin" ? (
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setReminderStudent(r);
-                          setReminderOpen(true);
-                        }}
-                        aria-label="Enviar recordatorio de pago"
-                      >
-                        <BellRing className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setGrantStudent(r);
-                          setGrantOpen(true);
-                        }}
-                        aria-label="Conceder recuperación"
-                      >
-                        <Gift className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-            <div className="hidden md:block">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Miembro</TableHead>
-                  <TableHead className="hidden md:table-cell">Email</TableHead>
-                  <TableHead>Rol</TableHead>
-                  <TableHead className="hidden lg:table-cell">Tags</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead className="hidden lg:table-cell">Slot</TableHead>
-                  {viewerRole === "admin" && (
-                    <>
-                      <TableHead>Plan del mes</TableHead>
-                      <TableHead className="text-center">Recup.</TableHead>
-                    </>
-                  )}
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((r) => (
-                  <TableRow key={r.id} className="cursor-pointer" onClick={() => setSelected(r)}>
-                    <TableCell className="font-medium">{fullName(r)}</TableCell>
-                    <TableCell className="hidden truncate text-muted-foreground md:table-cell">
-                      {r.email ?? "—"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{ROLE_LABELS[r.role]}</Badge>
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      {r.tags.length === 0 ? (
-                        <span className="text-muted-foreground">—</span>
-                      ) : (
-                        <div className="flex flex-wrap gap-1">
-                          {r.tags.map((t) => (
-                            <Badge key={t.id} variant="secondary">
-                              {t.name}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={ESTADO_BADGE[r.estado]}>{ESTADO_LABELS[r.estado]}</Badge>
-                    </TableCell>
-                    <TableCell className="hidden text-muted-foreground lg:table-cell">
-                      {r.slots.length === 0
-                        ? "—"
-                        : r.slots.map((s) => formatSlot(s.weekday, s.start_time)).join(", ")}
-                    </TableCell>
-                    {viewerRole === "admin" && (
-                      <>
-                        <TableCell>
-                          {r.plan_name ? (
-                            <Badge variant="secondary">{r.plan_name}</Badge>
-                          ) : (
-                            <span className="text-muted-foreground">Sin plan</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {r.pending_makeups > 0 ? (
-                            <Badge variant="outline">{r.pending_makeups}</Badge>
-                          ) : (
-                            <span className="text-muted-foreground">0</span>
-                          )}
-                        </TableCell>
-                      </>
-                    )}
-                    <TableCell className="text-right">
-                      {viewerRole === "admin" ? (
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setReminderStudent(r);
-                              setReminderOpen(true);
-                            }}
-                            aria-label="Enviar recordatorio de pago"
-                          >
-                            <BellRing className="h-4 w-4 sm:mr-1" />
-                            <span className="hidden sm:inline">Recordatorio</span>
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setGrantStudent(r);
-                              setGrantOpen(true);
-                            }}
-                            aria-label="Conceder recuperación"
-                          >
-                            <Gift className="h-4 w-4 sm:mr-1" />
-                            <span className="hidden sm:inline">Recuperación</span>
-                          </Button>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
+                  </li>
                 ))}
-              </TableBody>
-            </Table>
-            </div>
+              </ul>
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Miembro</TableHead>
+                      <TableHead className="hidden md:table-cell">Email</TableHead>
+                      <TableHead>Rol</TableHead>
+                      <TableHead className="hidden lg:table-cell">Tags</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead className="hidden lg:table-cell">Slot</TableHead>
+                      {viewerRole === "admin" && (
+                        <>
+                          <TableHead>Plan del mes</TableHead>
+                          <TableHead className="text-center">Recup.</TableHead>
+                        </>
+                      )}
+                      <TableHead className="text-right">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.map((r) => (
+                      <TableRow
+                        key={r.id}
+                        className="cursor-pointer"
+                        onClick={() => setSelected(r)}
+                      >
+                        <TableCell className="font-medium">{fullName(r)}</TableCell>
+                        <TableCell className="hidden truncate text-muted-foreground md:table-cell">
+                          {r.email ?? "—"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{ROLE_LABELS[r.role]}</Badge>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          {r.tags.length === 0 ? (
+                            <span className="text-muted-foreground">—</span>
+                          ) : (
+                            <div className="flex flex-wrap gap-1">
+                              {r.tags.map((t) => (
+                                <Badge key={t.id} variant="secondary">
+                                  {t.name}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={ESTADO_BADGE[r.estado]}>{ESTADO_LABELS[r.estado]}</Badge>
+                        </TableCell>
+                        <TableCell className="hidden text-muted-foreground lg:table-cell">
+                          {r.slots.length === 0
+                            ? "—"
+                            : r.slots.map((s) => formatSlot(s.weekday, s.start_time)).join(", ")}
+                        </TableCell>
+                        {viewerRole === "admin" && (
+                          <>
+                            <TableCell>
+                              {r.plan_name ? (
+                                <Badge variant="secondary">{r.plan_name}</Badge>
+                              ) : (
+                                <span className="text-muted-foreground">Sin plan</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {r.pending_makeups > 0 ? (
+                                <Badge variant="outline">{r.pending_makeups}</Badge>
+                              ) : (
+                                <span className="text-muted-foreground">0</span>
+                              )}
+                            </TableCell>
+                          </>
+                        )}
+                        <TableCell className="text-right">
+                          {viewerRole === "admin" ? (
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setReminderStudent(r);
+                                  setReminderOpen(true);
+                                }}
+                                aria-label="Enviar recordatorio de pago"
+                              >
+                                <BellRing className="h-4 w-4 sm:mr-1" />
+                                <span className="hidden sm:inline">Recordatorio</span>
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setGrantStudent(r);
+                                  setGrantOpen(true);
+                                }}
+                                aria-label="Conceder recuperación"
+                              >
+                                <Gift className="h-4 w-4 sm:mr-1" />
+                                <span className="hidden sm:inline">Recuperación</span>
+                              </Button>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </>
           )}
         </CardContent>
@@ -724,9 +728,9 @@ function StudentDetailSheet({
                 </SheetDescription>
               </SheetHeader>
 
-              <section className="mt-6 space-y-4">
+              <section className="flex flex-col mt-6 gap-4">
                 <h3 className="text-h3">Actividad y tags</h3>
-                <div className="space-y-1.5">
+                <div className="flex flex-col gap-2">
                   <Label>Tags</Label>
                   <TagPicker
                     allTags={allTags}
@@ -735,7 +739,7 @@ function StudentDetailSheet({
                     disabled={readOnly}
                   />
                 </div>
-                <div className="space-y-1.5">
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="membership-status">Estado de membresía</Label>
                   <Select
                     value={membership}
@@ -763,7 +767,7 @@ function StudentDetailSheet({
                     disabled={readOnly}
                   />
                 </div>
-                <div className="space-y-1.5">
+                <div className="flex flex-col gap-2">
                   <Label>Profesora asignada</Label>
                   <Select
                     value={instructor ?? "none"}
@@ -782,7 +786,7 @@ function StudentDetailSheet({
                   </Select>
                 </div>
 
-                <div className="space-y-1.5">
+                <div className="flex flex-col gap-2">
                   <Label>Slot fijo</Label>
                   <SlotEditor
                     slots={slots.map((s) => ({ ...s, active: true, note: null }))}
@@ -793,7 +797,7 @@ function StudentDetailSheet({
                 </div>
               </section>
 
-              <section className="mt-6 space-y-2">
+              <section className="flex flex-col mt-6 gap-2">
                 <h3 className="text-h3">Reservas</h3>
                 {loading ? (
                   <Skeleton className="h-24 w-full" />
@@ -830,7 +834,7 @@ function StudentDetailSheet({
 
               {!readOnly && (
                 <>
-                  <section className="mt-6 space-y-2">
+                  <section className="flex flex-col mt-6 gap-2">
                     <h3 className="text-h3">Pagos</h3>
                     {loading ? (
                       <Skeleton className="h-16 w-full" />
@@ -859,7 +863,7 @@ function StudentDetailSheet({
                     )}
                   </section>
 
-                  <section className="mt-6 space-y-2">
+                  <section className="flex flex-col mt-6 gap-2">
                     <h3 className="text-h3">Notificaciones recientes</h3>
                     {loading ? (
                       <Skeleton className="h-16 w-full" />
@@ -977,8 +981,8 @@ function MoveBookingDialog({
             auditoría.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-3">
-          <div className="space-y-1.5">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="target-class">Clase destino</Label>
             <select
               id="target-class"
@@ -994,7 +998,7 @@ function MoveBookingDialog({
               ))}
             </select>
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="reason">Motivo</Label>
             <Textarea
               id="reason"
@@ -1062,7 +1066,7 @@ function GrantMakeupDialog({
             {student ? `Para ${fullName(student)}.` : ""} Indica el motivo (queda registrado).
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-1.5">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="grant-reason">Motivo</Label>
           <Textarea
             id="grant-reason"
@@ -1129,7 +1133,7 @@ function PaymentReminderDialog({
             pago de Stripe y se enviará el recordatorio.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-1.5">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="reminder-plan">Plan</Label>
           {plans.length === 0 ? (
             <p className="text-sm text-muted-foreground">No hay planes activos disponibles.</p>

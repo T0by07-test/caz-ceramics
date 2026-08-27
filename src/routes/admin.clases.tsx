@@ -64,7 +64,12 @@ function AdminClassesPage() {
   const setView = (v: CalendarView) =>
     navigate({ search: (prev: CalendarSearch) => ({ ...prev, view: v }) });
   const shift = (dir: -1 | 1) =>
-    navigate({ search: (prev: CalendarSearch) => ({ ...prev, date: toIsoDate(shiftReference(view, reference, dir)) }) });
+    navigate({
+      search: (prev: CalendarSearch) => ({
+        ...prev,
+        date: toIsoDate(shiftReference(view, reference, dir)),
+      }),
+    });
   const goToday = () =>
     navigate({ search: (prev: CalendarSearch) => ({ ...prev, date: toIsoDate(new Date()) }) });
 
@@ -89,10 +94,10 @@ function AdminClassesPage() {
   }, [classes, selected]);
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <span className="text-label uppercase">Administración</span>
+          <span className="text-label">Administración</span>
           <h1 className="text-h1 mt-1">Clases del mes</h1>
           <p className="text-body mt-2 text-muted-foreground">
             Crea, edita o bloquea horarios. Los cambios se reflejan en tiempo real.
@@ -300,8 +305,8 @@ function ClassFormDialog({
             Define el horario y la capacidad. Los cambios son inmediatos.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1.5">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="date">Fecha</Label>
             <Input
               id="date"
@@ -312,7 +317,7 @@ function ClassFormDialog({
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="start">Inicio</Label>
               <Input
                 id="start"
@@ -322,7 +327,7 @@ function ClassFormDialog({
                 onChange={(e) => setStartTime(e.target.value)}
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="end">Fin</Label>
               <Input
                 id="end"
@@ -334,7 +339,7 @@ function ClassFormDialog({
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="cap_ideal">Capacidad ideal</Label>
               <Input
                 id="cap_ideal"
@@ -345,7 +350,7 @@ function ClassFormDialog({
                 onChange={(e) => setCapacityIdeal(Number(e.target.value))}
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="cap_max">Capacidad máxima</Label>
               <Input
                 id="cap_max"
@@ -357,7 +362,7 @@ function ClassFormDialog({
               />
             </div>
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="instructor">Instructora</Label>
             <Select
               value={instructorId || "none"}
@@ -377,7 +382,7 @@ function ClassFormDialog({
             </Select>
           </div>
           {mode === "edit" && (
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="status">Estado</Label>
               <Select value={status} onValueChange={(v) => setStatus(v as ClassStatus)}>
                 <SelectTrigger id="status">
@@ -546,7 +551,7 @@ function AdminClassDrawer({
           </SheetDescription>
         </SheetHeader>
         {cls ? (
-          <div className="mt-6 space-y-5 px-4">
+          <div className="flex flex-col mt-6 gap-6 px-4">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant={cls.status === "scheduled" ? "secondary" : "destructive"}>
                 {statusLabel(cls.status)}

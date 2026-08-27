@@ -11,7 +11,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type AcceptRequestResult = { invite_url: string; token: string };
 
-async function getFunctionErrorMessage(error: { message: string; context?: unknown }): Promise<string> {
+async function getFunctionErrorMessage(error: {
+  message: string;
+  context?: unknown;
+}): Promise<string> {
   const context = error.context;
   if (context instanceof Response) {
     const text = await context.text().catch(() => "");

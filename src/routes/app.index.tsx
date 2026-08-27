@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Banknote, CreditCard, Smartphone, X } from "lucide-react";
 import {
+  addMonths,
   capacityDotClass,
   capacityLabel,
   capacityLevel,
@@ -56,7 +57,12 @@ function CalendarioPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const view: CalendarView = search.view ?? "month";
-  const reference = useMemo(() => parseReference(search.date), [search.date]);
+  // Students almost always book for the month ahead, so an unparameterised
+  // visit lands on next month; ?date= (and "Hoy") still win.
+  const reference = useMemo(
+    () => (search.date ? parseReference(search.date) : addMonths(new Date(), 1)),
+    [search.date],
+  );
   const range = useMemo(() => rangeForView(view, reference), [view, reference]);
 
   const [full, setFull] = useState<ClassWithCount | null>(null);
@@ -121,9 +127,9 @@ function CalendarioPage() {
   };
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="flex flex-col gap-6 pb-24">
       <div>
-        <span className="text-label uppercase">Tu mes</span>
+        <span className="text-label">Tu mes</span>
         <h1 className="text-h1 mt-1">Calendario</h1>
         <p className="text-body mt-2 text-muted-foreground">
           Toca las clases a las que quieras venir y elige cómo pagar para reservar.
@@ -194,28 +200,38 @@ function SelectionBar({
   const count = classes.length;
   const totalLabel = formatEuros(selectionPriceCents(classes));
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 p-3 shadow-card backdrop-blur">
-      <div className="mx-auto flex max-w-5xl items-center gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="text-sm font-semibold">
-            {count === 1 ? "1 clase seleccionada" : `${count} clases seleccionadas`}
-            {` · ${totalLabel}`}
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur sm:px-8">
+      <div className="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="text-[15px] text-foreground">
+              {count === 1 ? "1 clase seleccionada" : `${count} clases seleccionadas`}
+              {` · ${totalLabel}`}
+            </div>
+            <div className="truncate text-sm text-muted-foreground">
+              {classes
+                .map(
+                  (c) => `${formatLongDate(c.date)} · ${formatTimeRange(c.start_time, c.end_time)}`,
+                )
+                .join(" · ")}
+            </div>
           </div>
-          <div className="truncate text-xs text-muted-foreground">
-            {classes
-              .map(
-                (c) => `${formatLongDate(c.date)} · ${formatTimeRange(c.start_time, c.end_time)}`,
-              )
-              .join(" · ")}
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Quitar selección"
+            onClick={onClear}
+            className="-mr-2 shrink-0 sm:mr-0"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
-        <Button variant="ghost" size="icon" aria-label="Quitar selección" onClick={onClear}>
-          <X className="h-4 w-4" />
-        </Button>
-        <Button onClick={onConfirm} disabled={submitting}>
-          {submitting
-            ? "Preparando…"
-            : `Elegir pago · ${totalLabel}`}
+        <Button
+          onClick={onConfirm}
+          disabled={submitting}
+          className="w-full shrink-0 px-6 py-3 sm:w-auto sm:px-8 sm:py-4"
+        >
+          {submitting ? "Preparando…" : `Elegir pago · ${totalLabel}`}
         </Button>
       </div>
     </div>
@@ -313,7 +329,7 @@ function WaitlistSheet({
           </SheetDescription>
         </SheetHeader>
         {cls ? (
-          <div className="mt-6 space-y-5 px-4">
+          <div className="flex flex-col mt-6 gap-6 px-4">
             <div className="flex items-center gap-2">
               <span className={["h-2.5 w-2.5 rounded-full", capacityDotClass(level)].join(" ")} />
               <Badge variant="secondary">{capacityLabel(level)}</Badge>
@@ -451,7 +467,6 @@ function DropInPaymentFlow({
     toast.success(count === 1 ? "Plaza reservada" : "Plazas reservadas");
   };
 
-
   const fetchClientSecret = useCallback(async () => {
     const ids = await reserveBookings();
     const returnUrl = `${window.location.origin}/app/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`;
@@ -541,7 +556,6 @@ function DropInPaymentFlow({
               <span className="flex flex-col">
                 <span className="font-medium">Bizum</span>
                 <span className="text-sm text-muted-foreground">Paga ahora con Bizum</span>
-
               </span>
             </Button>
           </div>
@@ -560,13 +574,13 @@ function DropInPaymentFlow({
               {count === 1 ? "Plaza reservada" : "Plazas reservadas"} · {cashDoneTotal}
             </DialogTitle>
             <DialogDescription>
-              Si has elegido pagar tus clases en efectivo, puedes realizar el pago directamente en el
-              taller el primer día de clase del mes al que corresponden tus clases.
+              Si has elegido pagar tus clases en efectivo, puedes realizar el pago directamente en
+              el taller el primer día de clase del mes al que corresponden tus clases.
             </DialogDescription>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            No necesitas realizar ningún pago por adelantado para reservar tu plaza. Te hemos enviado
-            un correo con la confirmación de tus clases.
+            No necesitas realizar ningún pago por adelantado para reservar tu plaza. Te hemos
+            enviado un correo con la confirmación de tus clases.
           </p>
           <Button
             className="w-full"
@@ -593,7 +607,6 @@ function DropInPaymentFlow({
             : undefined
         }
         fetchClientSecret={fetchClientSecret}
-
         fetchHostedUrl={fetchHostedUrl}
       />
     </>

@@ -110,7 +110,8 @@ type Promiseable = {
   }>["then"];
 };
 
-const WEEKDAY_RE = /^(lunes|martes|miércoles|miercoles|miercole|jueves|viernes|sábado|sabado|domingo|niños|ninos)/i;
+const WEEKDAY_RE =
+  /^(lunes|martes|miércoles|miercoles|miercole|jueves|viernes|sábado|sabado|domingo|niños|ninos)/i;
 function itemGroup(item: string | null): number {
   const s = (item ?? "").trim().toLowerCase();
   if (!s) return 5;
@@ -156,9 +157,7 @@ function itemMinutes(item: string | null): number {
 
 type LedgerTable = {
   select: (cols: string) => Orderable & Promiseable;
-  insert: (
-    values: Partial<LedgerEntry>,
-  ) => Promise<{ error: { message: string } | null }>;
+  insert: (values: Partial<LedgerEntry>) => Promise<{ error: { message: string } | null }>;
   update: (values: Partial<LedgerEntry>) => {
     eq: (col: string, val: string) => Promise<{ error: { message: string } | null }>;
   };
@@ -168,9 +167,7 @@ type LedgerTable = {
 };
 
 function ledger(): LedgerTable {
-  return (supabase.from as unknown as (table: "ledger_entries") => LedgerTable)(
-    "ledger_entries",
-  );
+  return (supabase.from as unknown as (table: "ledger_entries") => LedgerTable)("ledger_entries");
 }
 
 const ALL = "all";
@@ -206,29 +203,43 @@ function formatDateOrMonth(entryDate: string | null, month: string | null): stri
 function rowBg(status: string | null, collector: string[] | null): string {
   const isSofi = (collector ?? []).some((c) => c?.toLowerCase() === "sofi");
   if (status === "Pagado" && isSofi) return "bg-sky-50 hover:bg-sky-100/60";
-  if (status === "Pagado") return "bg-green-50 hover:bg-green-100/60";
-  if (status === "Pendiente") return "bg-amber-50 hover:bg-amber-100/60";
+  if (status === "Pagado") return "bg-muted hover:bg-muted/70";
+  if (status === "Pendiente") return "bg-secondary hover:bg-secondary/70";
   if (status === "ausente") return "bg-muted/40 opacity-70 hover:opacity-100";
   return "";
 }
 
 // --- Column visibility ---
 
-type ColumnKey = "fecha" | "alumno" | "item" | "categoria" | "importe" | "metodo" | "estado" | "notas";
+type ColumnKey =
+  | "fecha"
+  | "alumno"
+  | "item"
+  | "categoria"
+  | "importe"
+  | "metodo"
+  | "estado"
+  | "notas";
 
 const COLUMN_DEFS: { key: ColumnKey; label: string; locked?: boolean }[] = [
-  { key: "fecha",     label: "Fecha" },
-  { key: "alumno",    label: "Alumno", locked: true },
-  { key: "item",      label: "Clase / Producto" },
+  { key: "fecha", label: "Fecha" },
+  { key: "alumno", label: "Alumno", locked: true },
+  { key: "item", label: "Clase / Producto" },
   { key: "categoria", label: "Categoría" },
-  { key: "importe",   label: "Importe", locked: true },
-  { key: "metodo",    label: "Método" },
-  { key: "estado",    label: "Estado" },
-  { key: "notas",     label: "Notas" },
+  { key: "importe", label: "Importe", locked: true },
+  { key: "metodo", label: "Método" },
+  { key: "estado", label: "Estado" },
+  { key: "notas", label: "Notas" },
 ];
 
 const DEFAULT_VISIBLE = new Set<ColumnKey>([
-  "fecha", "alumno", "item", "categoria", "importe", "metodo", "notas",
+  "fecha",
+  "alumno",
+  "item",
+  "categoria",
+  "importe",
+  "metodo",
+  "notas",
   // "estado" hidden by default — row color used instead
 ]);
 
@@ -258,7 +269,7 @@ function ColumnPicker({
         Columnas
       </Button>
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-md border border-border bg-popover py-1 shadow-md">
+        <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-md border border-border bg-popover py-1">
           {COLUMN_DEFS.map(({ key, label, locked }) => (
             <label
               key={key}
@@ -311,9 +322,11 @@ function SortableHead({
       <div className="flex items-center gap-1">
         {children}
         {active ? (
-          sort!.dir === "asc"
-            ? <ChevronUp className="h-3 w-3 text-primary" />
-            : <ChevronDown className="h-3 w-3 text-primary" />
+          sort!.dir === "asc" ? (
+            <ChevronUp className="h-3 w-3 text-primary" />
+          ) : (
+            <ChevronDown className="h-3 w-3 text-primary" />
+          )
         ) : (
           <ChevronsUpDown className="h-3 w-3 text-muted-foreground/40" />
         )}
@@ -385,20 +398,17 @@ function AdminLedgerPage() {
   }, []);
 
   const categories = useMemo(
-    () =>
-      Array.from(new Set(rows.map((r) => r.category).filter((c): c is string => !!c))).sort(),
+    () => Array.from(new Set(rows.map((r) => r.category).filter((c): c is string => !!c))).sort(),
     [rows],
   );
   const months = useMemo(
     () =>
-      Array.from(new Set(rows.map((r) => r.month).filter((m): m is string => !!m))).sort(
-        (a, b) => {
-          const oa = monthOrder(a);
-          const ob = monthOrder(b);
-          if (oa !== ob) return oa - ob;
-          return a.localeCompare(b);
-        },
-      ),
+      Array.from(new Set(rows.map((r) => r.month).filter((m): m is string => !!m))).sort((a, b) => {
+        const oa = monthOrder(a);
+        const ob = monthOrder(b);
+        if (oa !== ob) return oa - ob;
+        return a.localeCompare(b);
+      }),
     [rows],
   );
   const methods = useMemo(
@@ -434,14 +444,36 @@ function AdminLedgerPage() {
         let av: string | number | null;
         let bv: string | number | null;
         switch (sort.key) {
-          case "fecha":      av = a.entry_date ?? a.month ?? ""; bv = b.entry_date ?? b.month ?? ""; break;
-          case "alumno":     av = a.student_name; bv = b.student_name; break;
-          case "item":       av = a.item;         bv = b.item; break;
-          case "categoria":  av = a.category;     bv = b.category; break;
-          case "importe":    av = a.amount_cents; bv = b.amount_cents; break;
-          case "metodo":     av = a.method;       bv = b.method; break;
-          case "estado":     av = a.status;       bv = b.status; break;
-          default:           return 0;
+          case "fecha":
+            av = a.entry_date ?? a.month ?? "";
+            bv = b.entry_date ?? b.month ?? "";
+            break;
+          case "alumno":
+            av = a.student_name;
+            bv = b.student_name;
+            break;
+          case "item":
+            av = a.item;
+            bv = b.item;
+            break;
+          case "categoria":
+            av = a.category;
+            bv = b.category;
+            break;
+          case "importe":
+            av = a.amount_cents;
+            bv = b.amount_cents;
+            break;
+          case "metodo":
+            av = a.method;
+            bv = b.method;
+            break;
+          case "estado":
+            av = a.status;
+            bv = b.status;
+            break;
+          default:
+            return 0;
         }
         if (av == null) return 1;
         if (bv == null) return -1;
@@ -521,10 +553,10 @@ function AdminLedgerPage() {
   const col = (key: ColumnKey) => visibleCols.has(key);
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <span className="text-label uppercase">Finanzas</span>
+          <span className="text-label">Finanzas</span>
           <h1 className="text-h1 mt-1">Registro</h1>
           <p className="text-body mt-2 text-muted-foreground">
             El cuaderno de ingresos y actividad. Filtra, edita y añade entradas manualmente.
@@ -546,35 +578,31 @@ function AdminLedgerPage() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <Card className="shadow-card">
+        <Card className="">
           <CardContent className="p-4">
-            <p className="text-label uppercase text-muted-foreground">Cobrado</p>
-            <p className="mt-1 text-2xl font-semibold text-success">
-              {formatEur(totals.cobrado)}
-            </p>
+            <p className="text-label text-muted-foreground">Cobrado</p>
+            <p className="mt-1 text-2xl font-normal text-success">{formatEur(totals.cobrado)}</p>
           </CardContent>
         </Card>
-        <Card className="shadow-card">
+        <Card className="">
           <CardContent className="p-4">
-            <p className="text-label uppercase text-muted-foreground">Pendiente</p>
-            <p className="mt-1 text-2xl font-semibold text-warning">
-              {formatEur(totals.pendiente)}
-            </p>
+            <p className="text-label text-muted-foreground">Pendiente</p>
+            <p className="mt-1 text-2xl font-normal text-warning">{formatEur(totals.pendiente)}</p>
           </CardContent>
         </Card>
-        <Card className="shadow-card">
+        <Card className="">
           <CardContent className="p-4">
-            <p className="text-label uppercase text-muted-foreground">Entradas</p>
-            <p className="mt-1 text-2xl font-semibold">{totals.count}</p>
+            <p className="text-label text-muted-foreground">Entradas</p>
+            <p className="mt-1 text-2xl font-normal">{totals.count}</p>
           </CardContent>
         </Card>
       </div>
 
       {teacherPayouts.perTeacher.length > 0 && (
-        <Card className="shadow-card">
+        <Card className="">
           <CardContent className="p-4">
             <div className="flex items-baseline justify-between gap-3">
-              <p className="text-label uppercase text-muted-foreground">
+              <p className="text-label text-muted-foreground">
                 Reparto de ingresos
                 {monthFilter !== ALL && (
                   <span className="ml-1 normal-case text-muted-foreground/70">
@@ -582,38 +610,33 @@ function AdminLedgerPage() {
                   </span>
                 )}
               </p>
-              <span className="text-xs text-muted-foreground">
-                según filtros · sólo Pagado
-              </span>
+              <span className="text-xs text-muted-foreground">según filtros · sólo Pagado</span>
             </div>
             <ul className="mt-2 divide-y divide-border">
               <li className="flex items-center justify-between py-1.5 text-sm">
                 <span className="font-medium">Total</span>
-                <span className="font-semibold">{formatEur(teacherPayouts.totalGross)}</span>
+                <span className="font-normal">{formatEur(teacherPayouts.totalGross)}</span>
               </li>
               <li className="flex items-center justify-between py-1.5 text-sm">
                 <span className="font-medium">
                   Cande
                   <span className="ml-1.5 text-xs text-muted-foreground">se queda</span>
                 </span>
-                <span className="font-semibold text-success">
+                <span className="font-normal text-success">
                   {formatEur(teacherPayouts.candeShare)}
                 </span>
               </li>
               {teacherPayouts.perTeacher.map((p) => {
                 const rate = rates.find((r) => r.teacher === p.teacher)?.default_pct ?? 0;
                 return (
-                  <li
-                    key={p.teacher}
-                    className="flex items-center justify-between py-1.5 text-sm"
-                  >
+                  <li key={p.teacher} className="flex items-center justify-between py-1.5 text-sm">
                     <span className="font-medium">
                       {p.teacher}
                       <span className="ml-1.5 text-xs text-muted-foreground">
                         a pagar · {Math.round(rate * 100)}%
                       </span>
                     </span>
-                    <span className="font-semibold text-sky-700">{formatEur(p.cents)}</span>
+                    <span className="font-normal text-sky-700">{formatEur(p.cents)}</span>
                   </li>
                 );
               })}
@@ -622,9 +645,9 @@ function AdminLedgerPage() {
         </Card>
       )}
 
-      <Card className="shadow-card">
+      <Card className="">
         <CardContent className="grid gap-3 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="search">Buscar</Label>
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -637,7 +660,7 @@ function AdminLedgerPage() {
               />
             </div>
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="f-status">Estado</Label>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger id="f-status">
@@ -651,7 +674,7 @@ function AdminLedgerPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="f-method">Método</Label>
             <Select value={methodFilter} onValueChange={setMethodFilter}>
               <SelectTrigger id="f-method">
@@ -667,7 +690,7 @@ function AdminLedgerPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="f-category">Categoría</Label>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger id="f-category">
@@ -683,7 +706,7 @@ function AdminLedgerPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="f-month">Mes</Label>
             <Select value={monthFilter} onValueChange={setMonthFilter}>
               <SelectTrigger id="f-month">
@@ -699,7 +722,7 @@ function AdminLedgerPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="f-teacher">Profesora</Label>
             <Select value={teacherFilter} onValueChange={setTeacherFilter}>
               <SelectTrigger id="f-teacher">
@@ -722,15 +745,15 @@ function AdminLedgerPage() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
+            <span className="h-2.5 w-2.5 rounded-full bg-success" />
             Pagado
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+            <span className="h-2.5 w-2.5 rounded-full bg-warning" />
             Pendiente
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-gray-300" />
+            <span className="h-2.5 w-2.5 rounded-full bg-input" />
             Ausente
           </span>
           <span className="hidden sm:inline">· T=Tarjeta · E=Efectivo · B=Bizum · R=Revolut</span>
@@ -738,10 +761,10 @@ function AdminLedgerPage() {
         <ColumnPicker visible={visibleCols} onChange={setVisibleCols} />
       </div>
 
-      <Card className="shadow-card">
+      <Card className="">
         <CardContent className="p-0 overflow-x-auto">
           {loading ? (
-            <div className="space-y-2 p-6">
+            <div className="flex flex-col gap-2 p-6">
               {Array.from({ length: 6 }).map((_, i) => (
                 <Skeleton key={i} className="h-10 w-full" />
               ))}
@@ -807,9 +830,7 @@ function AdminLedgerPage() {
                       Estado
                     </SortableHead>
                   )}
-                  {col("notas") && (
-                    <TableHead className="hidden xl:table-cell">Notas</TableHead>
-                  )}
+                  {col("notas") && <TableHead className="hidden xl:table-cell">Notas</TableHead>}
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -828,16 +849,14 @@ function AdminLedgerPage() {
                     {col("alumno") && (
                       <TableCell className="font-medium">{r.student_name ?? "—"}</TableCell>
                     )}
-                    {col("item") && (
-                      <TableCell>{r.item ?? "—"}</TableCell>
-                    )}
+                    {col("item") && <TableCell>{r.item ?? "—"}</TableCell>}
                     {col("categoria") && (
                       <TableCell className="hidden text-muted-foreground lg:table-cell">
                         {r.category ?? "—"}
                       </TableCell>
                     )}
                     {col("importe") && (
-                      <TableCell className="text-right font-semibold tabular-nums">
+                      <TableCell className="text-right font-normal tabular-nums">
                         {r.amount_cents != null ? formatEur(r.amount_cents) : "—"}
                       </TableCell>
                     )}
@@ -859,8 +878,8 @@ function AdminLedgerPage() {
                             r.status === "Pagado"
                               ? "bg-success text-success-foreground"
                               : r.status === "Pendiente"
-                              ? "bg-warning text-warning-foreground"
-                              : ""
+                                ? "bg-warning text-warning-foreground"
+                                : ""
                           }
                           variant={r.status === "ausente" ? "secondary" : "default"}
                         >
@@ -878,7 +897,10 @@ function AdminLedgerPage() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={(e) => { e.stopPropagation(); setEditing(r); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditing(r);
+                          }}
                           aria-label="Editar entrada"
                         >
                           <Pencil className="h-4 w-4" />
@@ -886,7 +908,10 @@ function AdminLedgerPage() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={(e) => { e.stopPropagation(); setDeleting(r); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleting(r);
+                          }}
                           aria-label="Eliminar entrada"
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
@@ -907,14 +932,20 @@ function AdminLedgerPage() {
         mode="create"
         open={creating}
         onOpenChange={setCreating}
-        onSaved={() => { setCreating(false); void load(); }}
+        onSaved={() => {
+          setCreating(false);
+          void load();
+        }}
       />
       <LedgerFormSheet
         mode="edit"
         entry={editing}
         open={editing !== null}
         onOpenChange={(o) => !o && setEditing(null)}
-        onSaved={() => { setEditing(null); void load(); }}
+        onSaved={() => {
+          setEditing(null);
+          void load();
+        }}
       />
 
       <AlertDialog open={deleting !== null} onOpenChange={(o) => !o && setDeleting(null)}>
@@ -1076,8 +1107,8 @@ function LedgerFormSheet({
             Registra un ingreso o actividad. El importe se guarda en euros.
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4 px-4 pb-4">
-          <div className="space-y-1.5">
+        <form onSubmit={handleSubmit} className="flex flex-col mt-6 gap-4 px-4 pb-4">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="entry_date">Fecha</Label>
             <Input
               id="entry_date"
@@ -1086,7 +1117,7 @@ function LedgerFormSheet({
               onChange={(e) => setEntryDate(e.target.value)}
             />
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="entry_month">Mes</Label>
             <Input
               id="entry_month"
@@ -1095,7 +1126,7 @@ function LedgerFormSheet({
               placeholder="Ej. JUNIO"
             />
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="student_name">Alumno</Label>
             <Input
               id="student_name"
@@ -1104,7 +1135,7 @@ function LedgerFormSheet({
               placeholder="Nombre del alumno"
             />
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="item">Clase / Producto</Label>
             <Input
               id="item"
@@ -1113,7 +1144,7 @@ function LedgerFormSheet({
               placeholder="Ej. Clase suelta, Bono mensual…"
             />
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="category">Categoría</Label>
             <Input
               id="category"
@@ -1123,7 +1154,7 @@ function LedgerFormSheet({
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="amount">Importe (€)</Label>
               <Input
                 id="amount"
@@ -1133,7 +1164,7 @@ function LedgerFormSheet({
                 placeholder="80,00"
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="method">Método</Label>
               <Select value={method} onValueChange={setMethod}>
                 <SelectTrigger id="method">
@@ -1149,11 +1180,11 @@ function LedgerFormSheet({
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-2">
               <Label>Profesora(s)</Label>
               <MultiTeacherSelect value={collector} onChange={setCollector} />
             </div>
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="commission_pct">Comisión (%)</Label>
               <Input
                 id="commission_pct"
@@ -1164,7 +1195,7 @@ function LedgerFormSheet({
               />
             </div>
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="status">Estado</Label>
             <Select value={status} onValueChange={setStatus}>
               <SelectTrigger id="status">
@@ -1177,7 +1208,7 @@ function LedgerFormSheet({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="notes">Notas</Label>
             <Textarea
               id="notes"

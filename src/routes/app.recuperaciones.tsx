@@ -54,7 +54,12 @@ function RecuperacionesPage() {
   const setView = (v: CalendarView) =>
     navigate({ search: (prev: CalendarSearch) => ({ ...prev, view: v }) });
   const shift = (dir: -1 | 1) =>
-    navigate({ search: (prev: CalendarSearch) => ({ ...prev, date: toIsoDate(shiftReference(view, reference, dir)) }) });
+    navigate({
+      search: (prev: CalendarSearch) => ({
+        ...prev,
+        date: toIsoDate(shiftReference(view, reference, dir)),
+      }),
+    });
   const goToday = () =>
     navigate({ search: (prev: CalendarSearch) => ({ ...prev, date: toIsoDate(new Date()) }) });
   const [bookedClassIds, setBookedClassIds] = useState<Set<string>>(new Set());
@@ -143,9 +148,9 @@ function RecuperacionesPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div>
-        <span className="text-label uppercase">Clases por recuperar</span>
+        <span className="text-label">Clases por recuperar</span>
         <h1 className="text-h1 mt-1">Recuperaciones</h1>
         <p className="text-body mt-2 text-muted-foreground">
           Te quedan <strong>{loading ? "—" : remaining}</strong>{" "}
@@ -154,11 +159,11 @@ function RecuperacionesPage() {
       </div>
 
       {!loading && makeups.length > 0 ? (
-        <ul className="space-y-2">
+        <ul className="flex flex-col gap-2">
           {makeups.map((m) => (
             <li
               key={m.id}
-              className="flex items-center justify-between rounded-xl border border-border bg-surface p-3 text-sm shadow-card"
+              className="flex items-center justify-between rounded-none border border-border bg-surface p-3 text-sm"
             >
               <span>Clase por recuperar</span>
               <Badge variant="outline">
@@ -169,7 +174,7 @@ function RecuperacionesPage() {
         </ul>
       ) : null}
 
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-h2 min-w-0">Reservar recuperación</h2>
           <p className="text-xs text-muted-foreground sm:max-w-xs sm:text-right">
@@ -206,7 +211,7 @@ function RecuperacionesPage() {
             </SheetDescription>
           </SheetHeader>
           {selected ? (
-            <div className="mt-6 space-y-4 px-4">
+            <div className="flex flex-col mt-6 gap-4 px-4">
               <p className="text-sm text-muted-foreground">
                 Vas a usar una de tus clases por recuperar para esta clase.
               </p>

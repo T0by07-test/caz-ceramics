@@ -3,7 +3,14 @@ import { Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 
 export type Tag = { id: string; name: string; color: string | null };
 
@@ -18,17 +25,25 @@ export function TagPicker({ allTags, selectedIds, onToggle, disabled }: Props) {
   const [open, setOpen] = useState(false);
   const selected = new Set(selectedIds);
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-1">
-        {allTags.filter((t) => selected.has(t.id)).map((t) => (
-          <Badge key={t.id} variant="outline">{t.name}</Badge>
-        ))}
-        {selectedIds.length === 0 ? <span className="text-sm text-muted-foreground">Sin tags</span> : null}
+        {allTags
+          .filter((t) => selected.has(t.id))
+          .map((t) => (
+            <Badge key={t.id} variant="outline">
+              {t.name}
+            </Badge>
+          ))}
+        {selectedIds.length === 0 ? (
+          <span className="text-sm text-muted-foreground">Sin tags</span>
+        ) : null}
       </div>
       {disabled ? null : (
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button type="button" variant="outline" size="sm">Editar tags</Button>
+            <Button type="button" variant="outline" size="sm">
+              Editar tags
+            </Button>
           </PopoverTrigger>
           <PopoverContent className="w-56 p-0" align="start">
             <Command>
@@ -40,7 +55,9 @@ export function TagPicker({ allTags, selectedIds, onToggle, disabled }: Props) {
                     const on = selected.has(t.id);
                     return (
                       <CommandItem key={t.id} value={t.name} onSelect={() => onToggle(t.id, !on)}>
-                        <Check className={["mr-2 h-4 w-4", on ? "opacity-100" : "opacity-0"].join(" ")} />
+                        <Check
+                          className={["mr-2 h-4 w-4", on ? "opacity-100" : "opacity-0"].join(" ")}
+                        />
                         {t.name}
                       </CommandItem>
                     );

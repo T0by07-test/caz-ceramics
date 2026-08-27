@@ -65,7 +65,8 @@ const PLANS = [
       "Una clase al mes para descubrir la cerámica y disfrutar del proceso, sin compromiso.",
     price: "30 €",
     period: "/mes",
-    trialNote: "¿Solo quieres probar una clase? La clase de prueba de un día tiene un precio de 35 €.",
+    trialNote:
+      "¿Solo quieres probar una clase? La clase de prueba de un día tiene un precio de 35 €.",
   },
   {
     classes: "2 clases",
@@ -88,7 +89,8 @@ const PLANS = [
     classes: "4 clases",
     detail: "al mes",
     tagline: "Para hacer de la cerámica parte de tu rutina",
-    description: "La opción ideal si quieres venir con frecuencia y aprovechar al máximo tu práctica.",
+    description:
+      "La opción ideal si quieres venir con frecuencia y aprovechar al máximo tu práctica.",
     price: "85 €",
     period: "/mes",
     featured: true,
@@ -96,164 +98,163 @@ const PLANS = [
   },
 ];
 
+const SCHEDULE = [
+  {
+    day: "Lunes",
+    slots: [
+      "17:00 a 18:00 — clases de niños (1 h) · Profe Sofi",
+      "18:30 a 20:30 — adultos · Profe Sofi",
+    ],
+  },
+  { day: "Martes", slots: ["18:30 a 20:30 — adultos · Profe Cande"] },
+  {
+    day: "Miércoles",
+    slots: [
+      "10:30 a 12:30 — adultos · Profe Cande",
+      "15:00 a 17:00 — adultos · Profe Cande",
+      "18:30 a 20:30 — adultos · Profe Cande",
+    ],
+  },
+  {
+    day: "Jueves",
+    slots: ["16:00 a 18:00 — adultos · Profe Cande", "18:30 a 20:30 — adultos · Profe Cande"],
+  },
+  {
+    day: "Viernes",
+    slots: ["10:30 a 12:30 — adultos · Profe Cande", "17:30 a 19:30 — adultos · Profe Sofi"],
+  },
+];
+
 function Index() {
   const [infoOpen, setInfoOpen] = useState(false);
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
-        <div className="flex items-center gap-2">
-          <img
-            src={logoAsset.url}
-            alt="Logo de Cazú Ceramics"
-            className="h-16 w-auto sm:h-20 lg:h-24"
-          />
-          <span className="sr-only">Cazú Ceramics</span>
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-border">
+        <div className="mx-auto flex w-full max-w-[1180px] items-center justify-between px-4 py-5 sm:px-8">
+          <img src={logoAsset.url} alt="Cazú Ceramics" className="h-14 w-auto shrink-0 sm:h-16" />
+          <nav className="flex items-center gap-8">
+            <Link
+              to="/login"
+              className="font-display text-[13px] uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Iniciar sesión
+            </Link>
+          </nav>
         </div>
-
-        <nav className="flex items-center gap-5">
-          <Link
-            to="/login"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Iniciar sesión
-          </Link>
-        </nav>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl px-5 pb-24 sm:px-8">
+      <main className="mx-auto w-full max-w-[1180px] px-4 sm:px-8">
         {/* Hero */}
-        <section className="mx-auto max-w-2xl pt-10 text-center sm:pt-16 lg:pt-24">
-          <span className="text-label uppercase">Estudio de cerámica</span>
-          <h1 className="text-h1 mt-3 text-foreground">
-            Crea, aprende y disfruta del barro&nbsp;
-            <br />a tu ritmo.
-          </h1>
-          <p className="text-body mt-5 text-muted-foreground">
-            Un espacio para descubrir la cerámica, aprender nuevas técnicas y crear con tus propias
-            manos. Clases para todos los niveles, grupos reducidos y&nbsp;
-            <br />
-            acompañamiento durante todo el proceso.
-          </p>
+        <section className="flex flex-col items-center gap-8 pb-12 pt-16 text-center">
+          <span className="text-label">Estudio de cerámica</span>
+          <div className="flex max-w-3xl flex-col gap-6">
+            <h1 className="text-h1">Crea, aprende y disfruta del barro a tu ritmo.</h1>
+            <p className="text-body mx-auto max-w-xl">
+              Un espacio para descubrir la cerámica, aprender nuevas técnicas y crear con tus
+              propias manos. Clases para todos los niveles, grupos reducidos y acompañamiento
+              durante todo el proceso.
+            </p>
+          </div>
 
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button size="lg" className="w-full sm:w-auto" onClick={() => setInfoOpen(true)}>
+          <div className="flex flex-col items-center gap-4 sm:flex-row">
+            <Button className="w-full sm:w-auto" onClick={() => setInfoOpen(true)}>
               Quiero información
             </Button>
-            <Button asChild size="lg" variant="secondary" className="w-full sm:w-auto">
-              <Link to="/login">Ya soy alumno/a</Link>
-            </Button>
+            <Link
+              to="/login"
+              className="font-display text-[13px] uppercase tracking-[0.16em] text-muted-foreground underline-offset-8 transition-colors hover:text-foreground hover:underline"
+            >
+              Ya soy alumno/a
+            </Link>
           </div>
 
           <InfoDialog open={infoOpen} onOpenChange={setInfoOpen} />
         </section>
 
-        {/* Imágenes del taller */}
-        <section className="mt-12 sm:mt-16">
-          <figure className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
-            <img
-              src={piezasCrudasAsset.url}
-              alt="Platos, bols y tazas de cerámica sin esmaltar secándose en el taller"
-              loading="lazy"
-              className="aspect-[4/3] w-full object-cover sm:aspect-[16/10]"
-            />
-          </figure>
-        </section>
-
-
-
-
-
+        {/* Piezas del taller */}
+        <figure className="pb-12">
+          <img
+            src={piezasCrudasAsset.url}
+            alt="Platos, bols y tazas de cerámica sin esmaltar secándose en el taller"
+            loading="lazy"
+            className="aspect-[4/3] w-full object-cover sm:aspect-[16/10]"
+          />
+        </figure>
 
         {/* Cómo funciona */}
-        <section className="mt-20 sm:mt-28">
-          <div className="text-center">
-            <h2 className="text-h2">¿Cómo funciona?</h2>
-          </div>
-          <ol className="mx-auto mt-8 grid max-w-3xl gap-4 sm:grid-cols-2">
+        <section className="flex flex-col gap-10 border-t border-border pb-12 pt-8">
+          <h2 className="text-h2">¿Cómo funciona?</h2>
+          <ol className="grid gap-10 sm:grid-cols-2">
             {STEPS.map((s) => (
-              <li key={s.n} className="rounded-2xl border border-border bg-surface p-5 shadow-card">
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                  {s.n}
-                </span>
-                <h3 className="mt-4 text-base font-semibold">{s.title}</h3>
-                <p className="mt-1.5 text-sm text-muted-foreground">{s.body}</p>
+              <li key={s.n} className="flex flex-col gap-3 border-t border-border pt-6">
+                <span className="text-label">{s.n}</span>
+                <h3 className="text-h3">{s.title}</h3>
+                <p className="text-body">{s.body}</p>
               </li>
             ))}
           </ol>
         </section>
 
         {/* Planes / precios */}
-        <section className="mt-20 sm:mt-28">
-          <div className="text-center">
+        <section className="flex flex-col gap-10 border-t border-border pb-12 pt-8">
+          <div className="flex flex-col gap-4">
             <h2 className="text-h2">Planes mensuales</h2>
-            <p className="text-body mx-auto mt-3 max-w-xl text-muted-foreground">
+            <p className="text-body max-w-xl">
               Elige cuántas clases quieres hacer al mes y organiza tus clases según tu
               disponibilidad.
             </p>
-            <p className="text-body mx-auto mt-1 max-w-xl text-muted-foreground">
+            <p className="text-body max-w-xl">
               Todos los planes te permiten elegir libremente los días y horarios disponibles al
               reservar tus clases.
             </p>
-            <p className="mt-4 text-sm font-medium text-foreground">Luego:</p>
           </div>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
             {PLANS.map((p) => (
-              <div
-                key={p.classes}
-                className={[
-                  "flex flex-col rounded-2xl border bg-surface p-5 shadow-card",
-                  p.featured ? "border-primary ring-1 ring-primary/30" : "border-border",
-                ].join(" ")}
-              >
-                {p.featured ? (
-                  <span className="text-label uppercase text-primary">⭐ {p.featuredLabel}</span>
-                ) : null}
-                <div className={`flex items-baseline gap-1.5 ${p.featured ? "mt-2" : ""}`}>
+              <div key={p.classes} className="flex flex-col gap-3 border-t border-border pt-6">
+                {p.featured ? <span className="text-label">{p.featuredLabel}</span> : null}
+                <div className="flex items-baseline gap-2">
                   <span className="text-h3">{p.classes}</span>
-                  <span className="text-sm text-muted-foreground">{p.detail}</span>
+                  <span className="text-label">{p.detail}</span>
                 </div>
-                {p.tagline ? (
-                  <p className="mt-1 text-sm font-medium text-foreground">{p.tagline}</p>
-                ) : null}
-                <p className="mt-2 text-sm text-muted-foreground">{p.description}</p>
-                <div className="mt-4 flex items-baseline gap-1.5">
-                  <span className="text-2xl font-semibold tabular-nums">{p.price}</span>
-                  <span className="text-sm text-muted-foreground">{p.period}</span>
+                {p.tagline ? <p className="text-body">{p.tagline}</p> : null}
+                <p className="text-body">{p.description}</p>
+                <div className="flex items-baseline gap-2 pt-2">
+                  <span className="font-display text-[32px] font-extralight tabular-nums tracking-[0.02em] text-foreground">
+                    {p.price}
+                  </span>
+                  <span className="text-label">{p.period}</span>
                 </div>
                 {p.trialNote ? (
-                  <p className="mt-3 text-xs text-muted-foreground">{p.trialNote}</p>
+                  <p className="text-sm text-muted-foreground">{p.trialNote}</p>
                 ) : null}
               </div>
             ))}
           </div>
 
-          <div className="mt-6 text-center">
-            <p className="text-body text-foreground">¿Quieres venir más de 4 veces al mes?</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Puedes añadir clases extra por 20 € cada una.
-            </p>
+          <div className="flex flex-col gap-3 border-t border-border pt-6">
+            <h3 className="text-h3">¿Quieres venir más de 4 veces al mes?</h3>
+            <p className="text-body">Puedes añadir clases extra por 20 € cada una.</p>
           </div>
 
-          <div className="mt-8 rounded-2xl border border-border bg-surface p-6 text-center shadow-card sm:p-8">
-            <p className="text-body text-foreground">
+          <div className="flex flex-col items-start gap-6 bg-muted px-6 py-10 sm:px-10 sm:py-12">
+            <p className="text-body max-w-2xl">
               Tú eliges cuándo venir. Cada mes tienes un número de clases según el plan que elijas y
               puedes reservarlas desde el calendario según la disponibilidad.
             </p>
-            <p className="mt-3 text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Las clases no se acumulan de un mes a otro. Si no las usas, se reinician al comienzo
               del siguiente mes.
             </p>
-            <div className="mt-6">
-              <Button asChild size="lg">
-                <Link to="/solicitar">Ver clases y horarios</Link>
-              </Button>
-            </div>
+            <Button asChild>
+              <Link to="/solicitar">Ver clases y horarios</Link>
+            </Button>
           </div>
         </section>
 
         {/* Galería: piezas del taller */}
-        <section className="mt-16 grid gap-4 sm:mt-20 sm:grid-cols-2">
-          <figure className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
+        <div className="grid grid-cols-1 gap-4 pb-12 sm:grid-cols-2 sm:gap-8">
+          <figure>
             <img
               src={tazasCrudasAsset.url}
               alt="Tazas y bols de cerámica sin esmaltar vistos desde arriba"
@@ -261,7 +262,7 @@ function Index() {
               className="aspect-[4/5] w-full object-cover"
             />
           </figure>
-          <figure className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
+          <figure>
             <img
               src={piezasBlancoTerracotaAsset.url}
               alt="Piezas de cerámica en barro blanco y terracota secándose en el taller"
@@ -269,155 +270,114 @@ function Index() {
               className="aspect-[4/5] w-full object-cover"
             />
           </figure>
-        </section>
-
+        </div>
 
         {/* Política de cancelación */}
-        <section className="mt-20 sm:mt-28">
-          <div className="text-center">
-            <span className="text-label uppercase">Cosas a tener en cuenta</span>
-            <h2 className="text-h2 mt-2">Cancelaciones y recuperaciones</h2>
-            <p className="text-body mx-auto mt-3 max-w-xl text-muted-foreground">
+        <section className="flex flex-col gap-10 border-t border-border pb-12 pt-8">
+          <div className="flex flex-col gap-4">
+            <span className="text-label">Cosas a tener en cuenta</span>
+            <h2 className="text-h2">Cancelaciones y recuperaciones</h2>
+            <p className="text-body max-w-xl">
               Pagas por las clases del plan que elijas (1, 2, 3 o 4 al mes). Si no puedes asistir a
               alguna, esto es lo que necesitas saber.
             </p>
           </div>
-          <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <li className="rounded-2xl border border-border bg-surface p-5 shadow-card">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                01
-              </span>
-              <h3 className="mt-4 text-base font-semibold">Avisa con tiempo</h3>
-              <p className="mt-1.5 text-sm text-muted-foreground">
+          <ol className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
+            <li className="flex flex-col gap-3 border-t border-border pt-6">
+              <span className="text-label">01</span>
+              <h3 className="text-h3">Avisa con tiempo</h3>
+              <p className="text-body">
                 Cancela tu clase con al menos 12 horas de antelación para no perderla. Así podemos
                 ofrecer tu plaza a alguien más.
               </p>
             </li>
-            <li className="rounded-2xl border border-border bg-surface p-5 shadow-card">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                02
-              </span>
-              <h3 className="mt-4 text-base font-semibold">Recupera tu clase</h3>
-              <p className="mt-1.5 text-sm text-muted-foreground">
+            <li className="flex flex-col gap-3 border-t border-border pt-6">
+              <span className="text-label">02</span>
+              <h3 className="text-h3">Recupera tu clase</h3>
+              <p className="text-body">
                 Si cancelas a tiempo, puedes reservar otro horario disponible dentro del mismo mes a
                 través del calendario.
               </p>
             </li>
-            <li className="rounded-2xl border border-border bg-surface p-5 shadow-card">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                03
-              </span>
-              <h3 className="mt-4 text-base font-semibold">Si cancelas tarde o no vienes</h3>
-              <p className="mt-1.5 text-sm text-muted-foreground">
+            <li className="flex flex-col gap-3 border-t border-border pt-6">
+              <span className="text-label">03</span>
+              <h3 className="text-h3">Si cancelas tarde o no vienes</h3>
+              <p className="text-body">
                 Si cancelas con menos de 12 horas o no asistes sin avisar, esa clase se cuenta como
                 utilizada y no se puede recuperar.
               </p>
             </li>
           </ol>
-          <p className="mt-6 text-center text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Las clases recuperadas deben usarse dentro del mismo mes natural. No se acumulan ni se
             trasladan al mes siguiente.
           </p>
         </section>
 
         {/* Horarios y profesoras */}
-        <section className="mt-20 sm:mt-28">
-          <div className="text-center">
-            <span className="text-label uppercase">Horarios y profesoras</span>
-            <h2 className="text-h2 mt-2">¿Cuándo se imparten las clases?</h2>
+        <section className="flex flex-col gap-10 border-t border-border pb-12 pt-8">
+          <div className="flex flex-col gap-4">
+            <span className="text-label">Horarios y profesoras</span>
+            <h2 className="text-h2">¿Cuándo se imparten las clases?</h2>
           </div>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="rounded-2xl border border-border bg-surface p-5 shadow-card">
-              <h3 className="text-base font-semibold">Lunes</h3>
-              <p className="mt-1.5 text-sm text-muted-foreground">
-                17:00 a 18:00 — clases de niños (1 h) · Profe Sofi
-                <br />
-                18:30 a 20:30 — adultos · Profe Sofi
-              </p>
-            </div>
-            <div className="rounded-2xl border border-border bg-surface p-5 shadow-card">
-              <h3 className="text-base font-semibold">Martes</h3>
-              <p className="mt-1.5 text-sm text-muted-foreground">
-                18:30 a 20:30 — adultos · Profe Cande
-              </p>
-            </div>
-            <div className="rounded-2xl border border-border bg-surface p-5 shadow-card">
-              <h3 className="text-base font-semibold">Miércoles</h3>
-              <p className="mt-1.5 text-sm text-muted-foreground">
-                10:30 a 12:30 — adultos · Profe Cande
-                <br />
-                15:00 a 17:00 — adultos · Profe Cande
-                <br />
-                18:30 a 20:30 — adultos · Profe Cande
-              </p>
-            </div>
-            <div className="rounded-2xl border border-border bg-surface p-5 shadow-card">
-              <h3 className="text-base font-semibold">Jueves</h3>
-              <p className="mt-1.5 text-sm text-muted-foreground">
-                16:00 a 18:00 — adultos · Profe Cande
-                <br />
-                18:30 a 20:30 — adultos · Profe Cande
-              </p>
-            </div>
-            <div className="rounded-2xl border border-border bg-surface p-5 shadow-card">
-              <h3 className="text-base font-semibold">Viernes</h3>
-              <p className="mt-1.5 text-sm text-muted-foreground">
-                10:30 a 12:30 — adultos · Profe Cande
-                <br />
-                17:30 a 19:30 — adultos · Profe Sofi
-              </p>
-            </div>
+          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
+            {SCHEDULE.map((d) => (
+              <div key={d.day} className="flex flex-col gap-3 border-t border-border pt-6">
+                <span className="text-label">{d.day}</span>
+                <ul className="flex flex-col gap-1.5">
+                  {d.slots.map((slot) => (
+                    <li key={slot} className="text-body">
+                      {slot}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            ¿Sois un grupo de 3 o más personas y queréis hacer una clase de cerámica durante la
-            semana?
-            <br />
-            Escríbeme por WhatsApp al{" "}
+          <div className="flex flex-col gap-3 border-t border-border pt-6">
+            <p className="text-body max-w-2xl">
+              ¿Sois un grupo de 3 o más personas y queréis hacer una clase de cerámica durante la
+              semana? Escríbeme por WhatsApp y coordinamos un día y horario que os venga bien.
+            </p>
             <a
               href="https://wa.me/34661499026"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+              className="inline-flex items-center gap-2 font-display text-[13px] uppercase tracking-[0.16em] text-primary underline-offset-8 hover:underline"
             >
-              <MessageCircle className="h-4 w-4" />
+              <MessageCircle className="h-4 w-4 shrink-0" />
               +34 661 499 026
-            </a>{" "}
-            y coordinamos un día y horario que os venga bien.
-          </p>
+            </a>
+          </div>
         </section>
 
         {/* Detalle: bol de terracota */}
-        <section className="mt-16 sm:mt-20">
-          <figure className="mx-auto max-w-2xl overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
-            <img
-              src={bolTerracotaAsset.url}
-              alt="Bol de barro rojo con dos asas sobre una tela en la mesa de trabajo"
-              loading="lazy"
-              className="aspect-[4/3] w-full object-cover"
-            />
-            <figcaption className="px-5 py-3 text-center text-xs text-muted-foreground">
-              Cada pieza se modela a mano, a tu ritmo.
-            </figcaption>
-          </figure>
-        </section>
-
+        <figure className="flex flex-col gap-3 pb-12">
+          <img
+            src={bolTerracotaAsset.url}
+            alt="Bol de barro rojo con dos asas sobre una tela en la mesa de trabajo"
+            loading="lazy"
+            className="aspect-[4/3] w-full object-cover"
+          />
+          <figcaption className="text-sm text-muted-foreground">
+            Cada pieza se modela a mano, a tu ritmo.
+          </figcaption>
+        </figure>
 
         {/* Closing CTA */}
-        <section className="mt-20 text-center sm:mt-28">
+        <section className="flex flex-col items-start gap-6 border-t border-border pb-12 pt-8">
           <h2 className="text-h2">¿List@ para empezar?</h2>
-          <p className="text-body mx-auto mt-3 max-w-xl text-muted-foreground">
-            Consulta el calendario, descubre los días y horarios disponibles y elige la clase que
-            mejor se adapte a ti.
-          </p>
-          <p className="text-body mx-auto mt-2 max-w-xl text-muted-foreground">
-            Reserva tu lugar y empieza a crear.
-          </p>
-          <div className="mt-6">
-            <Button asChild size="lg">
-              <Link to="/solicitar">Ver clases y horarios</Link>
-            </Button>
+          <div className="flex flex-col gap-2">
+            <p className="text-body max-w-xl">
+              Consulta el calendario, descubre los días y horarios disponibles y elige la clase que
+              mejor se adapte a ti.
+            </p>
+            <p className="text-body max-w-xl">Reserva tu lugar y empieza a crear.</p>
           </div>
+          <Button asChild>
+            <Link to="/solicitar">Ver clases y horarios</Link>
+          </Button>
         </section>
       </main>
     </div>
@@ -427,70 +387,71 @@ function Index() {
 function InfoDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto text-left sm:max-w-lg">
+      <DialogContent className="max-h-[85vh] gap-8 overflow-y-auto text-left sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-h3">Clases regulares de cerámica</DialogTitle>
+          <DialogTitle className="text-h2">Clases regulares de cerámica</DialogTitle>
           <DialogDescription>
             Son clases de modelado en cerámica, en grupos reducidos y para todos los niveles. No
-            necesitas experiencia previa. 🤎
+            necesitas experiencia previa.
           </DialogDescription>
         </DialogHeader>
 
-        <p className="text-sm text-muted-foreground">
+        <p className="text-body">
           En las clases exploramos diferentes técnicas e ideas para crear tus propias piezas.
           Trabajamos con arcilla gres, un material resistente y duradero, y puedes crear tanto
           piezas funcionales como piezas decorativas.
         </p>
 
-        <ul className="space-y-2 rounded-xl border border-border bg-surface p-4 text-sm">
-          <li>
-            <span aria-hidden>📍</span> <strong>Dónde:</strong> Taller Cazú Ceramics, Calle del Dr.
-            Sumsi 9, Ruzafa, Valencia
-          </li>
-          <li>
-            <span aria-hidden>⏰</span> <strong>Duración:</strong> 2 horas por clase (las clases de
-            niños son 1 hora)
-          </li>
-          <li>
-            <span aria-hidden>👩‍🏫</span> <strong>Profesoras:</strong> Sofi (lunes y viernes) y Cande
-            (martes, miércoles, jueves y viernes)
-          </li>
-          <li>
-            <span aria-hidden>📅</span> <strong>Frecuencia:</strong> tú eliges cuántas veces quieres
-            venir al mes, según el ritmo que quieras llevar.
-          </li>
-        </ul>
+        <dl className="grid gap-4 border-t border-border pt-6">
+          <div className="flex flex-col gap-1">
+            <dt className="text-label">Dónde</dt>
+            <dd className="text-body">
+              Taller Cazú Ceramics, Calle del Dr. Sumsi 9, Ruzafa, Valencia
+            </dd>
+          </div>
+          <div className="flex flex-col gap-1">
+            <dt className="text-label">Duración</dt>
+            <dd className="text-body">2 horas por clase (las clases de niños son 1 hora)</dd>
+          </div>
+          <div className="flex flex-col gap-1">
+            <dt className="text-label">Profesoras</dt>
+            <dd className="text-body">
+              Sofi (lunes y viernes) y Cande (martes, miércoles, jueves y viernes)
+            </dd>
+          </div>
+          <div className="flex flex-col gap-1">
+            <dt className="text-label">Frecuencia</dt>
+            <dd className="text-body">
+              Tú eliges cuántas veces quieres venir al mes, según el ritmo que quieras llevar.
+            </dd>
+          </div>
+        </dl>
 
-        <p className="text-sm text-muted-foreground">
+        <p className="text-body">
           Todas las herramientas, materiales y cocciones en el horno de cerámica están incluidos. La
           clase de niños (lunes 17:00, 1 h) tiene un precio aparte de{" "}
           <span className="whitespace-nowrap">12 €</span>.
         </p>
 
+        <div className="flex flex-col gap-10">
+          <h3 className="text-h3">¿Qué te gustaría hacer?</h3>
 
-        <div className="mt-2 space-y-3">
-          <h3 className="text-base font-semibold">¿Qué te gustaría hacer?</h3>
-
-          <div className="rounded-xl border border-border bg-surface p-4">
-            <p className="text-sm font-semibold">
-              <span aria-hidden>👐</span> Quiero probar una clase
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
+          <div className="flex flex-col gap-3 border-t border-border pt-6">
+            <span className="text-label">Quiero probar una clase</span>
+            <p className="text-body">
               Ven a conocer el estudio, experimentar con el barro y descubrir si la cerámica es para
               ti.
             </p>
             <TrialBooking />
           </div>
 
-          <div className="rounded-xl border border-primary/40 bg-surface p-4">
-            <p className="text-sm font-semibold">
-              <span aria-hidden>🏺</span> Quiero empezar con clases regulares
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
+          <div className="flex flex-col items-start gap-3 border-t border-border pt-6">
+            <span className="text-label">Quiero empezar con clases regulares</span>
+            <p className="text-body">
               Elige el plan que mejor se adapte a tu ritmo y reserva tus clases según tu
               disponibilidad.
             </p>
-            <Button asChild className="mt-3 w-full">
+            <Button asChild className="w-full">
               <Link to="/solicitar" search={{ intent: "regular" }}>
                 Ver horarios y reservar
               </Link>
@@ -532,7 +493,6 @@ function TrialBooking() {
       );
     })();
   }, []);
-
 
   const byDate = useMemo(() => {
     const map = new Map<string, UpcomingClass[]>();
@@ -584,7 +544,9 @@ function TrialBooking() {
       if (checkoutWindow) {
         try {
           checkoutWindow.document.open();
-          checkoutWindow.document.write(`<!doctype html><html lang="es"><head><title>Abriendo pago…</title></head><body><p>Abriendo el pago seguro…</p><script>window.opener=null;window.location.replace(${JSON.stringify(url)});</script></body></html>`);
+          checkoutWindow.document.write(
+            `<!doctype html><html lang="es"><head><title>Abriendo pago…</title></head><body><p>Abriendo el pago seguro…</p><script>window.opener=null;window.location.replace(${JSON.stringify(url)});</script></body></html>`,
+          );
           checkoutWindow.document.close();
           opened = true;
         } catch {
@@ -611,7 +573,7 @@ function TrialBooking() {
   };
 
   return (
-    <div className="mt-3 space-y-3">
+    <div className="flex flex-col mt-3 gap-3">
       <p className="text-xs text-muted-foreground">
         Elige el día y la hora que te vengan bien (35 € · 2 h).
       </p>
@@ -629,11 +591,11 @@ function TrialBooking() {
         onToggle={(id) => setSelectedId((prev) => (prev === id ? null : id))}
       />
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1.5">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="trial-name">Nombre</Label>
           <Input id="trial-name" value={name} onChange={(e) => setName(e.target.value)} />
         </div>
-        <div className="space-y-1.5">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="trial-email">Correo electrónico</Label>
           <Input
             id="trial-email"

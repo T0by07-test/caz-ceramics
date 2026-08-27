@@ -11,7 +11,7 @@ type Props = {
 
 export function DayView({ reference, classes, onSelectClass, selectedIds }: Props) {
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-3">
       <h2 className="text-h2 capitalize">{formatDayTitle(reference)}</h2>
       <AgendaList
         classes={classes}

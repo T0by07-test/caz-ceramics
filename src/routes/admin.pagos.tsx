@@ -48,9 +48,7 @@ type Row = {
 };
 
 function formatEur(cents: number) {
-  return new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(
-    cents / 100,
-  );
+  return new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(cents / 100);
 }
 
 function statusBadge(status: string) {
@@ -102,14 +100,19 @@ function AdminPaymentsPage() {
       const ids = Array.from(new Set((payments ?? []).map((p) => p.student_id)));
       const { data: profiles } = ids.length
         ? await supabase.from("profiles").select("id, name, surname, email").in("id", ids)
-        : { data: [] as { id: string; name: string | null; surname: string | null; email: string | null }[] };
+        : {
+            data: [] as {
+              id: string;
+              name: string | null;
+              surname: string | null;
+              email: string | null;
+            }[],
+          };
       const profById = new Map((profiles ?? []).map((p) => [p.id, p]));
       const result: Row[] = (payments ?? []).map((p) => {
         const prof = profById.get(p.student_id);
         const name =
-          [prof?.name, prof?.surname].filter(Boolean).join(" ").trim() ||
-          prof?.email ||
-          "—";
+          [prof?.name, prof?.surname].filter(Boolean).join(" ").trim() || prof?.email || "—";
         return { ...p, student_name: name };
       });
       if (cancelled) return;
@@ -147,22 +150,24 @@ function AdminPaymentsPage() {
   }, [rows]);
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="min-w-0">
-        <span className="text-label uppercase">Finanzas</span>
+        <span className="text-label">Finanzas</span>
         <h1 className="text-h1 mt-1">Pagos</h1>
         <p className="text-body mt-2 text-muted-foreground">
-          Filtra por estado y fechas. Cuando recibas un Bizum o efectivo, marca el pago como
-          pagado y la reserva de la alumna quedará confirmada.
+          Filtra por estado y fechas. Cuando recibas un Bizum o efectivo, marca el pago como pagado
+          y la reserva de la alumna quedará confirmada.
         </p>
       </div>
 
-      <Card className="shadow-card">
+      <Card className="">
         <CardContent className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="status">Estado</Label>
             <Select value={status} onValueChange={(v) => setStatus(v as StatusFilter)}>
-              <SelectTrigger id="status"><SelectValue /></SelectTrigger>
+              <SelectTrigger id="status">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="pending">Pendientes</SelectItem>
@@ -171,29 +176,27 @@ function AdminPaymentsPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="from">Desde</Label>
             <Input id="from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="to">Hasta</Label>
             <Input id="to" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
           </div>
           <div className="flex flex-col justify-end">
             <p className="text-xs text-muted-foreground">
               {totals.count} resultados · Confirmado:{" "}
-              <span className="font-semibold text-foreground">
-                {formatEur(totals.sum_confirmed)}
-              </span>
+              <span className="font-normal text-foreground">{formatEur(totals.sum_confirmed)}</span>
             </p>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="shadow-card">
+      <Card className="">
         <CardContent className="p-0 overflow-x-auto">
           {loading ? (
-            <div className="space-y-2 p-6">
+            <div className="flex flex-col gap-2 p-6">
               {Array.from({ length: 6 }).map((_, i) => (
                 <Skeleton key={i} className="h-10 w-full" />
               ))}
@@ -207,91 +210,24 @@ function AdminPaymentsPage() {
             </div>
           ) : (
             <>
-            <ul className="divide-y divide-border md:hidden">
-              {rows.map((r) => (
-                <li key={`m-${r.id}`} className="space-y-1 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">{r.student_name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(r.created_at).toLocaleDateString("es-ES")} ·{" "}
-                        {r.subscription_id ? "Plan" : r.booking_id ? "Clase suelta" : "—"} ·{" "}
-                        {methodLabel(r.method)}
-                      </p>
-                    </div>
-                    <span className="shrink-0 font-semibold tabular-nums">{formatEur(r.amount_cents)}</span>
-                  </div>
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    {statusBadge(r.status)}
-                    {r.status === "pending" ? (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        disabled={confirming === r.id}
-                        onClick={() => void confirmPayment(r.id)}
-                      >
-                        <Check className="mr-1 h-3.5 w-3.5" /> Marcar como pagado
-                      </Button>
-                    ) : null}
-                    {r.stripe_session_id ? (
-                      <a
-                        href={`https://dashboard.stripe.com/test/payments/${r.stripe_session_id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                      >
-                        Stripe <ExternalLink className="h-3 w-3" />
-                      </a>
-                    ) : null}
-                  </div>
-                </li>
-              ))}
-            </ul>
-            <div className="hidden md:block">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Alumna</TableHead>
-                  <TableHead>Concepto</TableHead>
-                  <TableHead>Método</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead className="text-right">Importe</TableHead>
-                  <TableHead className="text-right">Stripe</TableHead>
-                  <TableHead className="text-right">Acción</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+              <ul className="divide-y divide-border md:hidden">
                 {rows.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="whitespace-nowrap text-muted-foreground">
-                      {new Date(r.created_at).toLocaleDateString("es-ES")}
-                    </TableCell>
-                    <TableCell className="font-medium">{r.student_name}</TableCell>
-                    <TableCell>
-                      {r.subscription_id ? "Plan" : r.booking_id ? "Clase suelta" : "—"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{methodLabel(r.method)}</TableCell>
-                    <TableCell>{statusBadge(r.status)}</TableCell>
-                    <TableCell className="text-right font-semibold">
-                      {formatEur(r.amount_cents)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {r.stripe_session_id ? (
-                        <a
-                          href={`https://dashboard.stripe.com/test/payments/${r.stripe_session_id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                          aria-label="Ver en Stripe"
-                        >
-                          Ver <ExternalLink className="h-3 w-3" />
-                        </a>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
+                  <li key={`m-${r.id}`} className="flex flex-col gap-1.5 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{r.student_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(r.created_at).toLocaleDateString("es-ES")} ·{" "}
+                          {r.subscription_id ? "Plan" : r.booking_id ? "Clase suelta" : "—"} ·{" "}
+                          {methodLabel(r.method)}
+                        </p>
+                      </div>
+                      <span className="shrink-0 font-normal tabular-nums">
+                        {formatEur(r.amount_cents)}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      {statusBadge(r.status)}
                       {r.status === "pending" ? (
                         <Button
                           size="sm"
@@ -301,15 +237,86 @@ function AdminPaymentsPage() {
                         >
                           <Check className="mr-1 h-3.5 w-3.5" /> Marcar como pagado
                         </Button>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
+                      ) : null}
+                      {r.stripe_session_id ? (
+                        <a
+                          href={`https://dashboard.stripe.com/test/payments/${r.stripe_session_id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                        >
+                          Stripe <ExternalLink className="h-3 w-3" />
+                        </a>
+                      ) : null}
+                    </div>
+                  </li>
                 ))}
-              </TableBody>
-            </Table>
-            </div>
+              </ul>
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead>Alumna</TableHead>
+                      <TableHead>Concepto</TableHead>
+                      <TableHead>Método</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead className="text-right">Importe</TableHead>
+                      <TableHead className="text-right">Stripe</TableHead>
+                      <TableHead className="text-right">Acción</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rows.map((r) => (
+                      <TableRow key={r.id}>
+                        <TableCell className="whitespace-nowrap text-muted-foreground">
+                          {new Date(r.created_at).toLocaleDateString("es-ES")}
+                        </TableCell>
+                        <TableCell className="font-medium">{r.student_name}</TableCell>
+                        <TableCell>
+                          {r.subscription_id ? "Plan" : r.booking_id ? "Clase suelta" : "—"}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {methodLabel(r.method)}
+                        </TableCell>
+                        <TableCell>{statusBadge(r.status)}</TableCell>
+                        <TableCell className="text-right font-normal">
+                          {formatEur(r.amount_cents)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {r.stripe_session_id ? (
+                            <a
+                              href={`https://dashboard.stripe.com/test/payments/${r.stripe_session_id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                              aria-label="Ver en Stripe"
+                            >
+                              Ver <ExternalLink className="h-3 w-3" />
+                            </a>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {r.status === "pending" ? (
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              disabled={confirming === r.id}
+                              onClick={() => void confirmPayment(r.id)}
+                            >
+                              <Check className="mr-1 h-3.5 w-3.5" /> Marcar como pagado
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </>
           )}
         </CardContent>

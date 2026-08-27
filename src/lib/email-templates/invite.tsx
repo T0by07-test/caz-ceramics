@@ -1,4 +1,4 @@
-import * as React from 'react'
+import * as React from "react";
 
 import {
   Body,
@@ -11,14 +11,14 @@ import {
   Preview,
   Section,
   Text,
-} from '@react-email/components'
+} from "@react-email/components";
 
-import { accent, button, container, footer, h1, link, main, text } from './theme'
+import { accent, button, container, footer, h1, link, main, text } from "./theme";
 
 interface InviteEmailProps {
-  siteName: string
-  siteUrl: string
-  confirmationUrl: string
+  siteName: string;
+  siteUrl: string;
+  confirmationUrl: string;
 }
 
 export const InviteEmail = ({ siteName, siteUrl, confirmationUrl }: InviteEmailProps) => (
@@ -30,7 +30,7 @@ export const InviteEmail = ({ siteName, siteUrl, confirmationUrl }: InviteEmailP
         <Section style={accent} />
         <Heading style={h1}>Te invitamos a unirte</Heading>
         <Text style={text}>
-          Te hemos invitado a formar parte de{' '}
+          Te hemos invitado a formar parte de{" "}
           <Link href={siteUrl} style={link}>
             <strong>{siteName}</strong>
           </Link>
@@ -48,6 +48,6 @@ export const InviteEmail = ({ siteName, siteUrl, confirmationUrl }: InviteEmailP
       </Container>
     </Body>
   </Html>
-)
+);
 
-export default InviteEmail
+export default InviteEmail;

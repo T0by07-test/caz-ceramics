@@ -1,4 +1,4 @@
-import * as React from 'react'
+import * as React from "react";
 
 import {
   Body,
@@ -11,15 +11,15 @@ import {
   Preview,
   Section,
   Text,
-} from '@react-email/components'
+} from "@react-email/components";
 
-import { accent, button, container, footer, h1, link, main, text } from './theme'
+import { accent, button, container, footer, h1, link, main, text } from "./theme";
 
 interface SignupEmailProps {
-  siteName: string
-  siteUrl: string
-  recipient: string
-  confirmationUrl: string
+  siteName: string;
+  siteUrl: string;
+  recipient: string;
+  confirmationUrl: string;
 }
 
 export const SignupEmail = ({
@@ -36,7 +36,7 @@ export const SignupEmail = ({
         <Section style={accent} />
         <Heading style={h1}>Confirma tu email</Heading>
         <Text style={text}>
-          ¡Gracias por crear tu cuenta en{' '}
+          ¡Gracias por crear tu cuenta en{" "}
           <Link href={siteUrl} style={link}>
             <strong>{siteName}</strong>
           </Link>
@@ -56,6 +56,6 @@ export const SignupEmail = ({
       </Container>
     </Body>
   </Html>
-)
+);
 
-export default SignupEmail
+export default SignupEmail;

@@ -100,9 +100,7 @@ function endOfWeekIso(d: Date) {
   return toIsoDate(m);
 }
 function formatEur(cents: number) {
-  return new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(
-    cents / 100,
-  );
+  return new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(cents / 100);
 }
 
 function AdminDashboardPage() {
@@ -227,11 +225,15 @@ function AdminDashboardPage() {
         .limit(10);
       const studentIds = Array.from(new Set((lastPayments ?? []).map((p) => p.student_id)));
       const { data: studentProfiles } = studentIds.length
-        ? await supabase
-            .from("profiles")
-            .select("id, name, surname, email")
-            .in("id", studentIds)
-        : { data: [] as { id: string; name: string | null; surname: string | null; email: string | null }[] };
+        ? await supabase.from("profiles").select("id, name, surname, email").in("id", studentIds)
+        : {
+            data: [] as {
+              id: string;
+              name: string | null;
+              surname: string | null;
+              email: string | null;
+            }[],
+          };
       const profileById = new Map((studentProfiles ?? []).map((p) => [p.id, p]));
       const recent: RecentPayment[] = (lastPayments ?? []).map((p) => {
         const prof = profileById.get(p.student_id);
@@ -270,16 +272,27 @@ function AdminDashboardPage() {
 
   const monthLabel = useMemo(() => {
     const months = [
-      "enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre",
+      "enero",
+      "febrero",
+      "marzo",
+      "abril",
+      "mayo",
+      "junio",
+      "julio",
+      "agosto",
+      "septiembre",
+      "octubre",
+      "noviembre",
+      "diciembre",
     ];
     const d = new Date();
     return `${months[d.getMonth()]} ${d.getFullYear()}`;
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="min-w-0">
-        <span className="text-label uppercase">Panel</span>
+        <span className="text-label">Panel</span>
         <h1 className="text-h1 mt-1">Dashboard</h1>
         <p className="text-body mt-2 text-muted-foreground capitalize">
           Resumen del estudio · {monthLabel}
@@ -290,27 +303,27 @@ function AdminDashboardPage() {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
         <KpiCard
           label="Reservas totales"
-          value={loading ? null : kpis?.total ?? 0}
+          value={loading ? null : (kpis?.total ?? 0)}
           icon={<CalendarDays className="h-4 w-4" />}
         />
         <KpiCard
           label="Confirmadas"
-          value={loading ? null : kpis?.confirmed ?? 0}
+          value={loading ? null : (kpis?.confirmed ?? 0)}
           icon={<CheckCircle2 className="h-4 w-4 text-success" />}
         />
         <KpiCard
           label="Canceladas"
-          value={loading ? null : kpis?.cancelled ?? 0}
+          value={loading ? null : (kpis?.cancelled ?? 0)}
           icon={<XCircle className="h-4 w-4 text-destructive" />}
         />
         <KpiCard
           label="Asistencias"
-          value={loading ? null : kpis?.attended ?? 0}
+          value={loading ? null : (kpis?.attended ?? 0)}
           icon={<Users className="h-4 w-4" />}
         />
         <KpiCard
           label="Alumnas activas"
-          value={loading ? null : kpis?.active_students ?? 0}
+          value={loading ? null : (kpis?.active_students ?? 0)}
           icon={<Users className="h-4 w-4" />}
         />
         <KpiCard
@@ -320,18 +333,18 @@ function AdminDashboardPage() {
         />
         <KpiCard
           label="Recuperaciones pendientes"
-          value={loading ? null : kpis?.pending_makeups ?? 0}
+          value={loading ? null : (kpis?.pending_makeups ?? 0)}
           icon={<RotateCcw className="h-4 w-4" />}
         />
-        <Card className="shadow-card">
+        <Card className="">
           <CardHeader className="pb-2">
-            <CardDescription className="text-label uppercase">Alumnas por plan</CardDescription>
+            <CardDescription className="text-label">Alumnas por plan</CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
             {loading ? (
               <Skeleton className="h-12 w-full" />
             ) : kpis && kpis.per_plan.length > 0 ? (
-              <ul className="space-y-1 text-sm">
+              <ul className="flex flex-col gap-1.5 text-sm">
                 {kpis.per_plan.slice(0, 4).map((p) => (
                   <li key={p.name} className="flex items-center justify-between gap-2">
                     <span className="truncate text-muted-foreground">{p.name}</span>
@@ -347,7 +360,7 @@ function AdminDashboardPage() {
       </div>
 
       {/* Risk classes */}
-      <Card className="border-warning/40 shadow-card">
+      <Card className="border-warning/40">
         <CardHeader>
           <CardTitle className="text-h3 flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-warning" />
@@ -397,7 +410,7 @@ function AdminDashboardPage() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Week classes */}
-        <Card className="shadow-card">
+        <Card className="">
           <CardHeader>
             <CardTitle className="text-h3">Clases de esta semana</CardTitle>
             <CardDescription>Capacidad de cada clase programada.</CardDescription>
@@ -411,7 +424,7 @@ function AdminDashboardPage() {
                 description="Crea nuevas clases desde el calendario."
               />
             ) : (
-              <ul className="space-y-3">
+              <ul className="flex flex-col gap-3">
                 {weekClasses.map((c) => {
                   const level = capacityLevel(c.booked, c.capacity_max);
                   const pct = Math.min(100, (c.booked / c.capacity_max) * 100);
@@ -451,7 +464,7 @@ function AdminDashboardPage() {
         </Card>
 
         {/* Recent payments */}
-        <Card className="shadow-card">
+        <Card className="">
           <CardHeader>
             <CardTitle className="text-h3">Últimos pagos</CardTitle>
             <CardDescription>Las 10 últimas confirmaciones.</CardDescription>
@@ -474,7 +487,7 @@ function AdminDashboardPage() {
                         {p.kind} · {new Date(p.created_at).toLocaleDateString("es-ES")}
                       </div>
                     </div>
-                    <span className="font-semibold">{formatEur(p.amount_cents)}</span>
+                    <span className="font-normal">{formatEur(p.amount_cents)}</span>
                   </li>
                 ))}
               </ul>
@@ -496,7 +509,7 @@ function KpiCard({
   icon: React.ReactNode;
 }) {
   return (
-    <Card className="shadow-card">
+    <Card className="">
       <CardHeader className="pb-2">
         <CardDescription className="text-label flex items-center gap-2 uppercase">
           {icon}
@@ -507,7 +520,7 @@ function KpiCard({
         {value === null ? (
           <Skeleton className="h-7 w-20" />
         ) : (
-          <p className="text-2xl font-bold tracking-tight">{value}</p>
+          <p className="text-2xl font-normal tracking-tight">{value}</p>
         )}
       </CardContent>
     </Card>

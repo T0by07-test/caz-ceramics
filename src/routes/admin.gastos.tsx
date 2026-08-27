@@ -117,7 +117,9 @@ function AdminExpensesPage() {
       if (categoryFilter !== ALL && r.category !== categoryFilter) return false;
       if (monthFilter !== ALL && r.month !== monthFilter) return false;
       if (q) {
-        const hay = [r.provider, r.concept, r.notes].some((v) => (v ?? "").toLowerCase().includes(q));
+        const hay = [r.provider, r.concept, r.notes].some((v) =>
+          (v ?? "").toLowerCase().includes(q),
+        );
         if (!hay) return false;
       }
       return true;
@@ -135,10 +137,10 @@ function AdminExpensesPage() {
   }, [filtered]);
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <span className="text-label uppercase">Finanzas</span>
+          <span className="text-label">Finanzas</span>
           <h1 className="text-h1 mt-1">Gastos</h1>
           <p className="text-body mt-2 text-muted-foreground">
             Costes fijos y variables. El IVA soportado reduce el IVA a pagar.
@@ -160,29 +162,29 @@ function AdminExpensesPage() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <Card className="shadow-card">
+        <Card className="">
           <CardContent className="p-4">
-            <p className="text-label uppercase text-muted-foreground">Gastos</p>
-            <p className="mt-1 text-2xl font-semibold text-destructive">{formatEur(totals.gastos)}</p>
+            <p className="text-label text-muted-foreground">Gastos</p>
+            <p className="mt-1 text-2xl font-normal text-destructive">{formatEur(totals.gastos)}</p>
           </CardContent>
         </Card>
-        <Card className="shadow-card">
+        <Card className="">
           <CardContent className="p-4">
-            <p className="text-label uppercase text-muted-foreground">IVA soportado</p>
-            <p className="mt-1 text-2xl font-semibold">{formatEur(totals.iva)}</p>
+            <p className="text-label text-muted-foreground">IVA soportado</p>
+            <p className="mt-1 text-2xl font-normal">{formatEur(totals.iva)}</p>
           </CardContent>
         </Card>
-        <Card className="shadow-card">
+        <Card className="">
           <CardContent className="p-4">
-            <p className="text-label uppercase text-muted-foreground">Entradas</p>
-            <p className="mt-1 text-2xl font-semibold">{totals.count}</p>
+            <p className="text-label text-muted-foreground">Entradas</p>
+            <p className="mt-1 text-2xl font-normal">{totals.count}</p>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="shadow-card">
+      <Card className="">
         <CardContent className="grid gap-3 p-4 sm:grid-cols-2 md:grid-cols-3">
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="search">Buscar</Label>
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -195,7 +197,7 @@ function AdminExpensesPage() {
               />
             </div>
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="f-category">Categoría</Label>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger id="f-category">
@@ -211,7 +213,7 @@ function AdminExpensesPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="f-month">Mes</Label>
             <Select value={monthFilter} onValueChange={setMonthFilter}>
               <SelectTrigger id="f-month">
@@ -230,10 +232,10 @@ function AdminExpensesPage() {
         </CardContent>
       </Card>
 
-      <Card className="shadow-card">
+      <Card className="">
         <CardContent className="p-0 overflow-x-auto">
           {loading ? (
-            <div className="space-y-2 p-6">
+            <div className="flex flex-col gap-2 p-6">
               {Array.from({ length: 6 }).map((_, i) => (
                 <Skeleton key={i} className="h-10 w-full" />
               ))}
@@ -252,89 +254,33 @@ function AdminExpensesPage() {
             </div>
           ) : (
             <>
-            <ul className="divide-y divide-border md:hidden">
-              {filtered.map((r) => (
-                <li
-                  key={`m-${r.id}`}
-                  className="cursor-pointer space-y-1 p-4"
-                  onClick={() => setEditing(r)}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">{r.concept ?? "—"}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {r.entry_date ? new Date(r.entry_date).toLocaleDateString("es-ES") : (r.month ?? "—")}
-                        {r.category ? ` · ${r.category}` : ""}
-                      </p>
-                    </div>
-                    <span className="shrink-0 font-semibold tabular-nums">
-                      {r.amount_cents != null ? formatEur(r.amount_cents) : "—"}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                    <span>{r.method ?? "—"}{r.provider ? ` · ${r.provider}` : ""}</span>
-                    <div className="flex gap-1">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditing(r);
-                        }}
-                        aria-label="Editar gasto"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeleting(r);
-                        }}
-                        aria-label="Eliminar gasto"
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-            <div className="hidden md:block">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Categoría</TableHead>
-                  <TableHead>Concepto</TableHead>
-                  <TableHead className="hidden lg:table-cell">Proveedor</TableHead>
-                  <TableHead className="text-right">Importe (€)</TableHead>
-                  <TableHead className="hidden text-right sm:table-cell">IVA sop.</TableHead>
-                  <TableHead>Método</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+              <ul className="divide-y divide-border md:hidden">
                 {filtered.map((r) => (
-                  <TableRow key={r.id} className="cursor-pointer" onClick={() => setEditing(r)}>
-                    <TableCell className="whitespace-nowrap text-muted-foreground">
-                      {r.entry_date ? new Date(r.entry_date).toLocaleDateString("es-ES") : (r.month ?? "—")}
-                    </TableCell>
-                    <TableCell>{r.category ?? "—"}</TableCell>
-                    <TableCell className="font-medium">{r.concept ?? "—"}</TableCell>
-                    <TableCell className="hidden text-muted-foreground lg:table-cell">
-                      {r.provider ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-right font-semibold">
-                      {r.amount_cents != null ? formatEur(r.amount_cents) : "—"}
-                    </TableCell>
-                    <TableCell className="hidden text-right text-muted-foreground sm:table-cell">
-                      {r.vat_cents != null ? formatEur(r.vat_cents) : "—"}
-                    </TableCell>
-                    <TableCell>{r.method ?? "—"}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
+                  <li
+                    key={`m-${r.id}`}
+                    className="flex flex-col cursor-pointer gap-1.5 p-4"
+                    onClick={() => setEditing(r)}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{r.concept ?? "—"}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {r.entry_date
+                            ? new Date(r.entry_date).toLocaleDateString("es-ES")
+                            : (r.month ?? "—")}
+                          {r.category ? ` · ${r.category}` : ""}
+                        </p>
+                      </div>
+                      <span className="shrink-0 font-normal tabular-nums">
+                        {r.amount_cents != null ? formatEur(r.amount_cents) : "—"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                      <span>
+                        {r.method ?? "—"}
+                        {r.provider ? ` · ${r.provider}` : ""}
+                      </span>
+                      <div className="flex gap-1">
                         <Button
                           size="sm"
                           variant="ghost"
@@ -358,12 +304,75 @@ function AdminExpensesPage() {
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </div>
+                  </li>
                 ))}
-              </TableBody>
-            </Table>
-            </div>
+              </ul>
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead>Categoría</TableHead>
+                      <TableHead>Concepto</TableHead>
+                      <TableHead className="hidden lg:table-cell">Proveedor</TableHead>
+                      <TableHead className="text-right">Importe (€)</TableHead>
+                      <TableHead className="hidden text-right sm:table-cell">IVA sop.</TableHead>
+                      <TableHead>Método</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.map((r) => (
+                      <TableRow key={r.id} className="cursor-pointer" onClick={() => setEditing(r)}>
+                        <TableCell className="whitespace-nowrap text-muted-foreground">
+                          {r.entry_date
+                            ? new Date(r.entry_date).toLocaleDateString("es-ES")
+                            : (r.month ?? "—")}
+                        </TableCell>
+                        <TableCell>{r.category ?? "—"}</TableCell>
+                        <TableCell className="font-medium">{r.concept ?? "—"}</TableCell>
+                        <TableCell className="hidden text-muted-foreground lg:table-cell">
+                          {r.provider ?? "—"}
+                        </TableCell>
+                        <TableCell className="text-right font-normal">
+                          {r.amount_cents != null ? formatEur(r.amount_cents) : "—"}
+                        </TableCell>
+                        <TableCell className="hidden text-right text-muted-foreground sm:table-cell">
+                          {r.vat_cents != null ? formatEur(r.vat_cents) : "—"}
+                        </TableCell>
+                        <TableCell>{r.method ?? "—"}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditing(r);
+                              }}
+                              aria-label="Editar gasto"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleting(r);
+                              }}
+                              aria-label="Eliminar gasto"
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </>
           )}
         </CardContent>
@@ -521,40 +530,77 @@ function ExpenseFormSheet({
           <SheetTitle>{mode === "create" ? "Nuevo gasto" : "Editar gasto"}</SheetTitle>
           <SheetDescription>Registra un coste. Los importes se guardan en euros.</SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4 px-4 pb-4">
+        <form onSubmit={handleSubmit} className="flex flex-col mt-6 gap-4 px-4 pb-4">
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="g_date">Fecha</Label>
-              <Input id="g_date" type="date" value={entryDate} onChange={(e) => setEntryDate(e.target.value)} />
+              <Input
+                id="g_date"
+                type="date"
+                value={entryDate}
+                onChange={(e) => setEntryDate(e.target.value)}
+              />
             </div>
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="g_month">Mes</Label>
-              <Input id="g_month" value={month} onChange={(e) => setMonth(e.target.value)} placeholder="Ej. JUNIO" />
+              <Input
+                id="g_month"
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
+                placeholder="Ej. JUNIO"
+              />
             </div>
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="g_category">Categoría</Label>
-            <Input id="g_category" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Ej. Materiales, Alquiler, Horno / Cocción…" />
+            <Input
+              id="g_category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="Ej. Materiales, Alquiler, Horno / Cocción…"
+            />
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="g_concept">Concepto</Label>
-            <Input id="g_concept" value={concept} onChange={(e) => setConcept(e.target.value)} placeholder="Ej. Arcilla, Cocción tanda 1…" />
+            <Input
+              id="g_concept"
+              value={concept}
+              onChange={(e) => setConcept(e.target.value)}
+              placeholder="Ej. Arcilla, Cocción tanda 1…"
+            />
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="g_provider">Proveedor</Label>
-            <Input id="g_provider" value={provider} onChange={(e) => setProvider(e.target.value)} placeholder="Opcional" />
+            <Input
+              id="g_provider"
+              value={provider}
+              onChange={(e) => setProvider(e.target.value)}
+              placeholder="Opcional"
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="g_amount">Importe (€)</Label>
-              <Input id="g_amount" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="30,00" />
+              <Input
+                id="g_amount"
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="30,00"
+              />
             </div>
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="g_vat">IVA soportado (€)</Label>
-              <Input id="g_vat" inputMode="decimal" value={vat} onChange={(e) => setVat(e.target.value)} placeholder="6,30" />
+              <Input
+                id="g_vat"
+                inputMode="decimal"
+                value={vat}
+                onChange={(e) => setVat(e.target.value)}
+                placeholder="6,30"
+              />
             </div>
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="g_method">Método</Label>
             <Select value={method} onValueChange={setMethod}>
               <SelectTrigger id="g_method">
@@ -568,9 +614,15 @@ function ExpenseFormSheet({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="g_notes">Notas</Label>
-            <Textarea id="g_notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notas opcionales…" rows={3} />
+            <Textarea
+              id="g_notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Notas opcionales…"
+              rows={3}
+            />
           </div>
           <SheetFooter className="px-0">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>

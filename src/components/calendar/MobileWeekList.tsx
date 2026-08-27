@@ -31,18 +31,18 @@ export function MobileWeekList({ reference, classes, onSelectClass, selectedIds 
 
   if (days.length === 0) {
     return (
-      <div className="rounded-xl border border-border bg-surface p-6 text-center text-sm text-muted-foreground shadow-card">
+      <div className="rounded-none border border-border bg-surface p-6 text-center text-sm text-muted-foreground">
         No hay clases programadas este mes.
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       {days.map((day) => (
         <section key={day}>
           <h3 className="text-label mb-2 capitalize">{formatLongDate(day)}</h3>
-          <ul className="space-y-2">
+          <ul className="flex flex-col gap-2">
             {(grouped.get(day) ?? []).map((c) => {
               const level = capacityLevel(c.booked_count, c.capacity_max);
               const cancelled = c.status !== "scheduled";
@@ -53,7 +53,7 @@ export function MobileWeekList({ reference, classes, onSelectClass, selectedIds 
                     type="button"
                     onClick={() => onSelectClass(c)}
                     className={[
-                      "flex w-full items-center gap-3 rounded-xl border p-3 text-left shadow-card transition-colors",
+                      "flex w-full items-center gap-3 rounded-none border p-3 text-left transition-colors",
                       picked
                         ? "border-primary bg-primary/10"
                         : "border-border bg-surface hover:bg-accent",
@@ -67,7 +67,7 @@ export function MobileWeekList({ reference, classes, onSelectClass, selectedIds 
                       aria-hidden
                     />
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-semibold">
+                      <div className="text-sm font-normal">
                         {formatTimeRange(c.start_time, c.end_time)}
                       </div>
                       <div className="text-xs text-muted-foreground">

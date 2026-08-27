@@ -5,21 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { withoutClosedDates } from "@/lib/closures";
 import { createEnrollmentRequest } from "@/lib/requests";
 import { startOfMonth, toIsoDate, DEFAULT_CALENDAR_MONTH } from "@/lib/calendar";
-import {
-  PublicClassCalendar,
-  type UpcomingClass,
-} from "@/components/PublicClassCalendar";
+import { PublicClassCalendar, type UpcomingClass } from "@/components/PublicClassCalendar";
 
 import { z } from "zod";
 
@@ -137,16 +128,15 @@ function SolicitarPage() {
 
   if (done) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-5 py-10">
-        <Card className="w-full max-w-md text-center shadow-card">
+      <div className="mx-auto flex min-h-screen w-full max-w-[1180px] items-center justify-center px-4 py-24 sm:px-8">
+        <Card className="w-full max-w-md text-center">
           <CardHeader>
             <CardTitle className="text-h2">¡Solicitud recibida!</CardTitle>
             <CardDescription>
-              Hemos recibido tu solicitud. Cande la revisará y te escribirá para
-              confirmar tu plaza.
+              Hemos recibido tu solicitud. Cande la revisará y te escribirá para confirmar tu plaza.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="flex flex-col gap-3">
             <Button asChild className="w-full" size="lg">
               <Link to="/">Volver al inicio</Link>
             </Button>
@@ -160,14 +150,14 @@ function SolicitarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background px-5 py-10">
+    <div className="mx-auto w-full max-w-[1180px] px-4 py-24 sm:px-8">
       <div className="mx-auto w-full max-w-2xl">
         <div className="mb-6">
           <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
             ← Cazú Ceramics
           </Link>
         </div>
-        <Card className="shadow-card">
+        <Card className="">
           <CardHeader>
             <CardTitle className="text-h2">
               {isTrial
@@ -187,19 +177,18 @@ function SolicitarPage() {
                 </>
               ) : isRegular ? (
                 <>
-                  Elige el plan que mejor se adapte a tu ritmo, consulta los horarios y
-                  reserva tus clases.
+                  Elige el plan que mejor se adapte a tu ritmo, consulta los horarios y reserva tus
+                  clases.
                 </>
               ) : (
                 <>
-                  En Cazú Ceramics trabajamos en grupos reducidos, con atención
-                  personalizada y&nbsp; con la calma que pide la cerámica. Solicita tu
-                  plaza y te confirmaremos.
+                  En Cazú Ceramics trabajamos en grupos reducidos, con atención personalizada
+                  y&nbsp; con la calma que pide la cerámica. Solicita tu plaza y te confirmaremos.
                 </>
               )}
             </CardDescription>
             {isRegular ? (
-              <ul className="mt-3 grid gap-1.5 rounded-xl border border-border bg-background p-3 text-sm sm:grid-cols-2">
+              <ul className="mt-3 grid gap-1.5 rounded-none border border-border bg-background p-3 text-sm sm:grid-cols-2">
                 {PLAN_LINES.map((p) => (
                   <li key={p} className="tabular-nums">
                     {p}
@@ -209,9 +198,9 @@ function SolicitarPage() {
             ) : null}
           </CardHeader>
           <CardContent>
-            <form className="space-y-5" onSubmit={handleSubmit}>
+            <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="name">Nombre</Label>
                   <Input
                     id="name"
@@ -220,7 +209,7 @@ function SolicitarPage() {
                     onChange={(e) => setName(e.target.value)}
                   />
                 </div>
-                <div className="space-y-1.5">
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="surname">Apellido</Label>
                   <Input
                     id="surname"
@@ -230,7 +219,7 @@ function SolicitarPage() {
                   />
                 </div>
               </div>
-              <div className="space-y-1.5">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="email">Correo electrónico</Label>
                 <Input
                   id="email"
@@ -240,7 +229,7 @@ function SolicitarPage() {
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
-              <div className="space-y-1.5">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="whatsapp">WhatsApp</Label>
                 <Input
                   id="whatsapp"
@@ -252,7 +241,7 @@ function SolicitarPage() {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <Label>Clases que te interesan</Label>
                 <p className="text-xs text-muted-foreground">
                   Marca al menos una. Cande confirmará la disponibilidad final.
@@ -272,7 +261,7 @@ function SolicitarPage() {
                 />
               </div>
 
-              <div className="space-y-1.5">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="message">Mensaje (opcional)</Label>
                 <Textarea
                   id="message"

@@ -35,9 +35,11 @@ export function parseReference(dateParam?: string): Date {
   return new Date(DEFAULT_CALENDAR_MONTH);
 }
 
-
 /** week → Mon..Sun; day → single day; month → 6-week grid range. */
-export function rangeForView(view: CalendarView, reference: Date): { startIso: string; endIso: string } {
+export function rangeForView(
+  view: CalendarView,
+  reference: Date,
+): { startIso: string; endIso: string } {
   if (view === "week") return weekRange(reference);
   if (view === "day") return dayRange(reference);
   return monthGridRange(reference);

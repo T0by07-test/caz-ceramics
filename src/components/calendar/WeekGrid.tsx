@@ -31,14 +31,14 @@ export function WeekGrid({ reference, classes, onSelectClass, selectedIds }: Pro
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-border bg-surface shadow-card">
+    <div className="overflow-x-auto rounded-none border border-border bg-surface">
       <div className="min-w-[760px]">
         {/* Header: time gutter + 7 day columns */}
         <div className="grid grid-cols-8 border-b border-border">
           <div className="px-2 py-2" />
           {days.map((d, i) => (
             <div key={d.iso} className="px-2 py-2 text-center">
-              <div className="text-label uppercase">{ES_WEEKDAYS_SHORT[i]}</div>
+              <div className="text-label">{ES_WEEKDAYS_SHORT[i]}</div>
               <span
                 className={[
                   "mx-auto mt-1 inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-full text-xs font-medium",
@@ -62,7 +62,10 @@ export function WeekGrid({ reference, classes, onSelectClass, selectedIds }: Pro
                 (c) => Number(c.start_time.slice(0, 2)) === h,
               );
               return (
-                <div key={d.iso + h} className="min-h-[48px] space-y-1 border-l border-border p-1">
+                <div
+                  key={d.iso + h}
+                  className="flex flex-col min-h-[48px] gap-1.5 border-l border-border p-1"
+                >
                   {cellClasses.map((c) => {
                     const level = capacityLevel(c.booked_count, c.capacity_max);
                     const cancelled = c.status !== "scheduled";
@@ -100,9 +103,7 @@ export function WeekGrid({ reference, classes, onSelectClass, selectedIds }: Pro
                             {c.audience === "kids" ? " · niños" : ""}
                           </span>
                         ) : null}
-
                       </button>
-
                     );
                   })}
                 </div>

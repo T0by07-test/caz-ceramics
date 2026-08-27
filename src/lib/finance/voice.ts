@@ -38,7 +38,8 @@ export function validateVoiceForm(f: VoiceExtracted): string[] {
   if (!f.month) errors.push("Mes requerido");
   else if (!(MONTHS as readonly string[]).includes(f.month)) errors.push("Mes no válido");
   if (!f.entry_date) errors.push("Fecha requerida");
-  else if (!/^\d{4}-\d{2}-\d{2}$/.test(f.entry_date)) errors.push("Formato de fecha inválido (YYYY-MM-DD)");
+  else if (!/^\d{4}-\d{2}-\d{2}$/.test(f.entry_date))
+    errors.push("Formato de fecha inválido (YYYY-MM-DD)");
   if (f.status === "Pagado") {
     if (f.amount_cents === null) errors.push("Importe requerido para pagos cobrados");
     if (f.amount_cents !== null && f.amount_cents < 0) errors.push("Importe no puede ser negativo");

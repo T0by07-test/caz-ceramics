@@ -5,7 +5,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import type { CalendarView } from "@/lib/calendar-view";
 import type { ClassWithCount } from "@/hooks/useMonthClasses";
 
-
 type Props = {
   view: CalendarView;
   reference: Date;
@@ -40,7 +39,6 @@ export function CalendarBoard({
 
   // Week view keeps its own horizontal scroll on phones; month view is compact.
 
-
   if (view === "week") {
     return (
       <WeekGrid
@@ -65,7 +63,7 @@ export function CalendarBoard({
 function BoardSkeleton({ view }: { view: CalendarView }) {
   if (view === "month") {
     return (
-      <div className="grid grid-cols-7 gap-px rounded-xl border border-border bg-border p-px shadow-card">
+      <div className="grid grid-cols-7 gap-px rounded-none border border-border bg-border p-px">
         {Array.from({ length: 42 }).map((_, i) => (
           <div key={i} className="h-[110px] animate-pulse bg-surface" />
         ))}
@@ -73,9 +71,9 @@ function BoardSkeleton({ view }: { view: CalendarView }) {
     );
   }
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-2">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="h-16 animate-pulse rounded-xl border border-border bg-surface" />
+        <div key={i} className="h-16 animate-pulse rounded-none border border-border bg-surface" />
       ))}
     </div>
   );

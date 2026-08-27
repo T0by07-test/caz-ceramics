@@ -1,4 +1,4 @@
-import * as React from 'react'
+import * as React from "react";
 
 import {
   Body,
@@ -10,13 +10,13 @@ import {
   Preview,
   Section,
   Text,
-} from '@react-email/components'
+} from "@react-email/components";
 
-import { accent, button, container, footer, h1, main, text } from './theme'
+import { accent, button, container, footer, h1, main, text } from "./theme";
 
 interface RecoveryEmailProps {
-  siteName: string
-  confirmationUrl: string
+  siteName: string;
+  confirmationUrl: string;
 }
 
 export const RecoveryEmail = ({ siteName, confirmationUrl }: RecoveryEmailProps) => (
@@ -28,7 +28,7 @@ export const RecoveryEmail = ({ siteName, confirmationUrl }: RecoveryEmailProps)
         <Section style={accent} />
         <Heading style={h1}>Restablece tu contraseña</Heading>
         <Text style={text}>
-          Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en{' '}
+          Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en{" "}
           <strong>{siteName}</strong>.
         </Text>
         <Text style={text}>Haz clic en el botón para elegir una contraseña nueva:</Text>
@@ -44,6 +44,6 @@ export const RecoveryEmail = ({ siteName, confirmationUrl }: RecoveryEmailProps)
       </Container>
     </Body>
   </Html>
-)
+);
 
-export default RecoveryEmail
+export default RecoveryEmail;

@@ -1,4 +1,4 @@
-import * as React from 'react'
+import * as React from "react";
 
 import {
   Body,
@@ -9,12 +9,12 @@ import {
   Preview,
   Section,
   Text,
-} from '@react-email/components'
+} from "@react-email/components";
 
-import { accent, code, container, footer, h1, main, text } from './theme'
+import { accent, code, container, footer, h1, main, text } from "./theme";
 
 interface ReauthenticationEmailProps {
-  token: string
+  token: string;
 }
 
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
@@ -35,6 +35,6 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
       </Container>
     </Body>
   </Html>
-)
+);
 
-export default ReauthenticationEmail
+export default ReauthenticationEmail;

@@ -4,13 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { redeemInvite, enrollFromInvite, type RedeemInviteResult } from "@/lib/requests";
 import { formatLongDate, formatTimeRange } from "@/lib/calendar";
@@ -87,8 +81,7 @@ function UnirsePage() {
       // If email confirmation is required there may be no session yet.
       if (!data.session) {
         toast.success("Cuenta creada", {
-          description:
-            "Revisa tu correo para confirmar. Después podrás entrar y verás tus clases.",
+          description: "Revisa tu correo para confirmar. Después podrás entrar y verás tus clases.",
         });
         setSubmitting(false);
         return;
@@ -115,7 +108,7 @@ function UnirsePage() {
           <CardTitle className="text-h2">Cargando invitación…</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             {Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
@@ -129,10 +122,7 @@ function UnirsePage() {
   }
 
   const invalid =
-    loadError !== null ||
-    invite === null ||
-    invite.status !== "pending" ||
-    !invite.email;
+    loadError !== null || invite === null || invite.status !== "pending" || !invite.email;
 
   if (invalid) {
     const description =
@@ -149,7 +139,7 @@ function UnirsePage() {
           <CardTitle className="text-h2">Invitación no válida</CardTitle>
           <CardDescription>{description}</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="flex flex-col gap-3">
           <Button asChild className="w-full" size="lg">
             <Link to="/login">Iniciar sesión</Link>
           </Button>
@@ -172,8 +162,8 @@ function UnirsePage() {
       <CardContent>
         {invite.classes.length > 0 ? (
           <div className="mb-5 rounded-lg border border-border bg-surface p-4">
-            <div className="text-label uppercase">Tus clases</div>
-            <ul className="mt-2 space-y-1.5">
+            <div className="text-label">Tus clases</div>
+            <ul className="flex flex-col mt-2 gap-2">
               {invite.classes.map((c) => (
                 <li key={c.id} className="text-sm">
                   <span className="font-medium capitalize">{formatLongDate(c.date)}</span>
@@ -187,22 +177,17 @@ function UnirsePage() {
           </div>
         ) : null}
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="space-y-1.5">
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+          <div className="flex flex-col gap-2">
             <Label htmlFor="email">Correo electrónico</Label>
             <Input id="email" type="email" value={invite.email ?? ""} disabled />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="name">Nombre</Label>
-              <Input
-                id="name"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
+              <Input id="name" required value={name} onChange={(e) => setName(e.target.value)} />
             </div>
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="surname">Apellido</Label>
               <Input
                 id="surname"
@@ -212,7 +197,7 @@ function UnirsePage() {
               />
             </div>
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="whatsapp">WhatsApp</Label>
             <Input
               id="whatsapp"
@@ -223,7 +208,7 @@ function UnirsePage() {
               onChange={(e) => setWhatsapp(e.target.value)}
             />
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="password">Contraseña</Label>
             <Input
               id="password"
@@ -245,8 +230,8 @@ function UnirsePage() {
 
 function CenteredCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-5 py-10">
-      <Card className="w-full max-w-md shadow-card">{children}</Card>
+    <div className="mx-auto flex min-h-screen w-full max-w-[1180px] items-center justify-center px-4 py-24 sm:px-8">
+      <Card className="w-full max-w-md">{children}</Card>
     </div>
   );
 }

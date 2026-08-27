@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  EmbeddedCheckoutProvider,
-  EmbeddedCheckout,
-} from "@stripe/react-stripe-js";
+import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { getStripe } from "@/lib/stripe";
@@ -23,7 +20,6 @@ type Props = {
   notice?: string;
 };
 
-
 function isInIframe() {
   try {
     return window.self !== window.top;
@@ -40,7 +36,6 @@ export function StripeCheckoutDialog({
   fetchHostedUrl,
   notice,
 }: Props) {
-
   // Cache the clientSecret for as long as the dialog stays open. EmbeddedCheckoutProvider
   // throws "you cannot change the client secret after creation" if the function reference
   // changes between renders, so we resolve once per open and remount on close.
@@ -101,16 +96,15 @@ export function StripeCheckoutDialog({
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         {notice ? (
-          <div className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-foreground">
+          <div className="rounded-none border border-border bg-muted/40 px-4 py-3 text-sm text-foreground">
             {notice}
           </div>
         ) : null}
         <div id="checkout" className="min-h-[400px]">
-
           {error ? (
             <p className="text-sm text-destructive">{error}</p>
           ) : framed && fetchHostedUrl ? (
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               <p className="text-sm text-muted-foreground">
                 El pago seguro se abre en una pestaña nueva. Si no se ha abierto, usa el botón.
               </p>

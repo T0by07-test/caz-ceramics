@@ -36,7 +36,6 @@ export function addMonths(d: Date, n: number): Date {
 /** Default month shown in public and student calendars (September 2026). */
 export const DEFAULT_CALENDAR_MONTH = new Date(2026, 8, 1);
 
-
 export function toIsoDate(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -102,7 +101,6 @@ export function formatTimeRange(start: string, end: string): string {
 export function teacherShort(teacher?: string | null): string {
   return teacher ? `P. ${teacher}` : "";
 }
-
 
 export function formatLongDate(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);

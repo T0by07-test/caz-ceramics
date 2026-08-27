@@ -1,5 +1,13 @@
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { Calendar, BookmarkCheck, RotateCcw, User, LogOut, CreditCard, MoreHorizontal } from "lucide-react";
+import {
+  Calendar,
+  BookmarkCheck,
+  RotateCcw,
+  User,
+  LogOut,
+  CreditCard,
+  MoreHorizontal,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -39,31 +47,30 @@ export function AppShell({ brand, items }: Props) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Top bar */}
-      <header className="sticky top-0 z-30 border-b border-border bg-surface/90 backdrop-blur">
-        <div className="mx-auto grid h-14 w-full max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 sm:px-5 lg:px-8">
+      <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
+        <div className="mx-auto grid h-20 w-full max-w-[1180px] grid-cols-[minmax(0,1fr)_auto] items-center gap-6 px-4 sm:px-8">
           <div className="flex min-w-0 items-center gap-2">
             <img src={logoAsset.url} alt="Cazú Ceramics" className="h-12 w-auto shrink-0" />
-            <span className="text-h3 truncate">{brand}</span>
+            <span className="truncate font-display text-[15px] uppercase tracking-[0.16em] text-foreground">
+              {brand}
+            </span>
           </div>
 
           <button
             type="button"
             onClick={handleSignOut}
-            className="inline-flex shrink-0 items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="inline-flex shrink-0 items-center gap-2 font-display text-[13px] uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:text-foreground"
           >
             <LogOut className="h-4 w-4" />
             <span className="hidden sm:inline">Salir</span>
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
-              <User className="h-4 w-4" />
-            </span>
           </button>
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-7xl">
+      <div className="mx-auto flex w-full max-w-[1180px]">
         {/* Desktop sidebar */}
-        <aside className="hidden lg:flex lg:w-60 lg:flex-col lg:border-r lg:border-border lg:px-3 lg:py-6">
-          <nav className="flex flex-col gap-1">
+        <aside className="hidden lg:flex lg:w-60 lg:flex-col lg:border-r lg:border-border lg:py-12 lg:pr-8">
+          <nav className="flex flex-col gap-6">
             {items.map((item) => {
               const active =
                 pathname === item.to || (item.to !== "/" && pathname.startsWith(item.to));
@@ -72,10 +79,8 @@ export function AppShell({ brand, items }: Props) {
                   key={item.to}
                   to={item.to}
                   className={[
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                    active
-                      ? "bg-secondary text-foreground"
-                      : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                    "flex items-center gap-3 pl-8 font-display text-[13px] uppercase tracking-[0.16em] transition-colors",
+                    active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                   ].join(" ")}
                 >
                   <item.icon className="h-4 w-4" />
@@ -84,11 +89,11 @@ export function AppShell({ brand, items }: Props) {
               );
             })}
           </nav>
-          <div className="mt-auto pt-6">
+          <div className="mt-auto border-t border-border pl-8 pt-8">
             <button
               type="button"
               onClick={handleSignOut}
-              className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="flex w-full items-center gap-3 font-display text-[13px] uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:text-foreground"
             >
               <LogOut className="h-4 w-4" />
               Salir
@@ -97,13 +102,13 @@ export function AppShell({ brand, items }: Props) {
         </aside>
 
         {/* Main content */}
-        <main className="min-w-0 flex-1 px-5 pb-24 pt-6 lg:px-8 lg:pb-10">
+        <main className="min-w-0 flex-1 px-4 pb-24 pt-12 sm:px-8 lg:pb-24 lg:pl-12">
           <Outlet />
         </main>
       </div>
 
       {/* Mobile bottom nav */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background lg:hidden">
         <ul
           className="mx-auto grid max-w-md"
           style={{ gridTemplateColumns: `repeat(${mobileCellCount}, minmax(0, 1fr))` }}
@@ -116,7 +121,7 @@ export function AppShell({ brand, items }: Props) {
                 <Link
                   to={item.to}
                   className={[
-                    "flex flex-col items-center gap-1 px-1 py-2.5 text-[11px] font-medium transition-colors",
+                    "flex flex-col items-center gap-1.5 px-1 py-3 font-display text-[11px] uppercase tracking-[0.12em] transition-colors",
                     active ? "text-primary" : "text-muted-foreground hover:text-foreground",
                   ].join(" ")}
                 >
@@ -133,7 +138,7 @@ export function AppShell({ brand, items }: Props) {
                   <button
                     type="button"
                     className={[
-                      "flex w-full flex-col items-center gap-1 px-1 py-2.5 text-[11px] font-medium transition-colors",
+                      "flex w-full flex-col items-center gap-1.5 px-1 py-3 font-display text-[11px] uppercase tracking-[0.12em] transition-colors",
                       overflowItems.some(
                         (i) => pathname === i.to || (i.to !== "/" && pathname.startsWith(i.to)),
                       )
@@ -146,25 +151,24 @@ export function AppShell({ brand, items }: Props) {
                     <span>Más</span>
                   </button>
                 </SheetTrigger>
-                <SheetContent side="bottom" className="rounded-t-2xl">
+                <SheetContent side="bottom" className="rounded-t-none">
                   <SheetHeader>
                     <SheetTitle>Más</SheetTitle>
                   </SheetHeader>
                   <ul className="mt-4 grid grid-cols-2 gap-2 pb-4">
                     {overflowItems.map((item) => {
                       const active =
-                        pathname === item.to ||
-                        (item.to !== "/" && pathname.startsWith(item.to));
+                        pathname === item.to || (item.to !== "/" && pathname.startsWith(item.to));
                       return (
                         <li key={item.to}>
                           <Link
                             to={item.to}
                             onClick={() => setMoreOpen(false)}
                             className={[
-                              "flex items-center gap-3 rounded-lg border border-border px-3 py-3 text-sm font-medium transition-colors",
+                              "flex items-center gap-3 border-t border-border pt-4 font-display text-[13px] uppercase tracking-[0.16em] transition-colors",
                               active
-                                ? "bg-secondary text-foreground"
-                                : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                                ? "text-foreground"
+                                : "text-muted-foreground hover:text-foreground",
                             ].join(" ")}
                           >
                             <item.icon className="h-4 w-4 shrink-0" />

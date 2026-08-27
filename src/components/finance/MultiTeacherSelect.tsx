@@ -39,7 +39,7 @@ export function MultiTeacherSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-2" align="start">
-        <div className="space-y-0.5">
+        <div className="flex flex-col gap-1">
           {options.map((t) => (
             <label
               key={t}

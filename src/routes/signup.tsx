@@ -4,13 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth, isStaff } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -20,8 +14,7 @@ export const Route = createFileRoute("/signup")({
       { title: "Crear cuenta — Cazu Ceramics" },
       {
         name: "description",
-        content:
-          "Crea tu cuenta de Cazu Ceramics con tu correo y contraseña para reservar clases.",
+        content: "Crea tu cuenta de Cazu Ceramics con tu correo y contraseña para reservar clases.",
       },
       { property: "og:title", content: "Crear cuenta — Cazu Ceramics" },
       {
@@ -89,37 +82,27 @@ function SignupPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-5 py-10">
-      <Card className="w-full max-w-md shadow-card">
+    <div className="mx-auto flex min-h-screen w-full max-w-[1180px] items-center justify-center px-4 py-24 sm:px-8">
+      <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-h2">Crear cuenta</CardTitle>
           <CardDescription>
-            Regístrate con tu correo y contraseña para ver el calendario y reservar
-            tus clases.
+            Regístrate con tu correo y contraseña para ver el calendario y reservar tus clases.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="name">Nombre</Label>
-                <Input
-                  id="name"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
+                <Input id="name" required value={name} onChange={(e) => setName(e.target.value)} />
               </div>
-              <div className="space-y-1.5">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="surname">Apellido</Label>
-                <Input
-                  id="surname"
-                  value={surname}
-                  onChange={(e) => setSurname(e.target.value)}
-                />
+                <Input id="surname" value={surname} onChange={(e) => setSurname(e.target.value)} />
               </div>
             </div>
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="email">Correo electrónico</Label>
               <Input
                 id="email"
@@ -130,7 +113,7 @@ function SignupPage() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="password">Contraseña</Label>
               <Input
                 id="password"

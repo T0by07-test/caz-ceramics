@@ -25,10 +25,13 @@ export function MonthGrid({ reference, classes, onSelectClass, selectedIds }: Pr
   }
 
   return (
-    <div className="rounded-xl border border-border bg-surface shadow-card">
+    <div className="rounded-none border border-border bg-surface">
       <div className="grid grid-cols-7 border-b border-border">
         {ES_WEEKDAYS_SHORT.map((d) => (
-          <div key={d} className="px-1 py-2 text-center text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:text-label">
+          <div
+            key={d}
+            className="px-1 py-2 text-center text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:text-label"
+          >
             {d}
           </div>
         ))}
@@ -59,7 +62,7 @@ export function MonthGrid({ reference, classes, onSelectClass, selectedIds }: Pr
                   {cell.date.getDate()}
                 </span>
               </div>
-              <ul className="space-y-1">
+              <ul className="flex flex-col gap-1.5">
                 {dayClasses.map((c) => {
                   const level = capacityLevel(c.booked_count, c.capacity_max);
                   const cancelled = c.status !== "scheduled";
@@ -88,7 +91,7 @@ export function MonthGrid({ reference, classes, onSelectClass, selectedIds }: Pr
                             ].join(" ")}
                             aria-hidden
                           />
-                          <span className="text-[9px] font-semibold tabular-nums sm:text-xs">
+                          <span className="text-[9px] font-normal tabular-nums sm:text-xs">
                             {formatTime(c.start_time)}
                           </span>
                           <span className="ml-auto hidden shrink-0 tabular-nums text-xs text-muted-foreground sm:inline">
@@ -110,9 +113,6 @@ export function MonthGrid({ reference, classes, onSelectClass, selectedIds }: Pr
                             niños
                           </span>
                         ) : null}
-
-
-
                       </button>
                     </li>
                   );

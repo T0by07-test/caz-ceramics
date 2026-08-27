@@ -20,9 +20,7 @@ function getSpeechRecognitionConstructor(): (new () => AnySpeechRecognition) | n
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-export function useSpeechRecognition(
-  onResult: (transcript: string) => void,
-): UseSpeechRecognition {
+export function useSpeechRecognition(onResult: (transcript: string) => void): UseSpeechRecognition {
   const [state, setState] = useState<SpeechState>("idle");
   const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<AnySpeechRecognition | null>(null);
@@ -46,7 +44,9 @@ export function useSpeechRecognition(
 
     let errored = false;
 
-    recognition.onresult = (e: { results: { length: number; [i: number]: { [j: number]: { transcript: string } } } }) => {
+    recognition.onresult = (e: {
+      results: { length: number; [i: number]: { [j: number]: { transcript: string } } };
+    }) => {
       const parts: string[] = [];
       for (let i = 0; i < e.results.length; i++) {
         parts.push(e.results[i][0].transcript);

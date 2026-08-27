@@ -47,8 +47,8 @@ export const Route = createFileRoute("/admin/finanzas")({
   component: AdminFinanzasPage,
 });
 
-const COLOR_FACTURADO = "#d9b08c";
-const COLOR_NETO = "#7a9e7e";
+const COLOR_FACTURADO = "var(--chart-1)";
+const COLOR_NETO = "var(--chart-2)";
 const METHOD_LABEL: Record<string, string> = {
   T: "Tarjeta",
   E: "Efectivo",
@@ -57,11 +57,11 @@ const METHOD_LABEL: Record<string, string> = {
   "": "Sin registrar",
 };
 const METHOD_COLOR: Record<string, string> = {
-  T: "#5b8db8",
-  E: "#5a9e72",
-  B: "#8b6ba8",
-  R: "#e07848",
-  "": "#c8bfb5",
+  T: "var(--chart-1)",
+  E: "var(--chart-2)",
+  B: "var(--chart-3)",
+  R: "var(--chart-5)",
+  "": "var(--chart-4)",
 };
 
 const titleCase = (m: string) => m.charAt(0) + m.slice(1).toLowerCase();
@@ -107,9 +107,11 @@ function AdminFinanzasPage() {
       const k = r.method || "";
       acc.set(k, (acc.get(k) ?? 0) + (r.amount_cents ?? 0));
     }
-    return Array.from(acc, ([key, cents]) => ({ key, label: METHOD_LABEL[key] ?? key, cents })).sort(
-      (a, b) => b.cents - a.cents,
-    );
+    return Array.from(acc, ([key, cents]) => ({
+      key,
+      label: METHOD_LABEL[key] ?? key,
+      cents,
+    })).sort((a, b) => b.cents - a.cents);
   }, [ledger, currentMonth]);
 
   // Pending payments (all real months), most recent month first
@@ -139,10 +141,10 @@ function AdminFinanzasPage() {
   const media = totals.realMonths ? totals.beneficio_neto / totals.realMonths : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <span className="text-label uppercase">Finanzas</span>
+          <span className="text-label">Finanzas</span>
           <h1 className="text-h1 mt-1">Panel financiero</h1>
           <p className="text-body mt-2 text-muted-foreground">
             Ingresos, gastos y beneficio neto real. Impuestos orientativos — validar con el gestor.
@@ -165,9 +167,10 @@ function AdminFinanzasPage() {
       <ExportDialog open={exportOpen} onOpenChange={setExportOpen} defaultDataset="both" />
 
       {error && (
-        <Card className="border-destructive/40 shadow-card">
+        <Card className="border-destructive/40">
           <CardContent className="p-4 text-sm text-destructive">
-            No se pudieron cargar los datos: {error}. ¿Se aplicó la migración del módulo de finanzas?
+            No se pudieron cargar los datos: {error}. ¿Se aplicó la migración del módulo de
+            finanzas?
           </CardContent>
         </Card>
       )}
@@ -202,7 +205,7 @@ function AdminFinanzasPage() {
       {loading ? (
         <Skeleton className="h-72 w-full" />
       ) : realMonths.length === 0 ? (
-        <Card className="shadow-card">
+        <Card className="">
           <CardContent className="p-6">
             <EmptyState
               title="Aún no hay datos financieros"
@@ -214,7 +217,7 @@ function AdminFinanzasPage() {
         <>
           {/* Chart + pendientes */}
           <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-            <Card className="shadow-card">
+            <Card className="">
               <CardHeader>
                 <CardTitle className="text-h3">Facturado vs. beneficio neto</CardTitle>
                 <CardDescription>Por mes (solo meses con datos reales).</CardDescription>
@@ -242,7 +245,7 @@ function AdminFinanzasPage() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-card">
+            <Card className="">
               <CardHeader>
                 <CardTitle className="text-h3">Pendientes por cobrar</CardTitle>
                 <CardDescription>
@@ -251,9 +254,9 @@ function AdminFinanzasPage() {
               </CardHeader>
               <CardContent>
                 {pendientes.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Sin pendientes 🎉</p>
+                  <p className="text-sm text-muted-foreground">Sin pendientes</p>
                 ) : (
-                  <ul className="max-h-[230px] space-y-1 overflow-y-auto">
+                  <ul className="flex flex-col max-h-[230px] gap-1.5 overflow-y-auto">
                     {pendientes.slice(0, 30).map((r) => (
                       <li
                         key={r.id}
@@ -278,21 +281,23 @@ function AdminFinanzasPage() {
 
           {/* Category + method (latest real month) */}
           <div className="grid gap-4 lg:grid-cols-2">
-            <Card className="shadow-card">
+            <Card className="">
               <CardHeader>
                 <CardTitle className="text-h3">Ingresos por categoría</CardTitle>
-                <CardDescription>{currentMonth ? titleCase(currentMonth.month) : ""}</CardDescription>
+                <CardDescription>
+                  {currentMonth ? titleCase(currentMonth.month) : ""}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {cats.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Sin datos.</p>
                 ) : (
-                  <div className="space-y-2.5">
+                  <div className="flex flex-col gap-3">
                     {cats.map((c) => (
                       <div key={c.name}>
                         <div className="flex items-center justify-between text-sm">
                           <span>{c.name}</span>
-                          <span className="font-semibold">{formatEur(c.cents)}</span>
+                          <span className="font-normal">{formatEur(c.cents)}</span>
                         </div>
                         <div className="mt-1 h-1.5 w-full rounded-full bg-secondary">
                           <div
@@ -310,10 +315,12 @@ function AdminFinanzasPage() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-card">
+            <Card className="">
               <CardHeader>
                 <CardTitle className="text-h3">Método de pago</CardTitle>
-                <CardDescription>{currentMonth ? titleCase(currentMonth.month) : ""}</CardDescription>
+                <CardDescription>
+                  {currentMonth ? titleCase(currentMonth.month) : ""}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {methodData.length === 0 ? (
@@ -332,24 +339,24 @@ function AdminFinanzasPage() {
                             paddingAngle={2}
                           >
                             {methodData.map((m) => (
-                              <Cell key={m.key} fill={METHOD_COLOR[m.key] ?? "#c8bfb5"} />
+                              <Cell key={m.key} fill={METHOD_COLOR[m.key] ?? "var(--chart-4)"} />
                             ))}
                           </Pie>
                           <Tooltip formatter={(v: number) => formatEur(v)} />
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
-                    <ul className="space-y-1.5 text-sm">
+                    <ul className="flex flex-col gap-2 text-sm">
                       {methodData.map((m) => (
                         <li key={m.key} className="flex items-center justify-between gap-2">
                           <span className="flex items-center gap-2">
                             <span
                               className="inline-block h-2.5 w-2.5 rounded-full"
-                              style={{ backgroundColor: METHOD_COLOR[m.key] ?? "#c8bfb5" }}
+                              style={{ backgroundColor: METHOD_COLOR[m.key] ?? "var(--chart-4)" }}
                             />
                             {m.label}
                           </span>
-                          <span className="font-semibold">{formatEur(m.cents)}</span>
+                          <span className="font-normal">{formatEur(m.cents)}</span>
                         </li>
                       ))}
                     </ul>
@@ -360,7 +367,7 @@ function AdminFinanzasPage() {
           </div>
 
           {/* Commissions */}
-          <Card className="shadow-card">
+          <Card className="">
             <CardHeader>
               <CardTitle className="text-h3">Comisiones a profesoras</CardTitle>
               <CardDescription>
@@ -397,7 +404,7 @@ function AdminFinanzasPage() {
           </Card>
 
           {/* Monthly net table */}
-          <Card className="shadow-card">
+          <Card className="">
             <CardHeader>
               <CardTitle className="text-h3">Detalle mensual (neto real)</CardTitle>
             </CardHeader>
@@ -425,13 +432,15 @@ function AdminFinanzasPage() {
                         <td className="px-3 py-2 text-right">{formatEur(m.gastos)}</td>
                         <td className="px-3 py-2 text-right">{formatEur(m.iva_a_pagar)}</td>
                         <td className="px-3 py-2 text-right">{formatEur(m.irpf)}</td>
-                        <td className="px-3 py-2 text-right">{formatEur(m.comisiones_profesores)}</td>
-                        <td className="py-2 pl-3 text-right font-semibold text-success">
+                        <td className="px-3 py-2 text-right">
+                          {formatEur(m.comisiones_profesores)}
+                        </td>
+                        <td className="py-2 pl-3 text-right font-normal text-success">
                           {formatEur(m.beneficio_neto)}
                         </td>
                       </tr>
                     ))}
-                    <tr className="font-semibold">
+                    <tr className="font-normal">
                       <td className="py-2 pr-3">TOTAL</td>
                       <td className="px-3 py-2 text-right">{formatEur(totals.facturado)}</td>
                       <td className="px-3 py-2 text-right">—</td>
@@ -478,7 +487,7 @@ function KpiCard({
   const valueClass =
     accent === "success" ? "text-success" : accent === "warning" ? "text-warning" : "";
   return (
-    <Card className="shadow-card">
+    <Card className="">
       <CardHeader className="pb-2">
         <CardDescription className="text-label flex items-center gap-2 uppercase">
           {icon}
@@ -489,7 +498,9 @@ function KpiCard({
         {value === null ? (
           <Skeleton className="h-7 w-24" />
         ) : (
-          <p className={`text-2xl font-bold tracking-tight ${valueClass}`}>{value}</p>
+          <p className={`font-display text-[28px] font-extralight tracking-[0.02em] ${valueClass}`}>
+            {value}
+          </p>
         )}
       </CardContent>
     </Card>
@@ -508,7 +519,7 @@ function PctField({
   onChange: (v: string) => void;
 }) {
   return (
-    <div className="space-y-1.5">
+    <div className="flex flex-col gap-2">
       <Label htmlFor={id}>{label}</Label>
       <Input id={id} inputMode="decimal" value={value} onChange={(e) => onChange(e.target.value)} />
     </div>
@@ -592,16 +603,33 @@ function FinanceSettingsSheet({
             Impuestos y comisiones. Orientativo — validar con el gestor.
           </SheetDescription>
         </SheetHeader>
-        <div className="mt-6 space-y-4 px-4 pb-8">
+        <div className="flex flex-col mt-6 gap-4 px-4 pb-8">
           <PctField id="iva" label="IVA (%)" value={iva} onChange={setIva} />
           <PctField id="irpf" label="IRPF (%)" value={irpf} onChange={setIrpf} />
-          <PctField id="declared" label="% declarado (paga IVA/IRPF)" value={declared} onChange={setDeclared} />
-          <PctField id="feeRevolut" label="Comisión sobre método T (%)" value={feeRevolut} onChange={setFeeRevolut} />
-          <PctField id="feeBizum" label="Comisión sobre método B (%)" value={feeBizum} onChange={setFeeBizum} />
+          <PctField
+            id="declared"
+            label="% declarado (paga IVA/IRPF)"
+            value={declared}
+            onChange={setDeclared}
+          />
+          <PctField
+            id="feeRevolut"
+            label="Comisión sobre método T (%)"
+            value={feeRevolut}
+            onChange={setFeeRevolut}
+          />
+          <PctField
+            id="feeBizum"
+            label="Comisión sobre método B (%)"
+            value={feeBizum}
+            onChange={setFeeBizum}
+          />
           {rates.length > 0 && (
             <div className="border-t border-border pt-4">
-              <p className="text-label mb-2 uppercase text-muted-foreground">Comisión por profesora</p>
-              <div className="space-y-3">
+              <p className="text-label mb-2 uppercase text-muted-foreground">
+                Comisión por profesora
+              </p>
+              <div className="flex flex-col gap-3">
                 {rates.map((r) => (
                   <PctField
                     key={r.teacher}

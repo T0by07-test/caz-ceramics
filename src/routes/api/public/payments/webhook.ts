@@ -62,7 +62,8 @@ async function handlePublicTrial(session: any) {
       name: name || "Sin nombre",
       surname: rest.join(" ") || "-",
       email: email ?? "",
-      message: `Clase de prueba pagada (${(amount / 100).toFixed(2)} €) · ${md.classDate ?? ""} ${md.classTime ?? ""}`.trim(),
+      message:
+        `Clase de prueba pagada (${(amount / 100).toFixed(2)} €) · ${md.classDate ?? ""} ${md.classTime ?? ""}`.trim(),
       status: "pending",
     })
     .select("id")
@@ -144,9 +145,10 @@ async function handleSessionCompleted(session: any) {
       "Alumna";
     await recordLedgerIncome({
       studentName,
-      item: purpose === "plan"
-        ? "Plan mensual"
-        : `${classCount} ${classCount === 1 ? "clase" : "clases"}`,
+      item:
+        purpose === "plan"
+          ? "Plan mensual"
+          : `${classCount} ${classCount === 1 ? "clase" : "clases"}`,
       category: "Clases",
       method: md.paymentMethod === "bizum" ? "B" : "T",
       amountCents: amountForLedger,

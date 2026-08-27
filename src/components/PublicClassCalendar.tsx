@@ -13,7 +13,6 @@ import {
   toIsoDate,
 } from "@/lib/calendar";
 
-
 export type UpcomingClass = {
   id: string;
   date: string;
@@ -58,7 +57,7 @@ export function PublicClassCalendar({
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
-        <div className="text-sm font-semibold capitalize">{formatMonthTitle(monthRef)}</div>
+        <div className="text-sm font-normal capitalize">{formatMonthTitle(monthRef)}</div>
         <button
           type="button"
           aria-label="Mes siguiente"
@@ -141,7 +140,7 @@ export function PublicClassCalendar({
                 </div>
 
                 {/* Desktop: full chips with time and teacher */}
-                <ul className="hidden space-y-1 sm:block">
+                <ul className="flex flex-col hidden gap-1.5 sm:block">
                   {slots.map((c) => {
                     const checked = selectedIds.has(c.id);
                     return (
@@ -170,7 +169,7 @@ export function PublicClassCalendar({
                               ].join(" ")}
                               aria-hidden
                             />
-                            <span className="text-[11px] font-semibold tabular-nums">
+                            <span className="text-[11px] font-normal tabular-nums">
                               {formatTime(c.start_time)}
                             </span>
                           </span>
@@ -180,11 +179,8 @@ export function PublicClassCalendar({
                             </span>
                           ) : null}
                           {c.audience === "kids" ? (
-                            <span className="block text-[10px] text-muted-foreground">
-                              niños
-                            </span>
+                            <span className="block text-[10px] text-muted-foreground">niños</span>
                           ) : null}
-
                         </button>
                       </li>
                     );
@@ -197,22 +193,19 @@ export function PublicClassCalendar({
         </div>
       )}
 
-
       <div className="mt-3 border-t border-border pt-3">
         {!selectedDay ? (
           <p className="text-xs text-muted-foreground">
             Toca un día con disponibilidad para ver los horarios.
           </p>
         ) : daySlots.length === 0 ? (
-          <p className="text-xs text-muted-foreground">
-            No hay horarios disponibles ese día.
-          </p>
+          <p className="text-xs text-muted-foreground">No hay horarios disponibles ese día.</p>
         ) : (
           <div>
-            <div className="mb-2 text-xs font-semibold capitalize text-muted-foreground">
+            <div className="mb-2 text-xs font-normal capitalize text-muted-foreground">
               {formatLongDate(selectedDay)}
             </div>
-            <ul className="space-y-1.5">
+            <ul className="flex flex-col gap-2">
               {daySlots.map((c) => {
                 const checked = selectedIds.has(c.id);
                 return (
@@ -220,9 +213,7 @@ export function PublicClassCalendar({
                     <label
                       className={[
                         "flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors",
-                        checked
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:bg-muted/40",
+                        checked ? "border-primary bg-primary/5" : "border-border hover:bg-muted/40",
                       ].join(" ")}
                     >
                       <Checkbox checked={checked} onCheckedChange={() => onToggle(c.id)} />
@@ -231,9 +222,7 @@ export function PublicClassCalendar({
                           {formatTimeRange(c.start_time, c.end_time)}
                         </span>
                         {c.teacher ? (
-                          <span className="text-xs text-muted-foreground">
-                            Profe {c.teacher}
-                          </span>
+                          <span className="text-xs text-muted-foreground">Profe {c.teacher}</span>
                         ) : null}
                       </span>
                       {c.audience === "kids" ? (

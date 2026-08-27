@@ -29,7 +29,13 @@ export function deriveEstado(
   return "sin_actividad";
 }
 
-export type RecurringSlot = { id: string; weekday: number; start_time: string; active: boolean; note: string | null };
+export type RecurringSlot = {
+  id: string;
+  weekday: number;
+  start_time: string;
+  active: boolean;
+  note: string | null;
+};
 
 /** weekday 0=Mon..6=Sun + "HH:MM:SS" → "Lun 18:30". */
 export function formatSlot(weekday: number, startTime: string): string {

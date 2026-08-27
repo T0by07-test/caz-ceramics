@@ -57,8 +57,8 @@ function ResetPasswordPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-5 py-10">
-      <Card className="w-full max-w-md shadow-card">
+    <div className="mx-auto flex min-h-screen w-full max-w-[1180px] items-center justify-center px-4 py-24 sm:px-8">
+      <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-h2">Nueva contraseña</CardTitle>
           <CardDescription>
@@ -68,8 +68,8 @@ function ResetPasswordPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <div className="space-y-1.5">
+          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+            <div className="flex flex-col gap-2">
               <Label htmlFor="password">Nueva contraseña</Label>
               <Input
                 id="password"
@@ -82,7 +82,7 @@ function ResetPasswordPage() {
                 disabled={!ready}
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="confirm">Repite la contraseña</Label>
               <Input
                 id="confirm"

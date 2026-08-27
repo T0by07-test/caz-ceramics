@@ -108,7 +108,7 @@ function TransactionPicker<R extends TxRow>({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-muted-foreground">
           Seleccionado <span className="font-medium text-foreground">{formatEur(selCents)}</span> /{" "}
@@ -135,7 +135,7 @@ function TransactionPicker<R extends TxRow>({
           </button>
         </div>
       </div>
-      <div className="max-h-56 space-y-0.5 overflow-y-auto rounded-md border border-border p-1.5">
+      <div className="flex flex-col max-h-56 gap-1 overflow-y-auto rounded-md border border-border p-1.5">
         {rows.length === 0 ? (
           <p className="px-1 py-2 text-xs text-muted-foreground">
             Sin transacciones en el periodo.
@@ -379,9 +379,9 @@ export function ExportDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5">
+        <div className="flex flex-col gap-6">
           {/* Datasets */}
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label>Datos a exportar</Label>
             <div className="flex gap-4">
               <label className="flex cursor-pointer items-center gap-2 text-sm">
@@ -406,7 +406,7 @@ export function ExportDialog({
           </div>
 
           {/* Period */}
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label>Periodo</Label>
             <div className="flex flex-wrap items-center gap-2">
               <Select value={mode} onValueChange={(v) => setMode(v as Mode)}>
@@ -532,9 +532,9 @@ export function ExportDialog({
 
           {/* Transactions */}
           {!dataLoading && (doIncome || doExpense) && (
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               {doIncome && (
-                <div className="space-y-2">
+                <div className="flex flex-col gap-2">
                   <Label className="text-xs uppercase text-muted-foreground">
                     Transacciones · Ingresos
                   </Label>
@@ -548,7 +548,7 @@ export function ExportDialog({
                 </div>
               )}
               {doExpense && (
-                <div className="space-y-2">
+                <div className="flex flex-col gap-2">
                   <Label className="text-xs uppercase text-muted-foreground">
                     Transacciones · Gastos
                   </Label>
@@ -566,11 +566,11 @@ export function ExportDialog({
           {/* Columns */}
           <div className="grid gap-5 sm:grid-cols-2">
             {doIncome && (
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <Label className="text-xs uppercase text-muted-foreground">
                   Columnas · Ingresos
                 </Label>
-                <div className="space-y-1.5">
+                <div className="flex flex-col gap-2">
                   {INCOME_COLUMNS.map((c) => (
                     <label key={c.key} className="flex cursor-pointer items-center gap-2 text-sm">
                       <input
@@ -586,9 +586,9 @@ export function ExportDialog({
               </div>
             )}
             {doExpense && (
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <Label className="text-xs uppercase text-muted-foreground">Columnas · Gastos</Label>
-                <div className="space-y-1.5">
+                <div className="flex flex-col gap-2">
                   {EXPENSE_COLUMNS.map((c) => (
                     <label key={c.key} className="flex cursor-pointer items-center gap-2 text-sm">
                       <input

@@ -15,11 +15,16 @@ export function SlotEditor({ slots, onAdd, onRemove, disabled }: Props) {
   const [weekday, setWeekday] = useState(0);
   const [time, setTime] = useState("18:30");
   return (
-    <div className="space-y-2">
-      <ul className="space-y-1">
-        {slots.length === 0 ? <li className="text-sm text-muted-foreground">Sin slot fijo</li> : null}
+    <div className="flex flex-col gap-2">
+      <ul className="flex flex-col gap-1.5">
+        {slots.length === 0 ? (
+          <li className="text-sm text-muted-foreground">Sin slot fijo</li>
+        ) : null}
         {slots.map((s) => (
-          <li key={s.id} className="flex items-center justify-between rounded-md border border-border px-2 py-1 text-sm">
+          <li
+            key={s.id}
+            className="flex items-center justify-between rounded-md border border-border px-2 py-1 text-sm"
+          >
             <span>{formatSlot(s.weekday, s.start_time)}</span>
             {disabled ? null : (
               <button type="button" aria-label="Quitar slot" onClick={() => onRemove(s.id)}>
@@ -37,7 +42,9 @@ export function SlotEditor({ slots, onAdd, onRemove, disabled }: Props) {
             onChange={(e) => setWeekday(Number(e.target.value))}
           >
             {ES_WEEKDAYS_SHORT.map((d, i) => (
-              <option key={d} value={i}>{d}</option>
+              <option key={d} value={i}>
+                {d}
+              </option>
             ))}
           </select>
           <input
@@ -46,7 +53,12 @@ export function SlotEditor({ slots, onAdd, onRemove, disabled }: Props) {
             value={time}
             onChange={(e) => setTime(e.target.value)}
           />
-          <Button type="button" size="sm" variant="outline" onClick={() => onAdd(weekday, `${time}:00`)}>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => onAdd(weekday, `${time}:00`)}
+          >
             Añadir
           </Button>
         </div>

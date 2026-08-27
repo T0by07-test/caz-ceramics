@@ -84,7 +84,9 @@ function CategoryCombobox({
 }) {
   const [query, setQuery] = useState(value ?? "");
 
-  useEffect(() => { setQuery(value ?? ""); }, [value]);
+  useEffect(() => {
+    setQuery(value ?? "");
+  }, [value]);
 
   const chips = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -109,7 +111,10 @@ function CategoryCombobox({
             <button
               key={c}
               type="button"
-              onClick={() => { setQuery(c); onChange(c); }}
+              onClick={() => {
+                setQuery(c);
+                onChange(c);
+              }}
               className="rounded-full border border-primary/40 bg-primary/10 px-2.5 py-0.5 text-xs text-primary hover:bg-primary/20"
             >
               {c}
@@ -155,22 +160,23 @@ export function GastosVoiceFAB() {
     resetRef.current();
   }, []);
 
-  const handleTranscript = useCallback(async (transcript: string) => {
-    if (!transcript.trim()) {
-      toast.error("No se detectó voz. Intenta de nuevo.");
-      resetRef.current();
-      return;
-    }
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        toast.error("Sesión expirada. Por favor, recarga la página.");
+  const handleTranscript = useCallback(
+    async (transcript: string) => {
+      if (!transcript.trim()) {
+        toast.error("No se detectó voz. Intenta de nuevo.");
         resetRef.current();
         return;
       }
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/finance-voice`,
-        {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          toast.error("Sesión expirada. Por favor, recarga la página.");
+          resetRef.current();
+          return;
+        }
+        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/finance-voice`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${session.access_token}`,
@@ -183,41 +189,45 @@ export function GastosVoiceFAB() {
             knownCategories,
             knownConcepts: knownConcepts.slice(0, 30),
           }),
-        },
-      );
+        });
 
-      const json = await res.json() as { fields?: unknown; error?: string };
+        const json = (await res.json()) as { fields?: unknown; error?: string };
 
-      if (!res.ok || json.error) {
-        toast.error(
-          json.error === "parse_failed"
-            ? "No se pudo interpretar el audio. Añade el gasto manualmente."
-            : "Error al procesar el audio",
+        if (!res.ok || json.error) {
+          toast.error(
+            json.error === "parse_failed"
+              ? "No se pudo interpretar el audio. Añade el gasto manualmente."
+              : "Error al procesar el audio",
+          );
+          resetRef.current();
+          return;
+        }
+
+        const normalized = normalizeGasto(json.fields);
+        if (!normalized) {
+          toast.error("Respuesta inesperada del servidor");
+          resetRef.current();
+          return;
+        }
+
+        // Auto-compute VAT at 21% if AI didn't extract it
+        const vat =
+          normalized.vat_cents ??
+          (normalized.amount_cents != null ? Math.round(normalized.amount_cents * 0.21) : null);
+        const formWithVat = { ...normalized, vat_cents: vat };
+        setForm(formWithVat);
+        setAmountEur(
+          normalized.amount_cents != null ? (normalized.amount_cents / 100).toFixed(2) : "",
         );
+        setVatEur(vat != null ? (vat / 100).toFixed(2) : "");
+        setOpen(true);
+      } catch {
+        toast.error("Error de red al procesar el audio");
         resetRef.current();
-        return;
       }
-
-      const normalized = normalizeGasto(json.fields);
-      if (!normalized) {
-        toast.error("Respuesta inesperada del servidor");
-        resetRef.current();
-        return;
-      }
-
-      // Auto-compute VAT at 21% if AI didn't extract it
-      const vat = normalized.vat_cents ??
-        (normalized.amount_cents != null ? Math.round(normalized.amount_cents * 0.21) : null);
-      const formWithVat = { ...normalized, vat_cents: vat };
-      setForm(formWithVat);
-      setAmountEur(normalized.amount_cents != null ? (normalized.amount_cents / 100).toFixed(2) : "");
-      setVatEur(vat != null ? (vat / 100).toFixed(2) : "");
-      setOpen(true);
-    } catch {
-      toast.error("Error de red al procesar el audio");
-      resetRef.current();
-    }
-  }, [knownCategories, knownConcepts]);
+    },
+    [knownCategories, knownConcepts],
+  );
 
   const { state, start, stop, reset, error: speechError } = useSpeechRecognition(handleTranscript);
   resetRef.current = reset;
@@ -227,20 +237,29 @@ export function GastosVoiceFAB() {
   }, [speechError]);
 
   const handleFabClick = () => {
-    if (state === "idle") { start(); return; }
-    if (state === "listening") { stop(); }
+    if (state === "idle") {
+      start();
+      return;
+    }
+    if (state === "listening") {
+      stop();
+    }
   };
 
   const handleConfirm = async () => {
     const amount_cents = amountEur
       ? Math.round(parseFloat(amountEur.replace(",", ".")) * 100)
       : null;
-    const vat_cents = vatEur
-      ? Math.round(parseFloat(vatEur.replace(",", ".")) * 100)
-      : null;
+    const vat_cents = vatEur ? Math.round(parseFloat(vatEur.replace(",", ".")) * 100) : null;
 
-    if (!form.month) { toast.error("Mes requerido"); return; }
-    if (amount_cents == null || amount_cents < 0) { toast.error("Importe requerido"); return; }
+    if (!form.month) {
+      toast.error("Mes requerido");
+      return;
+    }
+    if (amount_cents == null || amount_cents < 0) {
+      toast.error("Importe requerido");
+      return;
+    }
 
     setSaving(true);
     const { error } = await tbl("expense_entries").insert({
@@ -276,8 +295,8 @@ export function GastosVoiceFAB() {
         onClick={handleFabClick}
         disabled={state === "processing"}
         className={[
-          "fixed bottom-24 right-4 z-50 h-14 w-14 rounded-full shadow-lg lg:bottom-6 lg:right-6",
-          state === "listening" ? "bg-red-500 hover:bg-red-600 animate-pulse" : "",
+          "fixed bottom-24 right-4 z-50 h-14 w-14 rounded-full lg:bottom-6 lg:right-6",
+          state === "listening" ? "bg-destructive hover:bg-destructive/90 animate-pulse" : "",
         ].join(" ")}
         size="icon"
         aria-label={state === "listening" ? "Detener grabación" : "Registrar gasto por voz"}
@@ -285,7 +304,12 @@ export function GastosVoiceFAB() {
         {fabIcon()}
       </Button>
 
-      <Dialog open={open} onOpenChange={(v) => { if (!v && !saving) closeDialog(); }}>
+      <Dialog
+        open={open}
+        onOpenChange={(v) => {
+          if (!v && !saving) closeDialog();
+        }}
+      >
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Confirmar gasto</DialogTitle>
@@ -307,12 +331,14 @@ export function GastosVoiceFAB() {
                   value={form.month ?? ""}
                   onValueChange={(v) => setForm({ ...form, month: v || null })}
                 >
-                  <SelectTrigger className={!form.month ? "border-yellow-400" : ""}>
+                  <SelectTrigger className={!form.month ? "border-warning" : ""}>
                     <SelectValue placeholder="—" />
                   </SelectTrigger>
                   <SelectContent>
                     {MONTHS.map((m) => (
-                      <SelectItem key={m} value={m}>{m}</SelectItem>
+                      <SelectItem key={m} value={m}>
+                        {m}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -353,7 +379,7 @@ export function GastosVoiceFAB() {
                   type="number"
                   step="0.01"
                   min="0"
-                  className={!amountEur ? "border-yellow-400" : ""}
+                  className={!amountEur ? "border-warning" : ""}
                   value={amountEur}
                   onChange={(e) => {
                     setAmountEur(e.target.value);
@@ -387,7 +413,9 @@ export function GastosVoiceFAB() {
                 </SelectTrigger>
                 <SelectContent>
                   {METHODS.map((m) => (
-                    <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                    <SelectItem key={m.value} value={m.value}>
+                      {m.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -405,7 +433,9 @@ export function GastosVoiceFAB() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={closeDialog}>Cancelar</Button>
+            <Button variant="outline" onClick={closeDialog}>
+              Cancelar
+            </Button>
             <Button onClick={handleConfirm} disabled={saving}>
               {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Confirmar

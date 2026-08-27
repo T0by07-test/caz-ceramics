@@ -121,9 +121,9 @@ function AdminMessagesPage() {
   const whatsappHref = useMemo(() => `https://wa.me/?text=${encodeURIComponent(text)}`, [text]);
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="min-w-0">
-        <span className="text-label uppercase">Comunicación</span>
+        <span className="text-label">Comunicación</span>
         <h1 className="text-h1 mt-1">Mensajes</h1>
         <p className="text-body mt-2 text-muted-foreground">
           Redacta un mensaje, cópialo y pégalo en tu grupo de WhatsApp. No se envía automáticamente.
@@ -131,7 +131,7 @@ function AdminMessagesPage() {
       </div>
 
       {tagId ? (
-        <Card className="shadow-card">
+        <Card className="">
           <CardHeader>
             <CardTitle className="text-h3 flex flex-wrap items-center gap-2">
               Destinatarias
@@ -139,7 +139,7 @@ function AdminMessagesPage() {
               <Badge variant="outline">{recipients.length}</Badge>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="flex flex-col gap-3">
             {recipients.length === 0 ? (
               <p className="text-sm text-muted-foreground">No hay miembros con este tag.</p>
             ) : (
@@ -164,12 +164,12 @@ function AdminMessagesPage() {
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="shadow-card">
+        <Card className="">
           <CardHeader>
             <CardTitle className="text-h3">Redactar</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-1.5">
+          <CardContent className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="message">Mensaje</Label>
               <Textarea
                 id="message"
@@ -182,8 +182,8 @@ function AdminMessagesPage() {
               <p className="text-xs text-muted-foreground">{text.length} caracteres</p>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-label uppercase">Insertar</Label>
+            <div className="flex flex-col gap-2">
+              <Label className="text-label">Insertar</Label>
               <div className="flex flex-wrap gap-2">
                 {STATIC_SNIPPETS.map((s) => (
                   <Button
@@ -198,7 +198,7 @@ function AdminMessagesPage() {
                 ))}
               </div>
               {classes.length > 0 ? (
-                <div className="space-y-1.5 pt-1">
+                <div className="flex flex-col gap-2 pt-1">
                   <span className="text-xs text-muted-foreground">Próximas clases:</span>
                   <div className="flex flex-wrap gap-2">
                     {classes.map((c) => (
@@ -239,7 +239,7 @@ function AdminMessagesPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-card">
+        <Card className="">
           <CardHeader>
             <CardTitle className="text-h3 flex items-center gap-2">
               Vista previa <Badge variant="outline">en vivo</Badge>
@@ -247,7 +247,7 @@ function AdminMessagesPage() {
           </CardHeader>
           <CardContent>
             {text.trim() ? (
-              <div className="rounded-2xl rounded-tl-sm bg-[#dcf8c6] p-4 text-sm text-[#111b21] shadow-sm">
+              <div className="border-l-2 border-primary bg-muted px-4 py-3 text-sm text-foreground">
                 <p className="whitespace-pre-wrap break-words">{text}</p>
               </div>
             ) : (

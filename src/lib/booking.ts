@@ -38,7 +38,6 @@ export function friendlyError(raw: string | undefined | null): string {
   return ERROR_MESSAGES[code] ?? raw;
 }
 
-
 export async function bookClass(classId: string, source: BookSource): Promise<BookResult> {
   const { data, error } = await supabase.rpc("book_class", {
     p_class_id: classId,

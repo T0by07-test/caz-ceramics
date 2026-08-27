@@ -3,12 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -67,11 +62,11 @@ function MisReservasPage() {
     setLoading(true);
     const [bookingsRes, waitlistRes] = await Promise.all([
       supabase
-      .from("bookings")
-      .select(
-        "id, status, source, cancelled_at, created_at, classes ( id, date, start_time, end_time, status )",
-      )
-      .eq("student_id", user.id)
+        .from("bookings")
+        .select(
+          "id, status, source, cancelled_at, created_at, classes ( id, date, start_time, end_time, status )",
+        )
+        .eq("student_id", user.id)
         .order("created_at", { ascending: false }),
       supabase
         .from("waitlist")
@@ -123,9 +118,7 @@ function MisReservasPage() {
   const now = Date.now();
   const upcoming = rows.filter(
     (r) =>
-      r.classes &&
-      ["reserved", "confirmed"].includes(r.status) &&
-      classStartMs(r.classes) >= now,
+      r.classes && ["reserved", "confirmed"].includes(r.status) && classStartMs(r.classes) >= now,
   );
   const past = rows.filter(
     (r) =>
@@ -138,9 +131,9 @@ function MisReservasPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="min-w-0">
-        <span className="text-label uppercase">Tu actividad</span>
+        <span className="text-label">Tu actividad</span>
         <h1 className="text-h1 mt-1">Mis reservas</h1>
         <p className="text-body mt-2 text-muted-foreground">
           Consulta tus próximas clases y gestiona cancelaciones.
@@ -206,7 +199,10 @@ function classStartMs(c: NonNullable<Row["classes"]>): number {
 }
 
 function statusBadge(status: string) {
-  const map: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
+  const map: Record<
+    string,
+    { label: string; variant: "default" | "secondary" | "outline" | "destructive" }
+  > = {
     reserved: { label: "Reservada", variant: "secondary" },
     confirmed: { label: "Confirmada", variant: "default" },
     attended: { label: "Asistida", variant: "outline" },
@@ -230,29 +226,32 @@ function BookingList({
 }) {
   if (loading) {
     return (
-      <div className="space-y-2">
+      <div className="flex flex-col gap-2">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="h-20 animate-pulse rounded-xl border border-border bg-surface" />
+          <div
+            key={i}
+            className="h-20 animate-pulse rounded-none border border-border bg-surface"
+          />
         ))}
       </div>
     );
   }
   if (rows.length === 0) {
     return (
-      <div className="rounded-xl border border-border bg-surface p-6 text-center text-sm text-muted-foreground shadow-card">
+      <div className="rounded-none border border-border bg-surface p-6 text-center text-sm text-muted-foreground">
         {empty}
       </div>
     );
   }
   return (
-    <ul className="space-y-2">
+    <ul className="flex flex-col gap-2">
       {rows.map((r) => (
         <li
           key={r.id}
-          className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 shadow-card sm:flex-row sm:items-center sm:justify-between"
+          className="flex flex-col gap-3 rounded-none border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between"
         >
           <div className="min-w-0">
-            <div className="text-sm font-semibold capitalize">
+            <div className="text-sm font-normal capitalize">
               {r.classes ? formatLongDate(r.classes.date) : "Clase"}
             </div>
             <div className="text-xs text-muted-foreground">
@@ -296,7 +295,8 @@ function CancelDialog({
         });
       } else {
         toast.success("Reserva cancelada", {
-          description: "La cancelación se realizó dentro de las 12 horas previas: la clase cuenta como usada.",
+          description:
+            "La cancelación se realizó dentro de las 12 horas previas: la clase cuenta como usada.",
         });
       }
       onCancelled();
@@ -315,14 +315,14 @@ function CancelDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Cancelar reserva</AlertDialogTitle>
           <AlertDialogDescription asChild>
-            <div className="space-y-2 text-sm">
+            <div className="flex flex-col gap-2 text-sm">
               <p>
-                Si cancelas con <strong>más de 12 horas</strong> de antelación,
-                podrás recuperar la clase otro día del mismo mes.
+                Si cancelas con <strong>más de 12 horas</strong> de antelación, podrás recuperar la
+                clase otro día del mismo mes.
               </p>
               <p>
-                Si cancelas con <strong>menos de 12 horas</strong> de antelación,
-                la clase cuenta como usada.
+                Si cancelas con <strong>menos de 12 horas</strong> de antelación, la clase cuenta
+                como usada.
               </p>
               <p
                 className={
@@ -360,29 +360,32 @@ function WaitlistList({
 }) {
   if (loading) {
     return (
-      <div className="space-y-2">
+      <div className="flex flex-col gap-2">
         {Array.from({ length: 2 }).map((_, i) => (
-          <div key={i} className="h-20 animate-pulse rounded-xl border border-border bg-surface" />
+          <div
+            key={i}
+            className="h-20 animate-pulse rounded-none border border-border bg-surface"
+          />
         ))}
       </div>
     );
   }
   if (rows.length === 0) {
     return (
-      <div className="rounded-xl border border-border bg-surface p-6 text-center text-sm text-muted-foreground shadow-card">
+      <div className="rounded-none border border-border bg-surface p-6 text-center text-sm text-muted-foreground">
         No estás en ninguna lista de espera.
       </div>
     );
   }
   return (
-    <ul className="space-y-2">
+    <ul className="flex flex-col gap-2">
       {rows.map((w) => (
         <li
           key={w.id}
-          className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 shadow-card sm:flex-row sm:items-center sm:justify-between"
+          className="flex flex-col gap-3 rounded-none border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between"
         >
           <div className="min-w-0">
-            <div className="text-sm font-semibold capitalize">
+            <div className="text-sm font-normal capitalize">
               {w.classes ? formatLongDate(w.classes.date) : "Clase"}
             </div>
             <div className="text-xs text-muted-foreground">
