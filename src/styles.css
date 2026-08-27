@@ -1,33 +1,36 @@
+/* Webfonts (Jost + Roboto) are loaded via a <link> in src/routes/__root.tsx.
+   A remote @import here is rejected by the project's lightningcss pipeline. */
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
-
 /*
  * Design system definition.
  *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
+ * Typography
+ *   Headings  -> Jost (font-display), weight 200, tracking 0.02em. Never bold.
+ *   Body      -> Roboto 300, line-height 1.75, colour --body.
+ *   UI labels -> Jost, uppercase, tracking 0.16em, 13px (.text-label / .ui-label).
  *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
+ * Colour
+ *   Every colour lives here as an HSL token and is exposed to Tailwind through
+ *   the @theme inline block below. No raw hex in components.
+ *   One accent per screen: --primary, reserved for the primary button.
  *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ * No dark mode.
  */
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+  --radius-xl: var(--radius);
+  --radius-2xl: var(--radius);
+  --radius-3xl: var(--radius);
+  --radius-4xl: var(--radius);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-body: var(--body);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
@@ -65,86 +68,57 @@
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
   --color-primary-hover: var(--primary-hover);
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --shadow-card: 0 1px 3px rgba(46, 36, 25, 0.06);
+  --font-display: "Jost", sans-serif;
+  --font-sans: "Roboto", sans-serif;
+  --shadow-card: none;
 }
 
 :root {
-  --radius: 0.75rem;
-  /* Ceramic / earthy palette — exact hex values from spec */
-  --background: #FAF5EE;
-  --surface: #FFFDF8;
-  --foreground: #2E2419;
-  --card: #FFFDF8;
-  --card-foreground: #2E2419;
-  --popover: #FFFDF8;
-  --popover-foreground: #2E2419;
-  --primary: #C96F4A;
-  --primary-hover: #B55D3B;
-  --primary-foreground: #FFFDF8;
-  --secondary: #E8DFD2;
-  --secondary-foreground: #2E2419;
-  --muted: #F1E9DC;
-  --muted-foreground: #8A7B6B;
-  --accent: #E8DFD2;
-  --accent-foreground: #2E2419;
-  --destructive: #C14D3D;
-  --destructive-foreground: #FFFDF8;
-  --success: #7A9B6E;
-  --success-foreground: #FFFDF8;
-  --warning: #D4A24C;
-  --warning-foreground: #2E2419;
-  --border: #E8DFD2;
-  --input: #E8DFD2;
-  --ring: #C96F4A;
-  --chart-1: #C96F4A;
-  --chart-2: #7A9B6E;
-  --chart-3: #D4A24C;
-  --chart-4: #8A7B6B;
-  --chart-5: #C14D3D;
-  --sidebar: #FFFDF8;
-  --sidebar-foreground: #2E2419;
-  --sidebar-primary: #C96F4A;
-  --sidebar-primary-foreground: #FFFDF8;
-  --sidebar-accent: #F1E9DC;
-  --sidebar-accent-foreground: #2E2419;
-  --sidebar-border: #E8DFD2;
-  --sidebar-ring: #C96F4A;
-}
+  --radius: 0.25rem;
 
-.dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  --background: hsl(72 17% 94%); /* #F2F3EE page */
+  --foreground: hsl(22 6% 35%); /* #5F5854 headings */
+  --body: hsl(17 6% 43%); /* #756B67 body copy */
+  --muted: hsl(38 28% 89%); /* #EAE4DA tinted sections */
+  --muted-foreground: hsl(69 6% 56%); /* #959789 meta text */
+  --primary: hsl(15 33% 62%); /* #BF8F7F accent — buttons */
+  --primary-foreground: hsl(72 17% 94%);
+  --secondary: hsl(38 28% 89%);
+  --border: hsl(44 20% 85%); /* #E1DDD2 hairlines */
+  --input: hsl(38 22% 74%); /* #CBC0AD */
+  --ring: hsl(15 33% 62%);
+
+  /* Derived tokens — all resolve into the palette above. */
+  --surface: hsl(72 17% 94%);
+  --card: hsl(72 17% 94%);
+  --card-foreground: hsl(22 6% 35%);
+  --popover: hsl(72 17% 94%);
+  --popover-foreground: hsl(22 6% 35%);
+  --primary-hover: hsl(15 33% 55%);
+  --secondary-foreground: hsl(22 6% 35%);
+  --accent: hsl(38 28% 89%);
+  --accent-foreground: hsl(22 6% 35%);
+  --destructive: hsl(15 40% 47%);
+  --destructive-foreground: hsl(72 17% 94%);
+  --success: hsl(69 12% 44%);
+  --success-foreground: hsl(72 17% 94%);
+  --warning: hsl(38 30% 52%);
+  --warning-foreground: hsl(72 17% 94%);
+
+  --chart-1: hsl(15 33% 62%);
+  --chart-2: hsl(69 12% 54%);
+  --chart-3: hsl(38 30% 62%);
+  --chart-4: hsl(22 6% 55%);
+  --chart-5: hsl(15 40% 47%);
+
+  --sidebar: hsl(72 17% 94%);
+  --sidebar-foreground: hsl(22 6% 35%);
+  --sidebar-primary: hsl(15 33% 62%);
+  --sidebar-primary-foreground: hsl(72 17% 94%);
+  --sidebar-accent: hsl(38 28% 89%);
+  --sidebar-accent-foreground: hsl(22 6% 35%);
+  --sidebar-border: hsl(44 20% 85%);
+  --sidebar-ring: hsl(15 33% 62%);
 }
 
 @layer base {
@@ -154,43 +128,109 @@
 
   body {
     background-color: var(--color-background);
-    color: var(--color-foreground);
+    color: var(--color-body);
     font-family: var(--font-sans);
+    font-weight: 300;
     font-size: 15px;
-    line-height: 1.55;
+    line-height: 1.75;
     -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    font-weight: 200;
+    letter-spacing: 0.02em;
+    line-height: 1.15;
+    color: var(--color-foreground);
+  }
+
+  /* Underline-only fields, everywhere. */
+  input,
+  textarea,
+  select {
+    font-family: var(--font-sans);
+    font-weight: 300;
+  }
+
+  /* Surfaces are square; only pills opt back in. */
+  ::placeholder {
+    color: var(--color-muted-foreground);
   }
 }
 
 @layer components {
   .text-h1 {
-    font-size: clamp(28px, 4vw, 32px);
-    font-weight: 700;
+    font-family: var(--font-display);
+    font-size: clamp(32px, 4.5vw, 44px);
+    font-weight: 200;
     line-height: 1.15;
-    letter-spacing: -0.01em;
+    letter-spacing: 0.02em;
+    color: var(--color-foreground);
   }
   .text-h2 {
-    font-size: clamp(22px, 3vw, 24px);
-    font-weight: 600;
-    line-height: 1.25;
+    font-family: var(--font-display);
+    font-size: clamp(24px, 3vw, 30px);
+    font-weight: 200;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+    color: var(--color-foreground);
   }
   .text-h3 {
-    font-size: 17px;
-    font-weight: 600;
-    line-height: 1.35;
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 300;
+    line-height: 1.3;
+    letter-spacing: 0.02em;
+    color: var(--color-foreground);
   }
   .text-body {
+    font-family: var(--font-sans);
     font-size: 15px;
-    font-weight: 400;
-    line-height: 1.55;
+    font-weight: 300;
+    line-height: 1.75;
+    color: var(--color-body);
   }
-  .text-label {
+  /* Buttons, nav links, table headers, badges, field labels. */
+  .text-label,
+  .ui-label {
+    font-family: var(--font-display);
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 400;
+    line-height: 1.4;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
     color: var(--color-muted-foreground);
-    letter-spacing: 0.01em;
+  }
+  /* Field label above an underline-only input. */
+  .field-label {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--color-muted-foreground);
+  }
+  /* Page container. */
+  .page {
+    width: 100%;
+    max-width: 1180px;
+    margin-inline: auto;
+    padding-inline: 2rem;
   }
   .shadow-card {
-    box-shadow: var(--shadow-card);
+    box-shadow: none;
+  }
+}
+
+@layer utilities {
+  /* Functional icons only: hairline stroke, never a decorative accent. */
+  .lucide {
+    stroke-width: 1;
   }
 }

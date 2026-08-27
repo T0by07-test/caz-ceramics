@@ -13,7 +13,7 @@ export function EmptyState({ icon, title, description, action, className }: Prop
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/40 px-6 py-10 text-center",
+        "flex flex-col items-center justify-center rounded-none border border-dashed border-border bg-muted/40 px-6 py-10 text-center",
         className,
       )}
     >

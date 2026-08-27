@@ -13,7 +13,7 @@ export function ErrorState({
   onRetry,
 }: Props) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-destructive/30 bg-destructive/5 px-6 py-10 text-center">
+    <div className="flex flex-col items-center justify-center rounded-none border border-destructive/30 bg-destructive/5 px-6 py-10 text-center">
       <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
         <AlertCircle className="h-5 w-5" />
       </div>

@@ -6,23 +6,16 @@ import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-secondary">
-          <span aria-hidden className="text-5xl">🏺</span>
-        </div>
-        <h1 className="text-h1 text-foreground">Página no encontrada</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          La página que buscas no existe o se ha movido.
-        </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Volver al inicio
-          </Link>
-        </div>
+    <div className="mx-auto flex min-h-screen w-full max-w-[1180px] items-center justify-center px-8 py-24">
+      <div className="flex max-w-md flex-col items-center gap-6 border-t border-border pt-12 text-center">
+        <h1 className="text-h1">Página no encontrada</h1>
+        <p className="text-body">La página que buscas no existe o se ha movido.</p>
+        <Link
+          to="/"
+          className="inline-flex items-center justify-center rounded-full bg-primary px-8 py-4 font-display text-[13px] uppercase leading-none tracking-[0.16em] text-primary-foreground transition-colors hover:bg-primary-hover"
+        >
+          Volver al inicio
+        </Link>
       </div>
     </div>
   );
@@ -41,9 +34,20 @@ export const Route = createRootRoute({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: "Cerámica Studio — Reservas" },
-      { name: "twitter:description", content: "Reserva tus clases de cerámica en nuestro estudio." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/970013cf-9176-4ac1-8d72-e2153af0f629/id-preview-1c19401e--995d85d1-d1cf-4d33-a106-2a11d90dc0f9.lovable.app-1782646880800.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/970013cf-9176-4ac1-8d72-e2153af0f629/id-preview-1c19401e--995d85d1-d1cf-4d33-a106-2a11d90dc0f9.lovable.app-1782646880800.png" },
+      {
+        name: "twitter:description",
+        content: "Reserva tus clases de cerámica en nuestro estudio.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/970013cf-9176-4ac1-8d72-e2153af0f629/id-preview-1c19401e--995d85d1-d1cf-4d33-a106-2a11d90dc0f9.lovable.app-1782646880800.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/970013cf-9176-4ac1-8d72-e2153af0f629/id-preview-1c19401e--995d85d1-d1cf-4d33-a106-2a11d90dc0f9.lovable.app-1782646880800.png",
+      },
     ],
     links: [
       {
@@ -55,7 +59,7 @@ export const Route = createRootRoute({
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500&family=Roboto:wght@300;400&display=swap",
       },
     ],
   }),
