@@ -481,7 +481,7 @@ async function processOne(row: QueueRow): Promise<void> {
     if (!profile.email) {
       result = { ok: false, error: "missing_email" };
     } else {
-      result = await sendEmail(profile.email, rendered);
+      result = await sendEmail(profile.email, rendered, `notif-${row.id}`);
     }
   } else if (row.channel === "whatsapp") {
     if (!profile.whatsapp) {
