@@ -1,53 +1,40 @@
-# Set up branded email for reservas.cazuceramics.com in IONOS
+# Send emails from @cazuceramics.com (IONOS DNS setup)
 
 ## Goal
-Configure the DNS records needed so Lovable can send emails as `Cazú Ceramics <noreply@notify.reservas.cazuceramics.com>` (e.g. booking confirmations, password resets) using the existing IONOS-managed domain.
+Send all app emails (booking confirmations, password resets, reminders) from the root domain — e.g. `Cazú Ceramics <noreply@notify.cazuceramics.com>` — instead of the `reservas.cazuceramics.com` subdomain.
 
 ## Current state
-- Custom web domain `reservas.cazuceramics.com` is already active.
-- Email domain status: **Pending** — DNS records for `notify.reservas.cazuceramics.com` have not been added yet.
+- Web domain `reservas.cazuceramics.com` is active and serving the published app.
+- An email domain was started for `reservas.cazuceramics.com` but never verified (still pending, no DNS added).
+- `cazuceramics.com` is **not yet registered** as an email domain in this workspace, so its DNS records don't exist yet.
 
-## Exact DNS records to add in IONOS
+## Steps
 
-### 1. TXT verification record
-| Type | Host / Name | Value |
-|------|-------------|-------|
-| TXT | `_lovable-email.reservas.cazuceramics.com` | `lovable_email_verify=ab2edf9bcb073a1c19f0940891c23c2c9ab63df5021a60cad8f14dca8c526e12` |
+### 1. Add cazuceramics.com as the sender domain
+Open the email setup dialog and enter `cazuceramics.com`. This generates the domain-specific DNS records (a TXT verification value and two `nsX.lovable.cloud` nameservers for the `notify.cazuceramics.com` subdomain). These values are unique per domain — the ones previously issued for `reservas.cazuceramics.com` cannot be reused.
 
-### 2. NS delegation for the email subdomain
-| Type | Host / Name | Value |
-|------|-------------|-------|
-| NS | `notify.reservas.cazuceramics.com` | `ns5.lovable.cloud` |
-| NS | `notify.reservas.cazuceramics.com` | `ns6.lovable.cloud` |
+### 2. Add the records in IONOS
+1. Log in to IONOS → **Domains & Hosting** → `cazuceramics.com` → **DNS**.
+2. Add the **TXT** record shown in the dialog:
+   - Host / Name: `_lovable-email` (IONOS appends the domain automatically)
+   - Value: the `lovable_email_verify=...` string from the dialog
+3. Add both **NS** records shown in the dialog:
+   - Host / Name: `notify`
+   - Values: the two `nsX.lovable.cloud` nameservers
+4. Save. If IONOS refuses NS records in the main DNS table, create the subdomain `notify` first, then set its NS records.
 
-## Step-by-step in IONOS
+Important: do **not** touch the existing records for `reservas.cazuceramics.com`, the website MX/mail records, or any SPF record already used for your normal mailbox. Only add the new ones.
 
-1. Log in to **IONOS** and go to **Domains & Hosting**.
-2. Find `cazuceramics.com` (or `reservas.cazuceramics.com`) and open **DNS** settings.
-3. Click **Add record**.
-4. Add the **TXT** record:
-   - Type: `TXT`
-   - Host / Name: `_lovable-email.reservas.cazuceramics.com`
-   - Value: `lovable_email_verify=ab2edf9bcb073a1c19f0940891c23c2c9ab63df5021a60cad8f14dca8c526e12`
-   - TTL: leave default (or 3600)
-5. Add the first **NS** record:
-   - Type: `NS`
-   - Host / Name: `notify.reservas.cazuceramics.com`
-   - Value: `ns5.lovable.cloud`
-   - TTL: leave default
-6. Add the second **NS** record:
-   - Type: `NS`
-   - Host / Name: `notify.reservas.cazuceramics.com`
-   - Value: `ns6.lovable.cloud`
-   - TTL: leave default
-7. **Save** the changes.
+### 3. Verify and switch the app over
+Once DNS has propagated (usually minutes, up to 48h), I re-check verification and then:
+- Point the notification sender to the new domain (`EMAIL_FROM` = `Cazú Ceramics <noreply@notify.cazuceramics.com>`), replacing the current `noreply@cazuceramics.com` default in the notification function.
+- Set the auth email sender (signup confirmation, password recovery) to the same address so nothing arrives from `no-reply@auth.lovable.cloud` anymore.
+- Translate the auth email templates to Spanish, signed as Cazú Ceramics.
+- Send a real test confirmation email so you can review it before launch.
 
-## Important notes
+### 4. Optional cleanup
+Remove the unused, never-verified `reservas.cazuceramics.com` email domain so only one sender domain remains.
 
-- Do **not** delete the existing A / TXT records that already point `reservas.cazuceramics.com` to Lovable. Only add the two new records above.
-- If IONOS shows an error adding NS records for a subdomain, use the **Subdomain** section and set the subdomain `notify` to type `NS` pointing to `ns5.lovable.cloud` and `ns6.lovable.cloud`.
-- DNS changes can take a few minutes to 48 hours to propagate. IONOS usually applies them within a few minutes.
-
-## Next step
-
-Once the records are saved, come back here and I’ll run the domain check to confirm verification and then wire the Spanish email templates so students receive confirmations signed as **Cazú Ceramics**.
+## Technical notes
+- Emails are sent from the `notify.` subdomain by design (delegated to Lovable nameservers). This keeps your normal IONOS mailbox on `@cazuceramics.com` fully intact — no risk to existing mail.
+- Reply-to can still be a human address (e.g. your IONOS mailbox) if you want replies to reach you; I can configure that in the same pass.
