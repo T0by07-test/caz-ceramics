@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Banknote, CreditCard, Smartphone } from "lucide-react";
+import { Banknote, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -51,8 +51,6 @@ function PlanesPage() {
   const [methodOpen, setMethodOpen] = useState(false);
   const [cashLoading, setCashLoading] = useState(false);
   const [cashConfirmOpen, setCashConfirmOpen] = useState(false);
-  const [bizumLoading, setBizumLoading] = useState(false);
-  const [bizumConfirmOpen, setBizumConfirmOpen] = useState(false);
   const months = monthOptions();
   const [month, setMonth] = useState(months[0]!.value);
 
@@ -85,29 +83,6 @@ function PlanesPage() {
     [month],
   );
 
-  const handleBizum = useCallback(
-    async (plan: Plan) => {
-      setBizumLoading(true);
-      const { error } = await (
-        supabase.rpc as unknown as (
-          fn: string,
-          args: Record<string, unknown>,
-        ) => Promise<{ error: { message: string } | null }>
-      )("purchase_plan_bizum", {
-        p_plan_id: plan.id,
-        p_month: month,
-      });
-      setBizumLoading(false);
-      if (error) {
-        toast.error(error.message ?? "No se pudo reservar tu plaza");
-        return;
-      }
-      setMethodOpen(false);
-      setBizumConfirmOpen(true);
-    },
-    [month],
-  );
-
   useEffect(() => {
     void (async () => {
       const { data, error } = await supabase
@@ -130,7 +105,6 @@ function PlanesPage() {
     const { clientSecret } = await createPlanCheckout({
       planId: activePlan.id,
       returnUrl,
-      paymentMethod: "card",
       month,
     });
     return clientSecret;
@@ -142,7 +116,6 @@ function PlanesPage() {
     const { url } = await createPlanCheckout({
       planId: activePlan.id,
       returnUrl,
-      paymentMethod: "card",
       month,
       hosted: true,
     });
@@ -227,7 +200,7 @@ function PlanesPage() {
         open={methodOpen}
         onOpenChange={(o) => {
           setMethodOpen(o);
-          if (!o && !open && !cashConfirmOpen && !bizumConfirmOpen) setActivePlan(null);
+          if (!o && !open && !cashConfirmOpen) setActivePlan(null);
         }}
       >
         <DialogContent className="max-w-md">
@@ -262,23 +235,8 @@ function PlanesPage() {
             >
               <CreditCard className="h-5 w-5 shrink-0" />
               <span className="flex flex-col">
-                <span className="font-medium">Tarjeta</span>
-                <span className="text-sm text-muted-foreground">Paga ahora con tarjeta</span>
-              </span>
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="h-auto items-start justify-start gap-3 whitespace-normal py-4 text-left"
-              disabled={bizumLoading}
-              onClick={() => activePlan && void handleBizum(activePlan)}
-            >
-              <Smartphone className="h-5 w-5 shrink-0" />
-              <span className="flex flex-col">
-                <span className="font-medium">Bizum</span>
-                <span className="text-sm text-muted-foreground">
-                  Reserva tu plaza y envía el pago por Bizum
-                </span>
+                <span className="font-medium">Tarjeta bancaria / Bizum</span>
+                <span className="text-sm text-muted-foreground">Paga ahora con tarjeta o Bizum</span>
               </span>
             </Button>
           </div>
@@ -301,33 +259,6 @@ function PlanesPage() {
             size="lg"
             onClick={() => {
               setCashConfirmOpen(false);
-              setActivePlan(null);
-              void navigate({ to: "/app" });
-            }}
-          >
-            Ir al calendario
-          </Button>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={bizumConfirmOpen}
-        onOpenChange={(o) => {
-          setBizumConfirmOpen(o);
-          if (!o) setActivePlan(null);
-        }}
-      >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Tu plaza está reservada</DialogTitle>
-            <DialogDescription>
-              Envía el importe por Bizum al 627 093 463 para completar tu pago.
-            </DialogDescription>
-          </DialogHeader>
-          <Button
-            size="lg"
-            onClick={() => {
-              setBizumConfirmOpen(false);
               setActivePlan(null);
               void navigate({ to: "/app" });
             }}
