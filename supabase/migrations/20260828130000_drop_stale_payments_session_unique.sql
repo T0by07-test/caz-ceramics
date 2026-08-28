@@ -1,0 +1,12 @@
+-- The 2026-08-20 migration (multi_class_drop_in_checkout) meant to replace the
+-- old single-column uniqueness on payments.stripe_session_id with a composite
+-- UNIQUE (stripe_session_id, booking_id), since a multi-class purchase inserts
+-- one payment row per booking, all sharing the same session/batch key.
+--
+-- It dropped the wrong constraint name (payments_stripe_session_id_key) and
+-- missed the index actually enforcing single-column uniqueness
+-- (payments_stripe_session_unique, from 2026-04-23). That leftover index has
+-- been silently rejecting the 2nd+ payment row of every multi-class batch
+-- (cash, card, or Bizum) ever since, surfacing as
+-- "duplicate key value violates unique constraint payments_stripe_session_unique".
+DROP INDEX IF EXISTS public.payments_stripe_session_unique;
