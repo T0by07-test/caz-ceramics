@@ -146,7 +146,7 @@ function Index() {
       <main className="mx-auto w-full max-w-[1180px] px-4 sm:px-8">
         {/* Hero */}
         <section className="flex flex-col items-center gap-8 pb-12 pt-16 text-center">
-          <span className="text-label">Estudio de cerámica</span>
+          <span className="text-label">ESTUDIO DE CERÁMICA - RUZAFA</span>
           <div className="flex max-w-3xl flex-col gap-6">
             <h1 className="text-h1">Crea, aprende y disfruta del barro a tu ritmo.</h1>
             <p className="text-body mx-auto max-w-xl">
