@@ -296,7 +296,15 @@ Deno.serve(async (req) => {
         stripe_session_id: session.id,
         ...(paymentMethod ? { method: paymentMethod } : {}),
       }];
-    await admin.from("payments").insert(paymentRows);
+    const { error: paymentInsertError } = await admin.from("payments").insert(paymentRows);
+    if (paymentInsertError) {
+      // Never hand out a live Stripe checkout we have no bookkeeping record of —
+      // that leaves a real payment with nothing on our side to reconcile against.
+      console.error("create-checkout payment row insert failed:", paymentInsertError, {
+        stripeSessionId: session.id,
+      });
+      return jsonResponse({ error: "No se pudo preparar el pago. Inténtalo de nuevo." }, 500);
+    }
 
     return jsonResponse({
       clientSecret: session.client_secret,

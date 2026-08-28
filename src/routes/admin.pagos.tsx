@@ -26,6 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
+import { isTestMode } from "@/lib/stripe";
 
 export const Route = createFileRoute("/admin/pagos")({
   head: () => ({ meta: [{ title: "Pagos — Admin" }] }),
@@ -63,6 +64,13 @@ function methodLabel(method: string | null) {
   if (method === "card") return "Tarjeta";
   if (method === "cash") return "Efectivo";
   return "—";
+}
+
+/** Only real Stripe checkout sessions (cs_...) have a dashboard page — cash/bizum
+ * batches store a synthetic "cash:..."/"bizum:..." key in the same column. */
+function stripeDashboardUrl(sessionId: string | null) {
+  if (!sessionId || !sessionId.startsWith("cs_")) return null;
+  return `https://dashboard.stripe.com/${isTestMode() ? "test/" : ""}payments/${sessionId}`;
 }
 
 function AdminPaymentsRoute() {
@@ -238,9 +246,9 @@ function AdminPaymentsPage() {
                           <Check className="mr-1 h-3.5 w-3.5" /> Marcar como pagado
                         </Button>
                       ) : null}
-                      {r.stripe_session_id ? (
+                      {stripeDashboardUrl(r.stripe_session_id) ? (
                         <a
-                          href={`https://dashboard.stripe.com/test/payments/${r.stripe_session_id}`}
+                          href={stripeDashboardUrl(r.stripe_session_id)!}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
@@ -284,9 +292,9 @@ function AdminPaymentsPage() {
                           {formatEur(r.amount_cents)}
                         </TableCell>
                         <TableCell className="text-right">
-                          {r.stripe_session_id ? (
+                          {stripeDashboardUrl(r.stripe_session_id) ? (
                             <a
-                              href={`https://dashboard.stripe.com/test/payments/${r.stripe_session_id}`}
+                              href={stripeDashboardUrl(r.stripe_session_id)!}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
