@@ -49,15 +49,15 @@ function PlanesPage() {
   const [activePlan, setActivePlan] = useState<Plan | null>(null);
   const [open, setOpen] = useState(false);
   const [methodOpen, setMethodOpen] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"card" | "bizum">("card");
   const [cashLoading, setCashLoading] = useState(false);
   const [cashConfirmOpen, setCashConfirmOpen] = useState(false);
+  const [bizumLoading, setBizumLoading] = useState(false);
+  const [bizumConfirmOpen, setBizumConfirmOpen] = useState(false);
   const months = monthOptions();
   const [month, setMonth] = useState(months[0]!.value);
 
-  const startStripe = useCallback((plan: Plan, method: "card" | "bizum") => {
+  const startStripe = useCallback((plan: Plan) => {
     setActivePlan(plan);
-    setPaymentMethod(method);
     setMethodOpen(false);
     setOpen(true);
   }, []);
@@ -85,6 +85,29 @@ function PlanesPage() {
     [month],
   );
 
+  const handleBizum = useCallback(
+    async (plan: Plan) => {
+      setBizumLoading(true);
+      const { error } = await (
+        supabase.rpc as unknown as (
+          fn: string,
+          args: Record<string, unknown>,
+        ) => Promise<{ error: { message: string } | null }>
+      )("purchase_plan_bizum", {
+        p_plan_id: plan.id,
+        p_month: month,
+      });
+      setBizumLoading(false);
+      if (error) {
+        toast.error(error.message ?? "No se pudo reservar tu plaza");
+        return;
+      }
+      setMethodOpen(false);
+      setBizumConfirmOpen(true);
+    },
+    [month],
+  );
+
   useEffect(() => {
     void (async () => {
       const { data, error } = await supabase
@@ -107,11 +130,11 @@ function PlanesPage() {
     const { clientSecret } = await createPlanCheckout({
       planId: activePlan.id,
       returnUrl,
-      paymentMethod,
+      paymentMethod: "card",
       month,
     });
     return clientSecret;
-  }, [activePlan, paymentMethod, month]);
+  }, [activePlan, month]);
 
   const fetchHostedUrl = useCallback(async () => {
     if (!activePlan) throw new Error("No plan selected");
@@ -119,12 +142,12 @@ function PlanesPage() {
     const { url } = await createPlanCheckout({
       planId: activePlan.id,
       returnUrl,
-      paymentMethod,
+      paymentMethod: "card",
       month,
       hosted: true,
     });
     return url;
-  }, [activePlan, paymentMethod, month]);
+  }, [activePlan, month]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -204,7 +227,7 @@ function PlanesPage() {
         open={methodOpen}
         onOpenChange={(o) => {
           setMethodOpen(o);
-          if (!o && !open && !cashConfirmOpen) setActivePlan(null);
+          if (!o && !open && !cashConfirmOpen && !bizumConfirmOpen) setActivePlan(null);
         }}
       >
         <DialogContent className="max-w-md">
@@ -218,7 +241,7 @@ function PlanesPage() {
             <Button
               variant="outline"
               size="lg"
-              className="h-auto justify-start gap-3 py-4 text-left"
+              className="h-auto items-start justify-start gap-3 whitespace-normal py-4 text-left"
               disabled={cashLoading}
               onClick={() => activePlan && void handleCash(activePlan)}
             >
@@ -233,9 +256,9 @@ function PlanesPage() {
             <Button
               variant="outline"
               size="lg"
-              className="h-auto justify-start gap-3 py-4 text-left"
+              className="h-auto items-start justify-start gap-3 whitespace-normal py-4 text-left"
               disabled={cashLoading}
-              onClick={() => activePlan && startStripe(activePlan, "card")}
+              onClick={() => activePlan && startStripe(activePlan)}
             >
               <CreditCard className="h-5 w-5 shrink-0" />
               <span className="flex flex-col">
@@ -246,14 +269,16 @@ function PlanesPage() {
             <Button
               variant="outline"
               size="lg"
-              className="h-auto justify-start gap-3 py-4 text-left"
-              disabled={cashLoading}
-              onClick={() => activePlan && startStripe(activePlan, "bizum")}
+              className="h-auto items-start justify-start gap-3 whitespace-normal py-4 text-left"
+              disabled={bizumLoading}
+              onClick={() => activePlan && void handleBizum(activePlan)}
             >
               <Smartphone className="h-5 w-5 shrink-0" />
               <span className="flex flex-col">
                 <span className="font-medium">Bizum</span>
-                <span className="text-sm text-muted-foreground">Paga ahora con Bizum</span>
+                <span className="text-sm text-muted-foreground">
+                  Reserva tu plaza y envía el pago por Bizum
+                </span>
               </span>
             </Button>
           </div>
@@ -285,6 +310,33 @@ function PlanesPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog
+        open={bizumConfirmOpen}
+        onOpenChange={(o) => {
+          setBizumConfirmOpen(o);
+          if (!o) setActivePlan(null);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Tu plaza está reservada</DialogTitle>
+            <DialogDescription>
+              Envía el importe por Bizum al 627 093 463 para completar tu pago.
+            </DialogDescription>
+          </DialogHeader>
+          <Button
+            size="lg"
+            onClick={() => {
+              setBizumConfirmOpen(false);
+              setActivePlan(null);
+              void navigate({ to: "/app" });
+            }}
+          >
+            Ir al calendario
+          </Button>
+        </DialogContent>
+      </Dialog>
+
       <StripeCheckoutDialog
         open={open}
         onOpenChange={(o) => {
@@ -292,11 +344,6 @@ function PlanesPage() {
           if (!o) setActivePlan(null);
         }}
         title={activePlan ? `Comprar ${activePlan.name}` : "Comprar plan"}
-        notice={
-          paymentMethod === "bizum"
-            ? "Si pagas con Bizum, envía el importe al 627 093 463."
-            : undefined
-        }
         fetchClientSecret={fetchClientSecret}
         fetchHostedUrl={fetchHostedUrl}
       />

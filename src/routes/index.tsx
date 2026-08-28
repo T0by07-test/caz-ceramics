@@ -160,12 +160,9 @@ function Index() {
             <Button className="w-full sm:w-auto" onClick={() => setInfoOpen(true)}>
               Quiero información
             </Button>
-            <Link
-              to="/login"
-              className="font-display text-[13px] uppercase tracking-[0.16em] text-muted-foreground underline-offset-8 transition-colors hover:text-foreground hover:underline"
-            >
-              Ya soy alumno/a
-            </Link>
+            <Button asChild variant="outline" className="w-full sm:w-auto">
+              <Link to="/login">Ya soy alumno/a</Link>
+            </Button>
           </div>
 
           <InfoDialog open={infoOpen} onOpenChange={setInfoOpen} />

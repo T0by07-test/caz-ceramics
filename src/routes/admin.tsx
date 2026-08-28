@@ -54,7 +54,7 @@ function AdminLayout() {
 
   return (
     <RouteGuard requireStaff>
-      <AppShell brand="Cerámica Studio · Admin" items={items} />
+      <AppShell brand="Admin" items={items} />
       {isGastos ? <GastosVoiceFAB /> : <VoiceFAB />}
     </RouteGuard>
   );

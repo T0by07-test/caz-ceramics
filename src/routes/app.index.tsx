@@ -129,9 +129,8 @@ function CalendarioPage() {
   return (
     <div className="flex flex-col gap-6 pb-24">
       <div>
-        <span className="text-label">Tu mes</span>
-        <h1 className="text-h1 mt-1">Calendario</h1>
-        <p className="text-body mt-2 text-muted-foreground">
+        <h1 className="text-h1">Calendario</h1>
+        <p className="text-body mt-2 hidden text-muted-foreground sm:block">
           Toca las clases a las que quieras venir y elige cómo pagar para reservar.
         </p>
       </div>
@@ -370,13 +369,15 @@ function DropInPaymentFlow({
 }) {
   const [methodOpen, setMethodOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [dropInMethod, setDropInMethod] = useState<"card" | "bizum">("card");
   const [bookingIds, setBookingIds] = useState<string[]>([]);
   const [reservedClasses, setReservedClasses] = useState<ClassWithCount[]>([]);
   const [reserving, setReserving] = useState(false);
   const [cashLoading, setCashLoading] = useState(false);
   const [cashDoneOpen, setCashDoneOpen] = useState(false);
   const [cashDoneTotal, setCashDoneTotal] = useState("");
+  const [bizumLoading, setBizumLoading] = useState(false);
+  const [bizumDoneOpen, setBizumDoneOpen] = useState(false);
+  const [bizumDoneTotal, setBizumDoneTotal] = useState("");
 
   const count = classes.length;
   const paidClasses = reservedClasses.length > 0 ? reservedClasses : classes;
@@ -392,6 +393,7 @@ function DropInPaymentFlow({
       setReservedClasses([]);
       setReserving(false);
       setCashLoading(false);
+      setBizumLoading(false);
     }
   }, [count]);
 
@@ -467,16 +469,48 @@ function DropInPaymentFlow({
     toast.success(count === 1 ? "Plaza reservada" : "Plazas reservadas");
   };
 
+  const handleDropInBizum = async () => {
+    if (count === 0) return;
+    setBizumLoading(true);
+    let ids: string[];
+    try {
+      ids = await reserveBookings();
+    } catch (err) {
+      setBizumLoading(false);
+      toast.error("No se pudo reservar tu plaza", {
+        description: err instanceof Error ? err.message : undefined,
+      });
+      return;
+    }
+    const { error } = await (
+      supabase.rpc as unknown as (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ error: { message: string } | null }>
+    )("pay_drop_in_bizum_batch", {
+      p_booking_ids: ids,
+    });
+    setBizumLoading(false);
+    if (error) {
+      toast.error("No se pudo reservar tu plaza", { description: error.message });
+      return;
+    }
+    setMethodOpen(false);
+    setBizumDoneTotal(totalLabel);
+    setBizumDoneOpen(true);
+    toast.success(count === 1 ? "Plaza reservada" : "Plazas reservadas");
+  };
+
   const fetchClientSecret = useCallback(async () => {
     const ids = await reserveBookings();
     const returnUrl = `${window.location.origin}/app/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`;
     const { clientSecret } = await createDropInCheckout({
       bookingIds: ids,
       returnUrl,
-      paymentMethod: dropInMethod,
+      paymentMethod: "card",
     });
     return clientSecret;
-  }, [dropInMethod, reserveBookings]);
+  }, [reserveBookings]);
 
   const fetchHostedUrl = useCallback(async () => {
     const ids = await reserveBookings();
@@ -484,11 +518,11 @@ function DropInPaymentFlow({
     const { url } = await createDropInCheckout({
       bookingIds: ids,
       returnUrl,
-      paymentMethod: dropInMethod,
+      paymentMethod: "card",
       hosted: true,
     });
     return url;
-  }, [dropInMethod, reserveBookings]);
+  }, [reserveBookings]);
 
   return (
     <>
@@ -512,7 +546,7 @@ function DropInPaymentFlow({
             <Button
               variant="outline"
               size="lg"
-              className="h-auto justify-start gap-3 py-4 text-left"
+              className="h-auto items-start justify-start gap-3 whitespace-normal py-4 text-left"
               disabled={cashLoading || reserving}
               onClick={() => void handleDropInCash()}
             >
@@ -527,10 +561,9 @@ function DropInPaymentFlow({
             <Button
               variant="outline"
               size="lg"
-              className="h-auto justify-start gap-3 py-4 text-left"
+              className="h-auto items-start justify-start gap-3 whitespace-normal py-4 text-left"
               disabled={cashLoading || reserving}
               onClick={() => {
-                setDropInMethod("card");
                 setMethodOpen(false);
                 setCheckoutOpen(true);
               }}
@@ -544,18 +577,16 @@ function DropInPaymentFlow({
             <Button
               variant="outline"
               size="lg"
-              className="h-auto justify-start gap-3 py-4 text-left"
-              disabled={cashLoading || reserving}
-              onClick={() => {
-                setDropInMethod("bizum");
-                setMethodOpen(false);
-                setCheckoutOpen(true);
-              }}
+              className="h-auto items-start justify-start gap-3 whitespace-normal py-4 text-left"
+              disabled={bizumLoading || reserving}
+              onClick={() => void handleDropInBizum()}
             >
               <Smartphone className="h-5 w-5 shrink-0" />
               <span className="flex flex-col">
                 <span className="font-medium">Bizum</span>
-                <span className="text-sm text-muted-foreground">Paga ahora con Bizum</span>
+                <span className="text-sm text-muted-foreground">
+                  Elige Bizum y la plaza queda reservada mientras envías el pago
+                </span>
               </span>
             </Button>
           </div>
@@ -593,6 +624,37 @@ function DropInPaymentFlow({
           </Button>
         </DialogContent>
       </Dialog>
+      <Dialog
+        open={bizumDoneOpen}
+        onOpenChange={(o) => {
+          setBizumDoneOpen(o);
+          if (!o) onClose();
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {count === 1 ? "Plaza reservada" : "Plazas reservadas"} · {bizumDoneTotal}
+            </DialogTitle>
+            <DialogDescription>
+              Envía el importe por Bizum al 627 093 463 para completar tu reserva.
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Tu plaza ya está reservada. Te hemos enviado un correo con la confirmación de tus clases
+            y las instrucciones para pagar con Bizum.
+          </p>
+          <Button
+            className="w-full"
+            onClick={() => {
+              setBizumDoneOpen(false);
+              onClose();
+            }}
+          >
+            Entendido
+          </Button>
+        </DialogContent>
+      </Dialog>
 
       <StripeCheckoutDialog
         open={checkoutOpen}
@@ -601,11 +663,6 @@ function DropInPaymentFlow({
           if (!o) onClose();
         }}
         title={count === 1 ? "Pagar clase" : `Pagar ${count} clases`}
-        notice={
-          dropInMethod === "bizum"
-            ? "Si pagas con Bizum, envía el importe al 627 093 463."
-            : undefined
-        }
         fetchClientSecret={fetchClientSecret}
         fetchHostedUrl={fetchHostedUrl}
       />

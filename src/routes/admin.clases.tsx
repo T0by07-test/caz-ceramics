@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Sheet,
   SheetContent,
@@ -198,7 +208,6 @@ function ClassFormDialog({
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("18:30");
   const [endTime, setEndTime] = useState("20:30");
-  const [capacityIdeal, setCapacityIdeal] = useState(6);
   const [capacityMax, setCapacityMax] = useState(7);
   const [status, setStatus] = useState<ClassStatus>("scheduled");
   const [instructorId, setInstructorId] = useState("");
@@ -213,7 +222,6 @@ function ClassFormDialog({
       setDate(cls.date);
       setStartTime(cls.start_time.slice(0, 5));
       setEndTime(cls.end_time.slice(0, 5));
-      setCapacityIdeal(cls.capacity_ideal);
       setCapacityMax(cls.capacity_max);
       setStatus(cls.status);
       setInstructorId(cls.instructor_id ?? "");
@@ -221,7 +229,6 @@ function ClassFormDialog({
       setDate(defaultDate ?? toIsoDate(new Date()));
       setStartTime("18:30");
       setEndTime("20:30");
-      setCapacityIdeal(6);
       setCapacityMax(7);
       setStatus("scheduled");
       setInstructorId("");
@@ -238,12 +245,20 @@ function ClassFormDialog({
         .eq("role", "instructora")
         .order("name", { ascending: true });
       if (cancelled) return;
-      setInstructoras((data ?? []) as typeof instructoras);
+      const list = (data ?? []) as typeof instructoras;
+      setInstructoras(list);
+      // Some classes only carry the free-text `teacher` shown on the calendar
+      // chip (e.g. "Cande"), with no matching instructor_id yet. Pre-select the
+      // picker from that name so it reflects what the calendar already shows.
+      if (mode === "edit" && cls && !cls.instructor_id && cls.teacher) {
+        const match = list.find((i) => i.name?.trim() === cls.teacher?.trim());
+        if (match) setInstructorId(match.id);
+      }
     })();
     return () => {
       cancelled = true;
     };
-  }, [open]);
+  }, [open, mode, cls]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,20 +266,21 @@ function ClassFormDialog({
       toast.error("La hora de fin debe ser posterior a la de inicio");
       return;
     }
-    if (capacityMax < capacityIdeal) {
-      toast.error("La capacidad máxima debe ser ≥ a la ideal");
-      return;
-    }
+    // The calendar chip shows classes.teacher (e.g. "Cande"), not instructor_id,
+    // so keep both in sync from whichever instructora is picked here.
+    const teacher = instructorId
+      ? (instructoras.find((i) => i.id === instructorId)?.name?.trim() ?? null)
+      : null;
     setSubmitting(true);
     if (mode === "create") {
       const { error } = await supabase.from("classes").insert({
         date,
         start_time: startTime,
         end_time: endTime,
-        capacity_ideal: capacityIdeal,
         capacity_max: capacityMax,
         status,
         instructor_id: instructorId || null,
+        teacher,
       });
       setSubmitting(false);
       if (error) {
@@ -280,10 +296,10 @@ function ClassFormDialog({
           date,
           start_time: startTime,
           end_time: endTime,
-          capacity_ideal: capacityIdeal,
           capacity_max: capacityMax,
           status,
           instructor_id: instructorId || null,
+          teacher,
         })
         .eq("id", cls.id);
       setSubmitting(false);
@@ -338,29 +354,16 @@ function ClassFormDialog({
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="cap_ideal">Capacidad ideal</Label>
-              <Input
-                id="cap_ideal"
-                type="number"
-                min={1}
-                required
-                value={capacityIdeal}
-                onChange={(e) => setCapacityIdeal(Number(e.target.value))}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="cap_max">Capacidad máxima</Label>
-              <Input
-                id="cap_max"
-                type="number"
-                min={1}
-                required
-                value={capacityMax}
-                onChange={(e) => setCapacityMax(Number(e.target.value))}
-              />
-            </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="cap_max">Capacidad máxima</Label>
+            <Input
+              id="cap_max"
+              type="number"
+              min={1}
+              required
+              value={capacityMax}
+              onChange={(e) => setCapacityMax(Number(e.target.value))}
+            />
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="instructor">Instructora</Label>
@@ -375,7 +378,7 @@ function ClassFormDialog({
                 <SelectItem value="none">Sin instructora</SelectItem>
                 {instructoras.map((i) => (
                   <SelectItem key={i.id} value={i.id}>
-                    {[i.name, i.surname].filter(Boolean).join(" ") || i.email || "Instructora"}
+                    {i.name?.trim() || i.surname?.trim() || i.email || "Instructora"}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -443,6 +446,8 @@ function AdminClassDrawer({
   const [blocking, setBlocking] = useState(false);
   // Bookings currently being toggled, to disable their switch while the RPC runs.
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
+  const [removing, setRemoving] = useState<BookedStudent | null>(null);
+  const [removingSubmitting, setRemovingSubmitting] = useState(false);
 
   const loadStudents = useCallback(async () => {
     if (!classId) {
@@ -541,107 +546,175 @@ function AdminClassDrawer({
     onOpenChange(false);
   };
 
+  const handleRemoveStudent = async () => {
+    if (!removing) return;
+    setRemovingSubmitting(true);
+    const { error } = await (
+      supabase.rpc as unknown as (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ error: { message: string } | null }>
+    )("admin_remove_booking", {
+      p_booking_id: removing.id,
+    });
+    setRemovingSubmitting(false);
+    if (error) {
+      toast.error("No se pudo eliminar a la alumna", { description: error.message });
+      return;
+    }
+    toast.success("Alumna eliminada de la clase");
+    setRemoving(null);
+    void loadStudents();
+  };
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle className="capitalize">{cls ? formatLongDate(cls.date) : ""}</SheetTitle>
-          <SheetDescription>
-            {cls ? formatTimeRange(cls.start_time, cls.end_time) : ""}
-          </SheetDescription>
-        </SheetHeader>
-        {cls ? (
-          <div className="flex flex-col mt-6 gap-6 px-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant={cls.status === "scheduled" ? "secondary" : "destructive"}>
-                {statusLabel(cls.status)}
-              </Badge>
-              <Badge variant="outline">
-                {cls.booked_count}/{cls.capacity_max} reservadas
-              </Badge>
-            </div>
+    <>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent side="right" className="w-full sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle className="capitalize">{cls ? formatLongDate(cls.date) : ""}</SheetTitle>
+            <SheetDescription>
+              {cls ? formatTimeRange(cls.start_time, cls.end_time) : ""}
+            </SheetDescription>
+          </SheetHeader>
+          {cls ? (
+            <div className="flex flex-col mt-6 gap-6 px-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant={cls.status === "scheduled" ? "secondary" : "destructive"}>
+                  {statusLabel(cls.status)}
+                </Badge>
+                <Badge variant="outline">
+                  {cls.booked_count}/{cls.capacity_max} reservadas
+                </Badge>
+              </div>
 
-            <div>
-              <h4 className="text-label mb-2 uppercase">Alumnas inscritas</h4>
-              {loadingStudents ? (
-                <p className="text-sm text-muted-foreground">Cargando…</p>
-              ) : students.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Aún no hay alumnas inscritas.</p>
-              ) : (
-                <ul className="divide-y divide-border rounded-lg border border-border">
-                  {students.map((s) => {
-                    const present = s.status === "attended";
-                    const switchId = `attendance-${s.id}`;
-                    const tags = (s.profiles?.profile_tags ?? [])
-                      .map((pt) => pt.tags)
-                      .filter((t): t is { id: string; name: string } => t !== null);
-                    const firstSlot = (s.profiles?.recurring_slots ?? [])[0];
-                    return (
-                      <li key={s.id} className="flex items-center justify-between gap-3 px-3 py-2">
-                        <div className="min-w-0">
-                          <div className="truncate text-sm font-medium">
-                            {[s.profiles?.name, s.profiles?.surname].filter(Boolean).join(" ") ||
-                              s.profiles?.email ||
-                              "Alumna"}
-                          </div>
-                          <div className="truncate text-xs text-muted-foreground">
-                            {s.profiles?.email}
-                          </div>
-                          {firstSlot ? (
-                            <div className="text-xs text-muted-foreground">
-                              {formatSlot(firstSlot.weekday, firstSlot.start_time)}
+              <div>
+                <h4 className="text-label mb-2 uppercase">Alumnas inscritas</h4>
+                {loadingStudents ? (
+                  <p className="text-sm text-muted-foreground">Cargando…</p>
+                ) : students.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Aún no hay alumnas inscritas.</p>
+                ) : (
+                  <ul className="divide-y divide-border rounded-lg border border-border">
+                    {students.map((s) => {
+                      const present = s.status === "attended";
+                      const switchId = `attendance-${s.id}`;
+                      const tags = (s.profiles?.profile_tags ?? [])
+                        .map((pt) => pt.tags)
+                        .filter((t): t is { id: string; name: string } => t !== null);
+                      const firstSlot = (s.profiles?.recurring_slots ?? [])[0];
+                      return (
+                        <li
+                          key={s.id}
+                          className="flex items-center justify-between gap-3 px-3 py-2"
+                        >
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-medium">
+                              {[s.profiles?.name, s.profiles?.surname].filter(Boolean).join(" ") ||
+                                s.profiles?.email ||
+                                "Alumna"}
                             </div>
-                          ) : null}
-                          {tags.length > 0 ? (
-                            <div className="mt-1 flex flex-wrap gap-1">
-                              {tags.map((t) => (
-                                <Badge key={t.id} variant="secondary">
-                                  {t.name}
-                                </Badge>
-                              ))}
+                            <div className="truncate text-xs text-muted-foreground">
+                              {s.profiles?.email}
                             </div>
-                          ) : null}
-                        </div>
-                        <div className="flex shrink-0 items-center gap-2">
-                          <Label htmlFor={switchId} className="text-xs text-muted-foreground">
-                            {present ? "Asistió" : "Asistencia"}
-                          </Label>
-                          <Switch
-                            id={switchId}
-                            checked={present}
-                            disabled={pendingIds.has(s.id)}
-                            onCheckedChange={(checked) => void handleToggleAttendance(s, checked)}
-                            aria-label={`Marcar asistencia de ${
-                              [s.profiles?.name, s.profiles?.surname].filter(Boolean).join(" ") ||
-                              s.profiles?.email ||
-                              "alumna"
-                            }`}
-                          />
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
+                            {firstSlot ? (
+                              <div className="text-xs text-muted-foreground">
+                                {formatSlot(firstSlot.weekday, firstSlot.start_time)}
+                              </div>
+                            ) : null}
+                            {tags.length > 0 ? (
+                              <div className="mt-1 flex flex-wrap gap-1">
+                                {tags.map((t) => (
+                                  <Badge key={t.id} variant="secondary">
+                                    {t.name}
+                                  </Badge>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <Label htmlFor={switchId} className="text-xs text-muted-foreground">
+                              {present ? "Asistió" : "Asistencia"}
+                            </Label>
+                            <Switch
+                              id={switchId}
+                              checked={present}
+                              disabled={pendingIds.has(s.id)}
+                              onCheckedChange={(checked) => void handleToggleAttendance(s, checked)}
+                              aria-label={`Marcar asistencia de ${
+                                [s.profiles?.name, s.profiles?.surname].filter(Boolean).join(" ") ||
+                                s.profiles?.email ||
+                                "alumna"
+                              }`}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                              onClick={() => setRemoving(s)}
+                              aria-label={`Eliminar a ${
+                                [s.profiles?.name, s.profiles?.surname].filter(Boolean).join(" ") ||
+                                s.profiles?.email ||
+                                "alumna"
+                              } de la clase`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
 
-            <div className="flex flex-col gap-2 pt-2 sm:flex-row">
-              <Button variant="secondary" className="flex-1" onClick={onEdit}>
-                Editar clase
-              </Button>
-              <Button
-                variant="destructive"
-                className="flex-1"
-                onClick={handleBlock}
-                disabled={blocking || cls.status === "cancelled_by_admin"}
-              >
-                {cls.status === "cancelled_by_admin" ? "Ya bloqueada" : "Bloquear horario"}
-              </Button>
+              <div className="flex flex-col gap-2 pt-2 sm:flex-row">
+                <Button variant="secondary" className="flex-1" onClick={onEdit}>
+                  Editar clase
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="flex-1"
+                  onClick={handleBlock}
+                  disabled={blocking || cls.status === "cancelled_by_admin"}
+                >
+                  {cls.status === "cancelled_by_admin" ? "Ya bloqueada" : "Bloquear horario"}
+                </Button>
+              </div>
             </div>
-          </div>
-        ) : null}
-      </SheetContent>
-    </Sheet>
+          ) : null}
+        </SheetContent>
+      </Sheet>
+
+      <AlertDialog open={removing !== null} onOpenChange={(o) => !o && setRemoving(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar de la clase</AlertDialogTitle>
+            <AlertDialogDescription>
+              {removing
+                ? `${
+                    [removing.profiles?.name, removing.profiles?.surname]
+                      .filter(Boolean)
+                      .join(" ") ||
+                    removing.profiles?.email ||
+                    "Esta alumna"
+                  } dejará de estar inscrita en esta clase y su plaza quedará libre.`
+                : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={removingSubmitting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => void handleRemoveStudent()}
+              disabled={removingSubmitting}
+            >
+              {removingSubmitting ? "Eliminando…" : "Eliminar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
