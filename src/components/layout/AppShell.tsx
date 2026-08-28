@@ -48,13 +48,14 @@ export function AppShell({ brand, items }: Props) {
     <div className="min-h-screen bg-background text-foreground">
       {/* Top bar */}
       <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
-        <div className="mx-auto grid h-20 w-full max-w-[1180px] grid-cols-[minmax(0,1fr)_auto] items-center gap-6 px-4 sm:px-8">
-          <div className="flex min-w-0 items-center gap-2">
+        <div className="mx-auto grid h-20 w-full max-w-[1180px] grid-cols-[auto_1fr_auto] items-center gap-4 px-4 sm:px-8">
+          <Link to="/" className="flex shrink-0 items-center" aria-label="Ir al inicio">
             <img src={logoAsset.url} alt="Cazú Ceramics" className="h-12 w-auto shrink-0" />
-            <span className="truncate font-display text-[15px] uppercase tracking-[0.16em] text-foreground">
-              {brand}
-            </span>
-          </div>
+          </Link>
+
+          <span className="truncate text-center font-display text-[15px] uppercase tracking-[0.16em] text-foreground">
+            {brand}
+          </span>
 
           <button
             type="button"

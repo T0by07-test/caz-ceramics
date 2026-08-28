@@ -71,13 +71,22 @@ interface Rendered {
   html: string;
 }
 
-function fmtClassesList(
-  payload: Record<string, unknown>,
-): { text: string; html: string; count: number } {
+function fmtClassesList(payload: Record<string, unknown>): {
+  text: string;
+  html: string;
+  count: number;
+} {
   const classes = Array.isArray(payload.classes) ? payload.classes : [];
   const singleClass =
     classes.length === 0 && payload.date
-      ? [{ date: payload.date, start_time: payload.start_time, end_time: payload.end_time, teacher: payload.teacher }]
+      ? [
+          {
+            date: payload.date,
+            start_time: payload.start_time,
+            end_time: payload.end_time,
+            teacher: payload.teacher,
+          },
+        ]
       : [];
   const list = classes.length > 0 ? classes : singleClass;
   const count = list.length;
@@ -90,7 +99,9 @@ function fmtClassesList(
     const end = fmtTime(c.end_time as string | undefined);
     const teacher = (c.teacher as string | undefined)?.trim();
     const kids = c.audience === "kids";
-    const extras = [teacher ? `Profe ${teacher}` : "", kids ? "Niños" : ""].filter(Boolean).join(" · ");
+    const extras = [teacher ? `Profe ${teacher}` : "", kids ? "Niños" : ""]
+      .filter(Boolean)
+      .join(" · ");
     return `${date}, de ${start}${end ? ` a ${end}` : ""}${extras ? ` (${extras})` : ""}`;
   };
 
@@ -100,7 +111,6 @@ function fmtClassesList(
     (c: Record<string, unknown>) =>
       `<li style="margin-bottom:6px">${escapeHtml(label(c as Record<string, unknown>))}</li>`,
   );
-
 
   return {
     text: textLines.join("\n"),
@@ -119,29 +129,37 @@ function render(type: string, payload: Record<string, unknown>, profile: Profile
     case "reservation_confirmed": {
       const classesList = fmtClassesList(payload);
       const isCash = payload.method === "cash";
-      const paymentMethod = isCash ? "en efectivo" : "con tarjeta";
+      const isBizum = payload.method === "bizum";
+      const paymentMethod = isCash ? "en efectivo" : isBizum ? "con Bizum" : "con tarjeta";
 
       const greetingText = `Hola ${name},\n\n¡Tu reserva está confirmada! 🤎\n\nTe esperamos en el estudio para tus próximas clases de cerámica.`;
-      const classesText = classesList.count > 0
-        ? `\n\nClases reservadas\nAquí encontrarás el detalle de las clases que has reservado:\n\n${classesList.text}`
-        : "";
+      const classesText =
+        classesList.count > 0
+          ? `\n\nClases reservadas\nAquí encontrarás el detalle de las clases que has reservado:\n\n${classesList.text}`
+          : "";
       const paymentText = `\n\nPago\nHas elegido pagar ${paymentMethod}.`;
       const cashNoteText = isCash
         ? `\n\nSi has elegido pago en efectivo, podrás realizarlo directamente en el taller el primer día de clase del mes al que corresponden tus clases.`
-        : "";
+        : isBizum
+          ? `\n\nEnvía el importe por Bizum al 627 093 463 para completar tu pago.`
+          : "";
       const cancelText = `\n\n¿Necesitas cancelar una clase?\nRecuerda hacerlo con al menos 12 horas de antelación para poder recuperar la clase.`;
       const closingText = `\n\nNos vemos en el estudio ✨\n\nSaludos,\nCazú Ceramics`;
 
-      const text = greetingText + classesText + paymentText + cashNoteText + cancelText + closingText;
+      const text =
+        greetingText + classesText + paymentText + cashNoteText + cancelText + closingText;
 
       const pStyle = `style="font-size:15px;line-height:1.55;margin:0 0 16px;color:#2E2419"`;
       const h2Style = `style="font-size:16px;margin:24px 0 8px;font-weight:600;color:#2E2419"`;
-      const classesHtml = classesList.count > 0
-        ? `<h2 ${h2Style}>Clases reservadas</h2><p ${pStyle}>Aquí encontrarás el detalle de las clases que has reservado:</p>${classesList.html}`
-        : "";
+      const classesHtml =
+        classesList.count > 0
+          ? `<h2 ${h2Style}>Clases reservadas</h2><p ${pStyle}>Aquí encontrarás el detalle de las clases que has reservado:</p>${classesList.html}`
+          : "";
       const cashNoteHtml = isCash
         ? `<p ${pStyle}>Si has elegido pago en efectivo, podrás realizarlo directamente en el taller el primer día de clase del mes al que corresponden tus clases.</p>`
-        : "";
+        : isBizum
+          ? `<p ${pStyle}>Envía el importe por Bizum al 627 093 463 para completar tu pago.</p>`
+          : "";
 
       const htmlBody = `
         <p ${pStyle}>Hola ${escapeHtml(name)},</p>
@@ -159,7 +177,6 @@ function render(type: string, payload: Record<string, unknown>, profile: Profile
 
       return wrap("Reserva confirmada", text, htmlBody);
     }
-
 
     case "plan_purchased":
       return wrap(
@@ -220,7 +237,9 @@ function render(type: string, payload: Record<string, unknown>, profile: Profile
 }
 
 function wrap(subject: string, body: string, htmlBody?: string): Rendered {
-  const bodyHtml = htmlBody ?? `<p style="font-size:15px;line-height:1.55;margin:0 0 20px;color:#2E2419">${escapeHtml(body)}</p>`;
+  const bodyHtml =
+    htmlBody ??
+    `<p style="font-size:15px;line-height:1.55;margin:0 0 20px;color:#2E2419">${escapeHtml(body)}</p>`;
   const html = `<!doctype html><html><body style="margin:0;padding:0;background:#FAF5EE;font-family:Inter,Arial,sans-serif;color:#2E2419">
   <div style="max-width:520px;margin:24px auto;background:#FFFDF8;border:1px solid #E8DFD2;border-radius:12px;padding:28px">
     <div style="height:4px;width:48px;background:#C96F4A;border-radius:2px;margin-bottom:20px"></div>
@@ -411,7 +430,6 @@ async function sendEmail(
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
 }
-
 
 async function sendWhatsApp(
   to: string,

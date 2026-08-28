@@ -24,19 +24,19 @@ export function CalendarHeader({
 }: Props) {
   const title = viewTitle(view, reference);
   return (
-    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-      <div className="flex min-w-0 items-center gap-1 sm:gap-2">
+    <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:gap-3 lg:justify-between lg:overflow-visible lg:pb-0">
+      <div className="flex shrink-0 items-center gap-0.5 sm:gap-2">
         <Button
           type="button"
           variant="outline"
           size="icon"
           onClick={onPrev}
           aria-label="Anterior"
-          className="shrink-0"
+          className="h-8 w-8 shrink-0"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <h2 className="text-h2 min-w-0 flex-1 truncate text-center capitalize lg:min-w-[14ch] lg:flex-none lg:text-left">
+        <h2 className="shrink-0 whitespace-nowrap font-display text-[18px] font-extralight capitalize leading-[1.2] tracking-[0.02em] text-foreground sm:text-[26px] lg:min-w-[14ch] lg:text-left">
           {title}
         </h2>
         <Button
@@ -45,27 +45,35 @@ export function CalendarHeader({
           size="icon"
           onClick={onNext}
           aria-label="Siguiente"
-          className="shrink-0"
+          className="h-8 w-8 shrink-0"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
-        <Button type="button" variant="ghost" size="sm" onClick={onToday} className="ml-1 shrink-0">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={onToday}
+          className="ml-1 hidden shrink-0 sm:inline-flex"
+        >
           Hoy
         </Button>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         <ToggleGroup
           type="single"
+          size="sm"
           value={view}
           onValueChange={(v) => v && onViewChange(v as CalendarView)}
+          className="gap-0.5"
         >
-          <ToggleGroupItem value="month" aria-label="Vista mensual">
+          <ToggleGroupItem value="month" aria-label="Vista mensual" className="px-0.5 sm:px-2">
             Mes
           </ToggleGroupItem>
-          <ToggleGroupItem value="week" aria-label="Vista semanal">
+          <ToggleGroupItem value="week" aria-label="Vista semanal" className="px-0.5 sm:px-2">
             Semana
           </ToggleGroupItem>
-          <ToggleGroupItem value="day" aria-label="Vista diaria">
+          <ToggleGroupItem value="day" aria-label="Vista diaria" className="px-0.5 sm:px-2">
             Día
           </ToggleGroupItem>
         </ToggleGroup>
