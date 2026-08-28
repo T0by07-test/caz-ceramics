@@ -45,7 +45,12 @@ export function AppShell({ brand, items }: Props) {
   const mobileCellCount = inlineItems.length + (needsMore ? 1 : 0);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div
+      className={[
+        "min-h-screen bg-background text-foreground",
+        brand === "Admin" ? "admin-shell" : "",
+      ].join(" ")}
+    >
       {/* Top bar */}
       <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
         <div className="mx-auto grid h-20 w-full max-w-[1180px] grid-cols-[auto_1fr_auto] items-center gap-4 px-4 sm:px-8">

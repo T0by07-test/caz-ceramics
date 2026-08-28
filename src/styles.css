@@ -234,3 +234,36 @@
     stroke-width: 1;
   }
 }
+
+/*
+ * Admin area only. The site's default typography (Jost 200/300, Roboto 300)
+ * is intentionally light for the public/student pages, but reads as too
+ * faint for a working admin tool. Bump weight one step, using only weights
+ * already loaded (Jost 200/300/400/500, Roboto 300/400) — see the font link
+ * in src/routes/__root.tsx. `.admin-shell` is applied by AppShell only when
+ * brand === "Admin", so the public/student site is unaffected.
+ */
+.admin-shell {
+  font-weight: 400;
+}
+.admin-shell h1,
+.admin-shell h2,
+.admin-shell h3,
+.admin-shell h4,
+.admin-shell h5,
+.admin-shell h6 {
+  font-weight: 300;
+}
+.admin-shell .text-h1,
+.admin-shell .text-h2 {
+  font-weight: 300;
+}
+.admin-shell .text-h3,
+.admin-shell .text-body {
+  font-weight: 400;
+}
+.admin-shell .text-label,
+.admin-shell .ui-label,
+.admin-shell .field-label {
+  font-weight: 500;
+}

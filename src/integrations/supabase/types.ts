@@ -707,6 +707,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          is_archived: boolean
           is_regular: boolean
           membership_status: string
           name: string | null
@@ -720,6 +721,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id: string
+          is_archived?: boolean
           is_regular?: boolean
           membership_status?: string
           name?: string | null
@@ -733,6 +735,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          is_archived?: boolean
           is_regular?: boolean
           membership_status?: string
           name?: string | null

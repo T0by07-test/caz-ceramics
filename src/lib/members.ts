@@ -41,3 +41,20 @@ export type RecurringSlot = {
 export function formatSlot(weekday: number, startTime: string): string {
   return `${ES_WEEKDAYS_SHORT[weekday] ?? "?"} ${formatTime(startTime)}`;
 }
+
+export type MonthClassDay = { date: string; weekday: number };
+
+/** One chip per distinct booked date this month, sorted ascending, plus a full-date tooltip. */
+export function summarizeMonthClasses(days: MonthClassDay[]) {
+  const byDate = new Map<string, number>();
+  for (const d of days) byDate.set(d.date, d.weekday);
+  const sortedDates = [...byDate.keys()].sort((a, b) => a.localeCompare(b));
+  const chips = sortedDates.map((date) => ({
+    date,
+    letter: (ES_WEEKDAYS_SHORT[byDate.get(date)!] ?? "?")[0],
+  }));
+  const tooltip = sortedDates
+    .map((date) => `${ES_WEEKDAYS_SHORT[byDate.get(date)!] ?? "?"} ${Number(date.slice(8, 10))}`)
+    .join(", ");
+  return { count: chips.length, chips, tooltip };
+}

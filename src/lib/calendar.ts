@@ -56,6 +56,34 @@ function mondayIndex(d: Date): number {
   return (d.getDay() + 6) % 7;
 }
 
+/** ISO date ("YYYY-MM-DD") -> weekday index 0..6 with Monday = 0. */
+export function weekdayOf(dateIso: string): number {
+  return mondayIndex(new Date(`${dateIso}T00:00:00`));
+}
+
+const TEACHER_CHART_VARS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+];
+
+/** Today's known teachers (see the "Profesora asignada" picker in admin.alumnas.tsx)
+ *  get a fixed, guaranteed-distinct slot; anything else falls back to a hash. */
+const KNOWN_TEACHER_INDEX: Record<string, number> = { Cande: 0, Sofi: 1, Martu: 2 };
+
+/** Deterministic teacher name -> one of the app's existing chart color tokens. */
+export function teacherColorVar(teacher: string | null): string {
+  if (!teacher) return "var(--muted-foreground)";
+  const known = KNOWN_TEACHER_INDEX[teacher];
+  if (known !== undefined) return TEACHER_CHART_VARS[known];
+  let hash = 0;
+  for (let i = 0; i < teacher.length; i++) hash = (hash * 31 + teacher.charCodeAt(i)) | 0;
+  const index = Math.abs(hash) % TEACHER_CHART_VARS.length;
+  return TEACHER_CHART_VARS[index];
+}
+
 /** 6×7 grid of days for the given month, Monday-first. */
 export function buildMonthGrid(reference: Date): DayCell[] {
   const first = startOfMonth(reference);

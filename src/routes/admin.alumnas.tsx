@@ -1,6 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Search, UserPlus, ArrowLeftRight, Gift, BellRing, MessageCircle } from "lucide-react";
+import {
+  Search,
+  UserPlus,
+  ArrowLeftRight,
+  Gift,
+  BellRing,
+  MessageCircle,
+  ChevronUp,
+  ChevronDown,
+  Archive,
+  ArchiveRestore,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,6 +52,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import {
   endOfMonth,
@@ -48,6 +60,7 @@ import {
   formatTimeRange,
   startOfMonth,
   toIsoDate,
+  weekdayOf,
 } from "@/lib/calendar";
 import { sendPaymentReminder } from "@/lib/admin-tools";
 import { useAuth } from "@/lib/auth";
@@ -57,9 +70,12 @@ import {
   ESTADO_LABELS,
   formatSlot,
   ROLE_LABELS,
+  summarizeMonthClasses,
   type Estado,
   type MembershipStatus,
+  type MonthClassDay,
 } from "@/lib/members";
+import { compareMembers, type MemberSortDir, type MemberSortKey } from "@/lib/members-sort";
 import { TagPicker, type Tag } from "@/components/admin/TagPicker";
 import { SlotEditor } from "@/components/admin/SlotEditor";
 
@@ -73,6 +89,7 @@ type StudentRow = {
   role: Role;
   membership_status: MembershipStatus;
   is_regular: boolean;
+  is_archived: boolean;
   name: string | null;
   surname: string | null;
   email: string | null;
@@ -83,7 +100,44 @@ type StudentRow = {
   slots: { id: string; weekday: number; start_time: string }[];
   estado: Estado;
   assigned_instructor: string | null;
+  month_classes: MonthClassDay[];
 };
+
+function SortableHeader({
+  label,
+  sortKey: key,
+  activeKey,
+  dir,
+  onSort,
+  className,
+}: {
+  label: string;
+  sortKey: MemberSortKey;
+  activeKey: MemberSortKey;
+  dir: MemberSortDir;
+  onSort: (key: MemberSortKey) => void;
+  className?: string;
+}) {
+  const active = key === activeKey;
+  return (
+    <TableHead className={className}>
+      <button
+        type="button"
+        onClick={() => onSort(key)}
+        className="inline-flex items-center gap-1 hover:text-foreground"
+      >
+        {label}
+        {active ? (
+          dir === "asc" ? (
+            <ChevronUp className="h-3 w-3" />
+          ) : (
+            <ChevronDown className="h-3 w-3" />
+          )
+        ) : null}
+      </button>
+    </TableHead>
+  );
+}
 
 type PlanOption = { id: string; name: string; price_cents: number };
 
@@ -108,6 +162,9 @@ function AdminStudentsPage() {
   const [roleFilter, setRoleFilter] = useState<"all" | Role>("all");
   const [tagFilter, setTagFilter] = useState<"all" | string>("all");
   const [estadoFilter, setEstadoFilter] = useState<"all" | Estado>("all");
+  const [showArchived, setShowArchived] = useState(false);
+  const [sortKey, setSortKey] = useState<MemberSortKey>("name");
+  const [sortDir, setSortDir] = useState<MemberSortDir>("asc");
   const [selected, setSelected] = useState<StudentRow | null>(null);
   const [grantOpen, setGrantOpen] = useState(false);
   const [grantStudent, setGrantStudent] = useState<StudentRow | null>(null);
@@ -144,6 +201,7 @@ function AdminStudentsPage() {
       whatsapp: string | null;
       membership_status: string | null;
       is_regular: boolean | null;
+      is_archived: boolean | null;
       assigned_instructor: string | null;
       profile_tags: { tags: { id: string; name: string } | null }[];
       recurring_slots: { id: string; weekday: number; start_time: string }[];
@@ -151,7 +209,7 @@ function AdminStudentsPage() {
     const { data: profiles } = await (supabase
       .from("profiles")
       .select(
-        "id, role, name, surname, email, whatsapp, membership_status, is_regular, assigned_instructor, profile_tags(tags(id,name)), recurring_slots(id,weekday,start_time)",
+        "id, role, name, surname, email, whatsapp, membership_status, is_regular, is_archived, assigned_instructor, profile_tags(tags(id,name)), recurring_slots(id,weekday,start_time)",
       )
       .order("created_at", { ascending: false }) as unknown as Promise<{
       data: ProfileRow[] | null;
@@ -180,6 +238,12 @@ function AdminStudentsPage() {
     for (const m of makeups ?? [])
       makeupCount.set(m.student_id, (makeupCount.get(m.student_id) ?? 0) + 1);
     const bookedThisMonth = new Set((monthBookings ?? []).map((b) => b.student_id));
+    const monthClassesByStudent = new Map<string, MonthClassDay[]>();
+    for (const b of (monthBookings ?? []) as { student_id: string; classes: { date: string } }[]) {
+      const list = monthClassesByStudent.get(b.student_id) ?? [];
+      list.push({ date: b.classes.date, weekday: weekdayOf(b.classes.date) });
+      monthClassesByStudent.set(b.student_id, list);
+    }
 
     const result: StudentRow[] = (profiles ?? []).map((p) => {
       const tags = ((p.profile_tags ?? []) as { tags: { id: string; name: string } | null }[])
@@ -193,6 +257,7 @@ function AdminStudentsPage() {
         role: (p.role ?? "user") as Role,
         membership_status: membership,
         is_regular: isRegular,
+        is_archived: Boolean(p.is_archived),
         name: p.name,
         surname: p.surname,
         email: p.email,
@@ -203,6 +268,7 @@ function AdminStudentsPage() {
         slots,
         estado: deriveEstado(membership, bookedThisMonth.has(p.id), isRegular),
         assigned_instructor: p.assigned_instructor ?? null,
+        month_classes: monthClassesByStudent.get(p.id) ?? [],
       };
     });
     setRows(result);
@@ -216,6 +282,7 @@ function AdminStudentsPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
+      if (!showArchived && r.is_archived) return false;
       if (
         q &&
         ![r.name, r.surname, r.email, r.whatsapp].some((v) => (v ?? "").toLowerCase().includes(q))
@@ -226,300 +293,448 @@ function AdminStudentsPage() {
       if (estadoFilter !== "all" && r.estado !== estadoFilter) return false;
       return true;
     });
-  }, [rows, search, roleFilter, tagFilter, estadoFilter]);
+  }, [rows, search, roleFilter, tagFilter, estadoFilter, showArchived]);
+
+  const sorted = useMemo(
+    () => [...filtered].sort((a, b) => compareMembers(a, b, sortKey, sortDir)),
+    [filtered, sortKey, sortDir],
+  );
+
+  const handleSort = (key: MemberSortKey) => {
+    if (key === sortKey) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
+  const toggleArchived = async (r: StudentRow) => {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_archived: !r.is_archived })
+      .eq("id", r.id);
+    if (error) {
+      toast.error("No se pudo actualizar");
+      return;
+    }
+    toast.success(r.is_archived ? "Miembro desarchivado" : "Miembro archivado");
+    void load();
+  };
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
-          <span className="text-label">Personas</span>
-          <h1 className="text-h1 mt-1">Miembros</h1>
-          <p className="text-body mt-2 text-muted-foreground">
-            Busca, filtra por rol, tag o estado y revisa su actividad.
-          </p>
+    <TooltipProvider delayDuration={200}>
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <span className="text-label">Personas</span>
+            <h1 className="text-h1 mt-1">Miembros</h1>
+            <p className="text-body mt-2 text-muted-foreground">
+              Busca, filtra por rol, tag o estado y revisa su actividad.
+            </p>
+          </div>
+          <div className="relative w-full sm:max-w-sm">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por nombre, email…"
+              aria-label="Buscar miembros"
+              className="pl-9"
+            />
+          </div>
         </div>
-        <div className="relative w-full sm:max-w-sm">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por nombre, email…"
-            aria-label="Buscar miembros"
-            className="pl-9"
-          />
-        </div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
-        <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as "all" | Role)}>
-          <SelectTrigger className="w-full sm:w-40" aria-label="Filtrar por rol">
-            <SelectValue placeholder="Rol" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los roles</SelectItem>
-            <SelectItem value="admin">{ROLE_LABELS.admin}</SelectItem>
-            <SelectItem value="instructora">{ROLE_LABELS.instructora}</SelectItem>
-            <SelectItem value="user">{ROLE_LABELS.user}</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={tagFilter} onValueChange={(v) => setTagFilter(v)}>
-          <SelectTrigger className="w-full sm:w-40" aria-label="Filtrar por tag">
-            <SelectValue placeholder="Tag" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los tags</SelectItem>
-            {allTags.map((t) => (
-              <SelectItem key={t.id} value={t.id}>
-                {t.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={estadoFilter} onValueChange={(v) => setEstadoFilter(v as "all" | Estado)}>
-          <SelectTrigger className="w-full sm:w-44" aria-label="Filtrar por estado">
-            <SelectValue placeholder="Estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los estados</SelectItem>
-            <SelectItem value="activa">{ESTADO_LABELS.activa}</SelectItem>
-            <SelectItem value="pausada">{ESTADO_LABELS.pausada}</SelectItem>
-            <SelectItem value="inactiva">{ESTADO_LABELS.inactiva}</SelectItem>
-            <SelectItem value="sin_actividad">{ESTADO_LABELS.sin_actividad}</SelectItem>
-          </SelectContent>
-        </Select>
-        {tagFilter !== "all" ? (
-          <Button
-            variant="secondary"
-            className="col-span-2 sm:col-auto"
-            onClick={() => navigate({ to: "/admin/mensajes", search: { tag: tagFilter } })}
-          >
-            <MessageCircle className="mr-1 h-4 w-4" /> Enviar mensaje a este grupo
-          </Button>
-        ) : null}
-      </div>
-
-      <Card className="">
-        <CardContent className="p-0 overflow-x-auto">
-          {loading ? (
-            <div className="flex flex-col gap-2 p-6">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-full" />
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
+          <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as "all" | Role)}>
+            <SelectTrigger className="w-full sm:w-40" aria-label="Filtrar por rol">
+              <SelectValue placeholder="Rol" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los roles</SelectItem>
+              <SelectItem value="admin">{ROLE_LABELS.admin}</SelectItem>
+              <SelectItem value="instructora">{ROLE_LABELS.instructora}</SelectItem>
+              <SelectItem value="user">{ROLE_LABELS.user}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={tagFilter} onValueChange={(v) => setTagFilter(v)}>
+            <SelectTrigger className="w-full sm:w-40" aria-label="Filtrar por tag">
+              <SelectValue placeholder="Tag" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los tags</SelectItem>
+              {allTags.map((t) => (
+                <SelectItem key={t.id} value={t.id}>
+                  {t.name}
+                </SelectItem>
               ))}
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="p-6">
-              <EmptyState
-                icon={<UserPlus className="h-5 w-5" />}
-                title={rows.length === 0 ? "Aún no hay miembros" : "Sin resultados"}
-                description={
-                  rows.length === 0
-                    ? "Los miembros aparecerán aquí cuando se registren."
-                    : "Prueba con otro término de búsqueda o filtro."
-                }
-              />
-            </div>
-          ) : (
-            <>
-              <ul className="divide-y divide-border md:hidden">
-                {filtered.map((r) => (
-                  <li
-                    key={`m-${r.id}`}
-                    className="flex flex-col cursor-pointer gap-2 p-4"
-                    onClick={() => setSelected(r)}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate font-medium">{fullName(r)}</p>
-                        {r.email ? (
-                          <p className="truncate text-xs text-muted-foreground">{r.email}</p>
+            </SelectContent>
+          </Select>
+          <Select value={estadoFilter} onValueChange={(v) => setEstadoFilter(v as "all" | Estado)}>
+            <SelectTrigger className="w-full sm:w-44" aria-label="Filtrar por estado">
+              <SelectValue placeholder="Estado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los estados</SelectItem>
+              <SelectItem value="activa">{ESTADO_LABELS.activa}</SelectItem>
+              <SelectItem value="pausada">{ESTADO_LABELS.pausada}</SelectItem>
+              <SelectItem value="inactiva">{ESTADO_LABELS.inactiva}</SelectItem>
+              <SelectItem value="sin_actividad">{ESTADO_LABELS.sin_actividad}</SelectItem>
+            </SelectContent>
+          </Select>
+          {tagFilter !== "all" ? (
+            <Button
+              variant="secondary"
+              className="col-span-2 sm:col-auto"
+              onClick={() => navigate({ to: "/admin/mensajes", search: { tag: tagFilter } })}
+            >
+              <MessageCircle className="mr-1 h-4 w-4" /> Enviar mensaje a este grupo
+            </Button>
+          ) : null}
+          <label className="col-span-2 flex items-center gap-2 sm:col-auto sm:ml-auto">
+            <Switch checked={showArchived} onCheckedChange={setShowArchived} />
+            <span className="text-body text-muted-foreground">Mostrar archivadas</span>
+          </label>
+        </div>
+
+        <Card className="">
+          <CardContent className="p-0 overflow-x-auto">
+            {loading ? (
+              <div className="flex flex-col gap-2 p-6">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-10 w-full" />
+                ))}
+              </div>
+            ) : sorted.length === 0 ? (
+              <div className="p-6">
+                <EmptyState
+                  icon={<UserPlus className="h-5 w-5" />}
+                  title={rows.length === 0 ? "Aún no hay miembros" : "Sin resultados"}
+                  description={
+                    rows.length === 0
+                      ? "Los miembros aparecerán aquí cuando se registren."
+                      : "Prueba con otro término de búsqueda o filtro."
+                  }
+                />
+              </div>
+            ) : (
+              <>
+                <ul className="divide-y divide-border md:hidden">
+                  {sorted.map((r) => (
+                    <li
+                      key={`m-${r.id}`}
+                      className="flex flex-col cursor-pointer gap-2 p-4"
+                      onClick={() => setSelected(r)}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">{fullName(r)}</p>
+                          {r.email ? (
+                            <p className="truncate text-xs text-muted-foreground">{r.email}</p>
+                          ) : null}
+                        </div>
+                        <Badge variant={ESTADO_BADGE[r.estado]} className="shrink-0">
+                          {ESTADO_LABELS[r.estado]}
+                        </Badge>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                        <Badge variant="outline">{ROLE_LABELS[r.role]}</Badge>
+                        {r.plan_name ? <Badge variant="secondary">{r.plan_name}</Badge> : null}
+                        {viewerRole === "admin" && r.pending_makeups > 0 ? (
+                          <span className="text-muted-foreground">{r.pending_makeups} recup.</span>
                         ) : null}
                       </div>
-                      <Badge variant={ESTADO_BADGE[r.estado]} className="shrink-0">
-                        {ESTADO_LABELS[r.estado]}
-                      </Badge>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                      <Badge variant="outline">{ROLE_LABELS[r.role]}</Badge>
-                      {r.plan_name ? <Badge variant="secondary">{r.plan_name}</Badge> : null}
-                      {viewerRole === "admin" && r.pending_makeups > 0 ? (
-                        <span className="text-muted-foreground">{r.pending_makeups} recup.</span>
+                      <p className="text-xs text-muted-foreground">
+                        {summarizeMonthClasses(r.month_classes).tooltip || "Sin clases este mes"}
+                      </p>
+                      {viewerRole === "admin" ? (
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setReminderStudent(r);
+                              setReminderOpen(true);
+                            }}
+                            aria-label="Enviar recordatorio de pago"
+                          >
+                            <BellRing className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setGrantStudent(r);
+                              setGrantOpen(true);
+                            }}
+                            aria-label="Conceder recuperación"
+                          >
+                            <Gift className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void toggleArchived(r);
+                            }}
+                            aria-label={r.is_archived ? "Desarchivar miembro" : "Archivar miembro"}
+                          >
+                            {r.is_archived ? (
+                              <ArchiveRestore className="h-4 w-4" />
+                            ) : (
+                              <Archive className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
                       ) : null}
-                    </div>
-                    {viewerRole === "admin" ? (
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setReminderStudent(r);
-                            setReminderOpen(true);
-                          }}
-                          aria-label="Enviar recordatorio de pago"
-                        >
-                          <BellRing className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setGrantStudent(r);
-                            setGrantOpen(true);
-                          }}
-                          aria-label="Conceder recuperación"
-                        >
-                          <Gift className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-              <div className="hidden md:block">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Miembro</TableHead>
-                      <TableHead className="hidden md:table-cell">Email</TableHead>
-                      <TableHead>Rol</TableHead>
-                      <TableHead className="hidden lg:table-cell">Tags</TableHead>
-                      <TableHead>Estado</TableHead>
-                      <TableHead className="hidden lg:table-cell">Slot</TableHead>
-                      {viewerRole === "admin" && (
-                        <>
-                          <TableHead>Plan del mes</TableHead>
-                          <TableHead className="text-center">Recup.</TableHead>
-                        </>
-                      )}
-                      <TableHead className="text-right">Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filtered.map((r) => (
-                      <TableRow
-                        key={r.id}
-                        className="cursor-pointer"
-                        onClick={() => setSelected(r)}
-                      >
-                        <TableCell className="font-medium">{fullName(r)}</TableCell>
-                        <TableCell className="hidden truncate text-muted-foreground md:table-cell">
-                          {r.email ?? "—"}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{ROLE_LABELS[r.role]}</Badge>
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          {r.tags.length === 0 ? (
-                            <span className="text-muted-foreground">—</span>
-                          ) : (
-                            <div className="flex flex-wrap gap-1">
-                              {r.tags.map((t) => (
-                                <Badge key={t.id} variant="secondary">
-                                  {t.name}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={ESTADO_BADGE[r.estado]}>{ESTADO_LABELS[r.estado]}</Badge>
-                        </TableCell>
-                        <TableCell className="hidden text-muted-foreground lg:table-cell">
-                          {r.slots.length === 0
-                            ? "—"
-                            : r.slots.map((s) => formatSlot(s.weekday, s.start_time)).join(", ")}
-                        </TableCell>
+                    </li>
+                  ))}
+                </ul>
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <SortableHeader
+                          label="Miembro"
+                          sortKey="name"
+                          activeKey={sortKey}
+                          dir={sortDir}
+                          onSort={handleSort}
+                        />
+                        <TableHead className="hidden xl:table-cell">Email</TableHead>
+                        <TableHead>Rol</TableHead>
+                        <TableHead className="hidden lg:table-cell">Tags</TableHead>
+                        <SortableHeader
+                          label="Estado"
+                          sortKey="estado"
+                          activeKey={sortKey}
+                          dir={sortDir}
+                          onSort={handleSort}
+                          className="whitespace-nowrap"
+                        />
+                        <TableHead className="hidden lg:table-cell">Slot</TableHead>
+                        <TableHead>Clases este mes</TableHead>
                         {viewerRole === "admin" && (
                           <>
-                            <TableCell>
-                              {r.plan_name ? (
-                                <Badge variant="secondary">{r.plan_name}</Badge>
-                              ) : (
-                                <span className="text-muted-foreground">Sin plan</span>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {r.pending_makeups > 0 ? (
-                                <Badge variant="outline">{r.pending_makeups}</Badge>
-                              ) : (
-                                <span className="text-muted-foreground">0</span>
-                              )}
-                            </TableCell>
+                            <SortableHeader
+                              label="Plan del mes"
+                              sortKey="plan"
+                              activeKey={sortKey}
+                              dir={sortDir}
+                              onSort={handleSort}
+                              className="whitespace-nowrap"
+                            />
+                            <SortableHeader
+                              label="Recup."
+                              sortKey="recup"
+                              activeKey={sortKey}
+                              dir={sortDir}
+                              onSort={handleSort}
+                              className="text-center"
+                            />
                           </>
                         )}
-                        <TableCell className="text-right">
-                          {viewerRole === "admin" ? (
-                            <div className="flex justify-end gap-1">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setReminderStudent(r);
-                                  setReminderOpen(true);
-                                }}
-                                aria-label="Enviar recordatorio de pago"
-                              >
-                                <BellRing className="h-4 w-4 sm:mr-1" />
-                                <span className="hidden sm:inline">Recordatorio</span>
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setGrantStudent(r);
-                                  setGrantOpen(true);
-                                }}
-                                aria-label="Conceder recuperación"
-                              >
-                                <Gift className="h-4 w-4 sm:mr-1" />
-                                <span className="hidden sm:inline">Recuperación</span>
-                              </Button>
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
-                          )}
-                        </TableCell>
+                        <TableHead className="text-right">Acciones</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+                    </TableHeader>
+                    <TableBody>
+                      {sorted.map((r) => {
+                        const monthSummary = summarizeMonthClasses(r.month_classes);
+                        return (
+                          <TableRow
+                            key={r.id}
+                            className="cursor-pointer"
+                            onClick={() => setSelected(r)}
+                          >
+                            <TableCell className="font-medium">
+                              {fullName(r)}
+                              {r.is_archived ? (
+                                <Badge variant="outline" className="ml-2">
+                                  Archivada
+                                </Badge>
+                              ) : null}
+                            </TableCell>
+                            <TableCell className="hidden truncate text-muted-foreground xl:table-cell">
+                              {r.email ?? "—"}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{ROLE_LABELS[r.role]}</Badge>
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell">
+                              {r.tags.length === 0 ? (
+                                <span className="text-muted-foreground">—</span>
+                              ) : (
+                                <div className="flex flex-wrap gap-1">
+                                  {r.tags.slice(0, 2).map((t) => (
+                                    <Badge key={t.id} variant="secondary">
+                                      {t.name}
+                                    </Badge>
+                                  ))}
+                                  {r.tags.length > 2 ? (
+                                    <Badge variant="outline">+{r.tags.length - 2}</Badge>
+                                  ) : null}
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap">
+                              <Badge variant={ESTADO_BADGE[r.estado]}>
+                                {ESTADO_LABELS[r.estado]}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="hidden text-muted-foreground lg:table-cell">
+                              {r.slots.length === 0
+                                ? "—"
+                                : r.slots
+                                    .map((s) => formatSlot(s.weekday, s.start_time))
+                                    .join(", ")}
+                            </TableCell>
+                            <TableCell>
+                              {monthSummary.count === 0 ? (
+                                <span className="text-muted-foreground">—</span>
+                              ) : (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="flex gap-1">
+                                      {monthSummary.chips.map((c) => (
+                                        <span
+                                          key={c.date}
+                                          className="flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[11px] text-muted-foreground"
+                                        >
+                                          {c.letter}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>{monthSummary.tooltip}</TooltipContent>
+                                </Tooltip>
+                              )}
+                            </TableCell>
+                            {viewerRole === "admin" && (
+                              <>
+                                <TableCell className="whitespace-nowrap">
+                                  {r.plan_name ? (
+                                    <Badge variant="secondary">{r.plan_name}</Badge>
+                                  ) : (
+                                    <span className="text-muted-foreground">Sin plan</span>
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  {r.pending_makeups > 0 ? (
+                                    <Badge variant="outline">{r.pending_makeups}</Badge>
+                                  ) : (
+                                    <span className="text-muted-foreground">0</span>
+                                  )}
+                                </TableCell>
+                              </>
+                            )}
+                            <TableCell className="text-right">
+                              {viewerRole === "admin" ? (
+                                <div className="flex justify-end gap-1">
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setReminderStudent(r);
+                                          setReminderOpen(true);
+                                        }}
+                                        aria-label="Enviar recordatorio de pago"
+                                      >
+                                        <BellRing className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Recordatorio de pago</TooltipContent>
+                                  </Tooltip>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setGrantStudent(r);
+                                          setGrantOpen(true);
+                                        }}
+                                        aria-label="Conceder recuperación"
+                                      >
+                                        <Gift className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Conceder recuperación</TooltipContent>
+                                  </Tooltip>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          void toggleArchived(r);
+                                        }}
+                                        aria-label={
+                                          r.is_archived ? "Desarchivar miembro" : "Archivar miembro"
+                                        }
+                                      >
+                                        {r.is_archived ? (
+                                          <ArchiveRestore className="h-4 w-4" />
+                                        ) : (
+                                          <Archive className="h-4 w-4" />
+                                        )}
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      {r.is_archived ? "Desarchivar miembro" : "Archivar miembro"}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
 
-      <StudentDetailSheet
-        student={selected}
-        viewerRole={viewerRole}
-        allTags={allTags}
-        onOpenChange={(o) => !o && setSelected(null)}
-        onChanged={() => void load()}
-      />
+        <StudentDetailSheet
+          student={selected}
+          viewerRole={viewerRole}
+          allTags={allTags}
+          onOpenChange={(o) => !o && setSelected(null)}
+          onChanged={() => void load()}
+        />
 
-      <GrantMakeupDialog
-        open={grantOpen}
-        onOpenChange={(o) => {
-          setGrantOpen(o);
-          if (!o) setGrantStudent(null);
-        }}
-        student={grantStudent}
-        onGranted={() => void load()}
-      />
+        <GrantMakeupDialog
+          open={grantOpen}
+          onOpenChange={(o) => {
+            setGrantOpen(o);
+            if (!o) setGrantStudent(null);
+          }}
+          student={grantStudent}
+          onGranted={() => void load()}
+        />
 
-      <PaymentReminderDialog
-        open={reminderOpen}
-        onOpenChange={(o) => {
-          setReminderOpen(o);
-          if (!o) setReminderStudent(null);
-        }}
-        student={reminderStudent}
-        plans={plans}
-      />
-    </div>
+        <PaymentReminderDialog
+          open={reminderOpen}
+          onOpenChange={(o) => {
+            setReminderOpen(o);
+            if (!o) setReminderStudent(null);
+          }}
+          student={reminderStudent}
+          plans={plans}
+        />
+      </div>
+    </TooltipProvider>
   );
 }
 
