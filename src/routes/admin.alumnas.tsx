@@ -538,7 +538,15 @@ type Payment = {
   status: string;
   created_at: string;
   stripe_session_id: string | null;
+  method: string | null;
 };
+
+function paymentMethodLabel(method: string | null) {
+  if (method === "cash") return "Efectivo";
+  if (method === "card") return "Tarjeta";
+  if (method === "bizum") return "Bizum";
+  return "—";
+}
 
 type Notif = {
   id: string;
@@ -691,7 +699,7 @@ function StudentDetailSheet({
           .limit(50),
         supabase
           .from("payments")
-          .select("id, amount_cents, status, created_at, stripe_session_id")
+          .select("id, amount_cents, status, created_at, stripe_session_id, method")
           .eq("student_id", student.id)
           .order("created_at", { ascending: false })
           .limit(20),
@@ -849,7 +857,9 @@ function StudentDetailSheet({
                           >
                             <span>
                               {new Date(p.created_at).toLocaleDateString("es-ES")} ·{" "}
-                              <span className="text-muted-foreground">{p.status}</span>
+                              <span className="text-muted-foreground">
+                                {paymentMethodLabel(p.method)} · {p.status}
+                              </span>
                             </span>
                             <span className="font-medium">
                               {new Intl.NumberFormat("es-ES", {
