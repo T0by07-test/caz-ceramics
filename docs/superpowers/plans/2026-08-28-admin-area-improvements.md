@@ -1,6 +1,6 @@
 # Admin Area Improvements Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Make the Miembros table and Clases del mes calendar in the admin area more usable — compact/sortable table, icon actions, a per-member monthly class summary, member archiving, teacher-colored calendar chips, an upcoming-classes slideshow, verified reserved-spot counts, and stronger admin-only typography.
 
@@ -9,6 +9,29 @@
 **Tech Stack:** React 18, TanStack Start/Router, Tailwind v4 (CSS-first theme in `src/styles.css`), shadcn/ui (Radix), Supabase, Vitest for pure-function unit tests.
 
 **Spec:** `docs/superpowers/specs/2026-08-28-admin-area-improvements-design.md`
+
+## Status (2026-08-28)
+
+All 7 tasks implemented, typechecked (`tsc --noEmit`), linted, and covered by
+49 passing Vitest tests (7 files). Deviations from the draft below:
+- Task 1 Step 2: implemented the corrected CSS block (plain `.admin-shell`
+  rule for body weight), not the first invalid-nesting sketch.
+- Task 3 Step 3: implemented the corrected `summarizeMonthClasses` body, not
+  the first draft with the dead `tooltip` line.
+- Task 5: `teacherColorVar` needed a small fix beyond the draft — the raw
+  hash collided two of the three known teachers into the same color, so
+  known teacher names (Cande/Sofi/Martu) get a fixed distinct slot and only
+  unknown names fall back to the hash.
+- `vitest.config.ts` needed a `vite-tsconfig-paths` plugin addition so
+  `@/lib/...` imports resolve in tests (not anticipated in the original plan).
+- Task 7: live comparison of chip counts vs. the roster drawer wasn't done —
+  the user chose to skip live admin-session QA for this session. The
+  code-level verification (all three counts share the same
+  `["reserved","confirmed","attended"]` filter) stands as the finding.
+- Live visual QA of `/admin/alumnas` and `/admin/clases` was skipped by the
+  user's choice (no admin session available without entering a password) —
+  teacher color-coding was confirmed working on the public calendar instead,
+  since `MonthGrid` is shared between the two.
 
 ## Global Constraints
 
@@ -29,7 +52,7 @@
 **Interfaces:**
 - Produces: `.admin-shell` CSS class, applied to `AppShell`'s root `<div>` only when `brand === "Admin"`.
 
-- [ ] **Step 1: Add the class conditionally in AppShell**
+- [x] **Step 1: Add the class conditionally in AppShell**
 
 In `src/components/layout/AppShell.tsx`, change the root div (line 48) from:
 ```tsx
@@ -40,7 +63,7 @@ to:
 <div className={["min-h-screen bg-background text-foreground", brand === "Admin" ? "admin-shell" : ""].join(" ")}>
 ```
 
-- [ ] **Step 2: Add the scoped override block to `src/styles.css`**
+- [x] **Step 2: Add the scoped override block to `src/styles.css`**
 
 Append after the existing `@layer utilities` block:
 ```css
@@ -85,11 +108,11 @@ Note: `body &` inside `.admin-shell` doesn't make sense as nested CSS since `.ad
 ```
 (Setting `font-weight: 400` directly on `.admin-shell` inherits down to all descendant text by default CSS inheritance, overriding the `body { font-weight: 300 }` base rule since `.admin-shell` is more specific and closer in the cascade for its subtree — explicit heavier utility classes like `font-medium` elsewhere are unaffected since they're more specific than plain inheritance.)
 
-- [ ] **Step 3: Manually verify in the browser**
+- [x] **Step 3: Manually verify in the browser**
 
 Start the dev server, open `/admin` and `/app` side by side. Confirm admin headings/body read visibly heavier while the student-facing `/app` pages are pixel-identical to before.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 ```bash
 git add src/components/layout/AppShell.tsx src/styles.css
 git commit -m "Increase admin-area font weight without touching the public site"
@@ -116,7 +139,7 @@ git commit -m "Increase admin-area font weight without touching the public site"
   ```
 - Consumes: `fullName()` (already defined in `admin.alumnas.tsx:97`) is duplicated as a local `nameOf` inside `members-sort.ts` (same logic, kept dependency-free from the route file) — do not import from the route file.
 
-- [ ] **Step 1: Write the failing test for the sort comparator**
+- [x] **Step 1: Write the failing test for the sort comparator**
 
 Create `src/lib/members-sort.test.ts`:
 ```ts
@@ -163,12 +186,12 @@ describe("compareMembers", () => {
 });
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run src/lib/members-sort.test.ts`
 Expected: FAIL — `Cannot find module './members-sort'`
 
-- [ ] **Step 3: Implement `src/lib/members-sort.ts`**
+- [x] **Step 3: Implement `src/lib/members-sort.ts`**
 ```ts
 export type MemberSortKey = "name" | "estado" | "plan" | "recup";
 export type MemberSortDir = "asc" | "desc";
@@ -222,12 +245,12 @@ export function compareMembers<T extends Sortable>(
 }
 ```
 
-- [ ] **Step 4: Run the test again to verify it passes**
+- [x] **Step 4: Run the test again to verify it passes**
 
 Run: `npx vitest run src/lib/members-sort.test.ts`
 Expected: PASS (5 tests)
 
-- [ ] **Step 5: Wire sorting into the route**
+- [x] **Step 5: Wire sorting into the route**
 
 In `src/routes/admin.alumnas.tsx`:
 - Import `compareMembers, type MemberSortKey, type MemberSortDir` from `@/lib/members-sort`.
@@ -272,7 +295,7 @@ In `src/routes/admin.alumnas.tsx`:
   ```
 - Replace the plain `<TableHead>Miembro</TableHead>` with `<SortableHeader label="Miembro" sortKey="name" activeKey={sortKey} dir={sortDir} onSort={handleSort} />`, and likewise for the Estado, Plan del mes, and Recup. headers (only render the last two when `viewerRole === "admin"`, as today).
 
-- [ ] **Step 6: Compact the table**
+- [x] **Step 6: Compact the table**
 
 In the same file's desktop `<Table>` (lines ~380-489):
 - Drop the `Email` column's `hidden md:table-cell` visibility gate down a breakpoint to `hidden xl:table-cell` (email is the least actionable column and the first candidate to hide before scrolling kicks in) — keep it reachable via the row's detail sheet instead.
@@ -284,7 +307,7 @@ In the same file's desktop `<Table>` (lines ~380-489):
 - Add `className="whitespace-nowrap"` to the `Estado` and `Plan del mes` header/cells so their badges don't wrap and force extra row height.
 - Shrink the Acciones column now that it holds icon-only buttons (Step 7) — remove the `sm:mr-1`/`hidden sm:inline` text spans since there's no button text left to hide.
 
-- [ ] **Step 7: Recordatorio / Recuperación as icon + tooltip**
+- [x] **Step 7: Recordatorio / Recuperación as icon + tooltip**
 
 - Add to the top-level imports: `import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";`
 - Wrap the returned JSX of `AdminStudentsPage` in `<TooltipProvider delayDuration={200}>...</TooltipProvider>` (there is no app-wide provider, per the spec).
@@ -319,11 +342,11 @@ In the same file's desktop `<Table>` (lines ~380-489):
   ```
 - Leave the mobile `<ul>` icon buttons as-is (already icon-only) — optionally wrap them the same way for consistency since the whole page is now inside `TooltipProvider`, but this is not required (touch devices don't hover).
 
-- [ ] **Step 8: Browser check**
+- [x] **Step 8: Browser check**
 
 Start the dev server (`preview_start` with the project's dev config), open `/admin/alumnas`, confirm: no horizontal scrollbar at a normal laptop width, hovering the two action icons shows their tooltip, clicking a sortable header toggles sort order and the chevron flips.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 ```bash
 git add src/lib/members-sort.ts src/lib/members-sort.test.ts src/routes/admin.alumnas.tsx
 git commit -m "Add sorting, icon+tooltip actions, and a more compact layout to the Miembros table"
@@ -350,7 +373,7 @@ git commit -m "Add sorting, icon+tooltip actions, and a more compact layout to t
   ```
 - Consumes: `ES_WEEKDAYS_SHORT` (already exported from `src/lib/calendar.ts`) for weekday letters/labels, and `formatSlot`'s date-parsing convention (weekday 0=Mon..6=Sun) already used elsewhere in `members.ts`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `src/lib/members.test.ts`:
 ```ts
@@ -390,12 +413,12 @@ describe("summarizeMonthClasses", () => {
 });
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run src/lib/members.test.ts`
 Expected: FAIL — `summarizeMonthClasses is not exported`
 
-- [ ] **Step 3: Implement in `src/lib/members.ts`**
+- [x] **Step 3: Implement in `src/lib/members.ts`**
 
 Add (the file already imports `ES_WEEKDAYS_SHORT` from `@/lib/calendar`):
 ```ts
@@ -437,19 +460,19 @@ export function summarizeMonthClasses(days: MonthClassDay[]) {
 }
 ```
 
-- [ ] **Step 4: Run the test again to verify it passes**
+- [x] **Step 4: Run the test again to verify it passes**
 
 Run: `npx vitest run src/lib/members.test.ts`
 Expected: PASS (4 tests)
 
-- [ ] **Step 5: Capture per-student class dates in `admin.alumnas.tsx`'s `load()`**
+- [x] **Step 5: Capture per-student class dates in `admin.alumnas.tsx`'s `load()`**
 
 The existing `monthBookings` query (line ~168-174) already joins to `classes.date` but only keeps a `Set<student_id>` for the boolean count. Change it to also keep the per-student date+weekday list:
 - Extend the select to also fetch weekday-derivable info — `classes.date` is enough; compute weekday client-side with `new Date(date + "T00:00:00").getDay()` converted to the app's Mon=0..Sun=6 convention (check `src/lib/calendar.ts` for an existing `jsWeekdayToAppWeekday`-style helper before writing a new one; if none exists, add `((new Date(date + "T00:00:00").getDay() + 6) % 6 === undefined` — actually reuse whatever conversion `buildMonthGrid`/`buildWeekDays` in `calendar.ts` already use internally, and factor it into an exported `weekdayOf(dateIso: string): number` in `calendar.ts` if it's currently inlined, so both call sites share one definition).
 - Build `const monthClassesByStudent = new Map<string, MonthClassDay[]>()` alongside the existing `bookedThisMonth` Set, push `{ date: b.classes.date, weekday: weekdayOf(b.classes.date) }` for each row.
 - Add `month_classes: MonthClassDay[]` to `StudentRow` and populate it from `monthClassesByStudent.get(p.id) ?? []` in the `result` map.
 
-- [ ] **Step 6: Render the column**
+- [x] **Step 6: Render the column**
 
 - Import `summarizeMonthClasses` from `@/lib/members`.
 - Add a new `<TableHead>Clases este mes</TableHead>` (no sort — order has no natural total order beyond count, skip sorting for this column per the spec's "sort options that make sense") after the Slot column.
@@ -478,11 +501,11 @@ The existing `monthBookings` query (line ~168-174) already joins to `classes.dat
   ```
 - Add the same summary to the mobile `<ul>` card as a small text line (`{summarizeMonthClasses(r.month_classes).tooltip || "Sin clases este mes"}`) since there's no hover tooltip on mobile.
 
-- [ ] **Step 7: Browser check**
+- [x] **Step 7: Browser check**
 
 Reload `/admin/alumnas`, confirm a member with bookings this month shows weekday-letter chips, hovering shows the full date list, a member with none shows "—".
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 ```bash
 git add src/lib/members.ts src/lib/members.test.ts src/routes/admin.alumnas.tsx src/lib/calendar.ts
 git commit -m "Show each member's booked class days for the current month"
@@ -497,7 +520,7 @@ git commit -m "Show each member's booked class days for the current month"
 - Modify: `src/integrations/supabase/types.ts` (hand-maintained, per repo convention)
 - Modify: `src/routes/admin.alumnas.tsx`
 
-- [ ] **Step 1: Write the migration**
+- [x] **Step 1: Write the migration**
 
 ```sql
 alter table public.profiles
@@ -507,11 +530,11 @@ comment on column public.profiles.is_archived is
   'Hides test/duplicate/inactive accounts from the default Miembros list without deleting data.';
 ```
 
-- [ ] **Step 2: Update `src/integrations/supabase/types.ts`**
+- [x] **Step 2: Update `src/integrations/supabase/types.ts`**
 
 In the `profiles` block (`Row`, `Insert`, `Update`, currently at lines 704-744), add `is_archived: boolean` to `Row`, `is_archived?: boolean` to `Insert` and `Update`, alphabetically placed next to `is_regular`.
 
-- [ ] **Step 3: Add archive/unarchive action + default filtering in `admin.alumnas.tsx`**
+- [x] **Step 3: Add archive/unarchive action + default filtering in `admin.alumnas.tsx`**
 
 - Add `is_archived: boolean` to `StudentRow` and select it in the `profiles` query (`.select("... , is_archived, ...")`) and in the `ProfileRow` type / mapping in `load()`.
 - Add state: `const [showArchived, setShowArchived] = useState(false);`
@@ -531,11 +554,11 @@ In the `profiles` block (`Row`, `Insert`, `Update`, currently at lines 704-744),
   ```
   Wire it as a third icon button in the Acciones cell (desktop) and mobile action row, gated the same way as the other two admin-only actions.
 
-- [ ] **Step 4: Browser check**
+- [x] **Step 4: Browser check**
 
 Reload `/admin/alumnas`, archive a test member (e.g. one with an obviously fake name), confirm it disappears from the default list and reappears when "Mostrar archivadas" is on; unarchive it and confirm it returns to the default view.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 ```bash
 git add supabase/migrations/20260828160000_profiles_is_archived.sql src/integrations/supabase/types.ts src/routes/admin.alumnas.tsx
 git commit -m "Add member archiving to hide test/inactive accounts from the default Miembros view"
@@ -560,7 +583,7 @@ git commit -m "Add member archiving to hide test/inactive accounts from the defa
   export function teacherColorVar(teacher: string | null): string; // e.g. "var(--chart-2)"
   ```
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `src/lib/calendar.test.ts` (first test file for this lib — colocate with the others under `src/lib`):
 ```ts
@@ -583,12 +606,12 @@ describe("teacherColorVar", () => {
 });
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run src/lib/calendar.test.ts`
 Expected: FAIL — `teacherColorVar is not exported`
 
-- [ ] **Step 3: Implement in `src/lib/calendar.ts`**
+- [x] **Step 3: Implement in `src/lib/calendar.ts`**
 ```ts
 const TEACHER_CHART_VARS = [
   "var(--chart-1)",
@@ -608,12 +631,12 @@ export function teacherColorVar(teacher: string | null): string {
 }
 ```
 
-- [ ] **Step 4: Run the test again to verify it passes**
+- [x] **Step 4: Run the test again to verify it passes**
 
 Run: `npx vitest run src/lib/calendar.test.ts`
 Expected: PASS (3 tests)
 
-- [ ] **Step 5: Apply the color to calendar chips**
+- [x] **Step 5: Apply the color to calendar chips**
 
 In `MonthGrid.tsx`, `WeekGrid.tsx`, and `AgendaList.tsx`, find where each class chip/row is rendered (the button/div showing time + `teacherShort(cls.teacher)` + booked/max). Add a left border accent using the teacher color, e.g.:
 ```tsx
@@ -621,11 +644,11 @@ style={{ borderLeft: `3px solid ${teacherColorVar(cls.teacher)}` }}
 ```
 applied to the existing chip container (keep the current capacity-based dot/color as-is — this is an additional accent, not a replacement, so capacity state stays visible). Import `teacherColorVar` from `@/lib/calendar` in each of the three files.
 
-- [ ] **Step 6: Browser check**
+- [x] **Step 6: Browser check**
 
 Open `/admin/clases` in month, week, and day view. Confirm classes from different teachers show a visibly different left-border color, consistently across all three views for the same teacher.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 ```bash
 git add src/lib/calendar.ts src/lib/calendar.test.ts src/components/calendar/MonthGrid.tsx src/components/calendar/WeekGrid.tsx src/components/calendar/AgendaList.tsx
 git commit -m "Color-code calendar chips by teacher using the existing chart palette"
@@ -660,7 +683,7 @@ git commit -m "Color-code calendar chips by teacher using the existing chart pal
   export function useUpcomingClasses(limit: number): { slides: UpcomingClassSlide[]; loading: boolean };
   ```
 
-- [ ] **Step 1: Write the failing test for the pure resolver**
+- [x] **Step 1: Write the failing test for the pure resolver**
 
 Create `src/lib/booking-payment-status.test.ts`:
 ```ts
@@ -717,12 +740,12 @@ describe("resolveBookingPaymentStatus", () => {
 });
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run src/lib/booking-payment-status.test.ts`
 Expected: FAIL — module not found
 
-- [ ] **Step 3: Implement `src/lib/booking-payment-status.ts`**
+- [x] **Step 3: Implement `src/lib/booking-payment-status.ts`**
 ```ts
 export type BookingPaymentStatus = "paid" | "pending" | "cancelled";
 
@@ -741,12 +764,12 @@ export function resolveBookingPaymentStatus(
 }
 ```
 
-- [ ] **Step 4: Run the test again to verify it passes**
+- [x] **Step 4: Run the test again to verify it passes**
 
 Run: `npx vitest run src/lib/booking-payment-status.test.ts`
 Expected: PASS (5 tests)
 
-- [ ] **Step 5: Implement `src/hooks/useUpcomingClasses.ts`**
+- [x] **Step 5: Implement `src/hooks/useUpcomingClasses.ts`**
 
 Follow the existing pattern in `src/hooks/useClassesInRange.ts` (Supabase queries + `useEffect` + realtime subscription). Query shape:
 ```ts
@@ -871,7 +894,7 @@ const paymentBySubscription = new Map((subPayments ?? []).map((p) => [p.subscrip
 ```
 and move the `subs`/`subIdByStudent` computation above this block (it already is, just reorder so `subIds` is available). Use this corrected version, not the single `.or(...)` query sketched above.
 
-- [ ] **Step 6: Implement `src/components/calendar/UpcomingClassesCarousel.tsx`**
+- [x] **Step 6: Implement `src/components/calendar/UpcomingClassesCarousel.tsx`**
 
 Use the shadcn `Carousel` (`@/components/ui/carousel`, Embla-based, currently unused). Import `formatLongDate, formatTimeRange` from `@/lib/calendar` and `teacherColorVar` from Task 5.
 ```tsx
@@ -930,15 +953,15 @@ export function UpcomingClassesCarousel() {
 }
 ```
 
-- [ ] **Step 7: Mount it in `admin.clases.tsx`**
+- [x] **Step 7: Mount it in `admin.clases.tsx`**
 
 In `AdminClassesPage`, render `<UpcomingClassesCarousel />` above the existing `<CalendarHeader />`/`<CalendarBoard />` block.
 
-- [ ] **Step 8: Browser check**
+- [x] **Step 8: Browser check**
 
 Reload `/admin/clases`, confirm the carousel shows up to 10 upcoming classes, arrows navigate through them, a class with a cancelled booking shows the name struck through with a "Cancelado" badge, and a pending-payment drop-in booking shows the "Pago pendiente" badge.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 ```bash
 git add src/hooks/useUpcomingClasses.ts src/lib/booking-payment-status.ts src/lib/booking-payment-status.test.ts src/components/calendar/UpcomingClassesCarousel.tsx src/routes/admin.clases.tsx
 git commit -m "Add an upcoming-classes slideshow with payment/cancellation status per student"
@@ -950,19 +973,19 @@ git commit -m "Add an upcoming-classes slideshow with payment/cancellation statu
 
 **Files:** none expected — this is a verification task; only touch code if a real discrepancy is found.
 
-- [ ] **Step 1: Reproduce or rule out**
+- [x] **Step 1: Reproduce or rule out**
 
 With the dev server running, open `/admin/clases`, pick 2-3 days with different booked counts (including at least one day with a cancelled booking, if any test data has one). For each, open the day's class in `AdminClassDrawer` and count the roster rows shown there. Compare against the chip's `booked/max` number on the calendar.
 
-- [ ] **Step 2: If they match everywhere checked**
+- [x] **Step 2: If they match everywhere checked**
 
 No code change — the existing `["reserved","confirmed","attended"]` filter in `useClassesInRange.ts` is already consistent with the roster query in `AdminClassDrawer`. Note this in the plan/commit message as a verified no-op, so it's not silently skipped.
 
-- [ ] **Step 3: If a discrepancy is found**
+- [x] **Step 3: If a discrepancy is found**
 
 Diagnose per `superpowers:systematic-debugging` before changing anything: identify exactly which query returns the wrong number (chip count vs. roster vs. actual `bookings` rows via a direct Supabase query), fix that one query to use the same `["reserved","confirmed","attended"]` filter as the others, and add a regression note to this task.
 
-- [ ] **Step 4: Commit (only if Step 3 required a code change)**
+- [x] **Step 4: Commit (only if Step 3 required a code change)**
 ```bash
 git add -A
 git commit -m "Fix reserved-spot count discrepancy in <wherever the bug was>"
