@@ -5,6 +5,7 @@ import {
   dayHourBounds,
   ES_WEEKDAYS_SHORT,
   formatTime,
+  teacherColorVar,
   teacherShort,
 } from "@/lib/calendar";
 
@@ -75,6 +76,11 @@ export function WeekGrid({ reference, classes, onSelectClass, selectedIds }: Pro
                         key={c.id}
                         type="button"
                         onClick={() => onSelectClass(c)}
+                        style={
+                          cancelled
+                            ? undefined
+                            : { borderLeft: `3px solid ${teacherColorVar(c.teacher)}` }
+                        }
                         className={[
                           "flex w-full flex-col gap-0.5 rounded-md border border-border px-1.5 py-1 text-left text-xs transition-colors",
                           cancelled

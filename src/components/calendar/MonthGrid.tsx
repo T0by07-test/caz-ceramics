@@ -4,6 +4,7 @@ import {
   capacityLevel,
   ES_WEEKDAYS_SHORT,
   formatTime,
+  teacherColorVar,
   teacherShort,
 } from "@/lib/calendar";
 import type { ClassWithCount } from "@/hooks/useMonthClasses";
@@ -72,6 +73,11 @@ export function MonthGrid({ reference, classes, onSelectClass, selectedIds }: Pr
                       <button
                         type="button"
                         onClick={() => onSelectClass(c)}
+                        style={
+                          cancelled
+                            ? undefined
+                            : { borderLeft: `3px solid ${teacherColorVar(c.teacher)}` }
+                        }
                         className={[
                           "flex w-full flex-col gap-0.5 rounded-md border border-border px-0.5 py-0.5 text-left leading-[1.15] transition-colors sm:px-1.5 sm:py-1",
                           cancelled

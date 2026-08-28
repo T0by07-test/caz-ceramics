@@ -4,6 +4,7 @@ import {
   capacityLevel,
   formatLongDate,
   formatTimeRange,
+  teacherColorVar,
   teacherShort,
 } from "@/lib/calendar";
 
@@ -53,6 +54,11 @@ export function AgendaList({
                   <button
                     type="button"
                     onClick={() => onSelectClass(c)}
+                    style={
+                      cancelled
+                        ? undefined
+                        : { borderLeft: `3px solid ${teacherColorVar(c.teacher)}` }
+                    }
                     className={[
                       "flex w-full items-center gap-3 rounded-none border p-3 text-left transition-colors",
                       picked

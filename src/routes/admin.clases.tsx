@@ -54,6 +54,7 @@ import {
 } from "@/lib/calendar-view";
 import { CalendarHeader } from "@/components/calendar/CalendarHeader";
 import { CalendarBoard } from "@/components/calendar/CalendarBoard";
+import { UpcomingClassesCarousel } from "@/components/calendar/UpcomingClassesCarousel";
 
 export const Route = createFileRoute("/admin/clases")({
   validateSearch: (search) => calendarSearchSchema.parse(search),
@@ -121,6 +122,8 @@ function AdminClassesPage() {
           <Plus className="h-4 w-4" /> Crear clase
         </Button>
       </div>
+
+      <UpcomingClassesCarousel />
 
       <CalendarHeader
         view={view}
