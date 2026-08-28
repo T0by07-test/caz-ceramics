@@ -3,6 +3,24 @@ import { getStripeEnvironment } from "@/lib/stripe";
 
 type PaymentMethod = "card" | "bizum";
 
+/**
+ * supabase-js's FunctionsHttpError.message is always the generic
+ * "Edge Function returned a non-2xx status code", discarding the JSON body
+ * our edge functions actually return (e.g. { error: "Authentication required" }).
+ * Pull the real reason out of error.context (the raw Response) when present.
+ */
+async function functionErrorMessage(error: { message: string; context?: Response }) {
+  if (error.context instanceof Response) {
+    try {
+      const body = await error.context.clone().json();
+      if (typeof body?.error === "string") return body.error;
+    } catch {
+      // Body wasn't JSON (or already consumed) — fall through to the generic message.
+    }
+  }
+  return error.message;
+}
+
 type CreateDropInArgs = {
   bookingIds: string[];
   returnUrl: string;
@@ -35,7 +53,7 @@ export async function createDropInCheckout({
       environment: getStripeEnvironment(),
     },
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(await functionErrorMessage(error));
   if (hosted) {
     if (!data?.url) throw new Error(data?.error ?? "No checkout URL returned");
   } else if (!data?.clientSecret) {
@@ -62,7 +80,7 @@ export async function createPlanCheckout({
       environment: getStripeEnvironment(),
     },
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(await functionErrorMessage(error));
   if (hosted) {
     if (!data?.url) throw new Error(data?.error ?? "No checkout URL returned");
   } else if (!data?.clientSecret) {
@@ -85,7 +103,7 @@ export async function createTrialCheckout({ classId, email, name, returnUrl }: C
       environment: getStripeEnvironment(),
     },
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(await functionErrorMessage(error));
   if (!data?.url) throw new Error(data?.error ?? "No checkout URL returned");
   return data as { url: string; sessionId: string };
 }

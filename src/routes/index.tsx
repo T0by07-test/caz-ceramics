@@ -256,7 +256,7 @@ function Index() {
             <TableBody>
               {SCHEDULE.flatMap((d) =>
                 d.slots.map((slot, i) => (
-                  <TableRow key={slot}>
+                  <TableRow key={`${d.day}-${slot}`}>
                     {i === 0 ? (
                       <TableCell rowSpan={d.slots.length} className="align-top text-label">
                         {d.day}
