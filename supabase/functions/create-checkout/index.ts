@@ -75,6 +75,7 @@ Deno.serve(async (req) => {
       }
       const publicSession = await publicStripe.checkout.sessions.create({
         mode: "payment",
+        payment_method_types: ["card"],
         line_items: [{ price: trialPrices.data[0].id, quantity: 1 }],
         customer_email: email,
         success_url: `${returnUrl}?pago=ok`,

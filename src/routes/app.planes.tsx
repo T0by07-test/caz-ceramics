@@ -105,6 +105,7 @@ function PlanesPage() {
     const { clientSecret } = await createPlanCheckout({
       planId: activePlan.id,
       returnUrl,
+      paymentMethod: "card",
       month,
     });
     return clientSecret;
@@ -116,6 +117,7 @@ function PlanesPage() {
     const { url } = await createPlanCheckout({
       planId: activePlan.id,
       returnUrl,
+      paymentMethod: "card",
       month,
       hosted: true,
     });
@@ -235,8 +237,8 @@ function PlanesPage() {
             >
               <CreditCard className="h-5 w-5 shrink-0" />
               <span className="flex flex-col">
-                <span className="font-medium">Tarjeta bancaria / Bizum</span>
-                <span className="text-sm text-muted-foreground">Paga ahora con tarjeta o Bizum</span>
+                <span className="font-medium">Tarjeta</span>
+                <span className="text-sm text-muted-foreground">Paga ahora con tarjeta</span>
               </span>
             </Button>
           </div>
