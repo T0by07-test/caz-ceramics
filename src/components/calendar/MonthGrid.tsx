@@ -5,7 +5,6 @@ import {
   ES_WEEKDAYS_SHORT,
   formatTime,
   teacherColorVar,
-  teacherShort,
 } from "@/lib/calendar";
 import type { ClassWithCount } from "@/hooks/useMonthClasses";
 
@@ -107,11 +106,6 @@ export function MonthGrid({ reference, classes, onSelectClass, selectedIds }: Pr
                         {!cancelled && level === "full" ? (
                           <span className="block text-[8px] font-medium text-destructive sm:pl-3 sm:text-[11px]">
                             completa
-                          </span>
-                        ) : null}
-                        {c.teacher ? (
-                          <span className="block text-[8px] text-muted-foreground sm:pl-3 sm:text-[11px]">
-                            {teacherShort(c.teacher)}
                           </span>
                         ) : null}
                         {c.audience === "kids" ? (

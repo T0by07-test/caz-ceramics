@@ -5,7 +5,6 @@ import {
   formatLongDate,
   formatTimeRange,
   teacherColorVar,
-  teacherShort,
 } from "@/lib/calendar";
 
 import type { ClassWithCount } from "@/hooks/useMonthClasses";
@@ -79,7 +78,6 @@ export function AgendaList({
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {cancelled ? "Cancelada" : capacityLabel(level)}
-                        {c.teacher ? ` · ${teacherShort(c.teacher)}` : ""}
                         {c.audience === "kids" ? " · Clase infantil" : ""}
                       </div>
                     </div>

@@ -6,7 +6,6 @@ import {
   ES_WEEKDAYS_SHORT,
   formatTime,
   teacherColorVar,
-  teacherShort,
 } from "@/lib/calendar";
 
 import type { ClassWithCount } from "@/hooks/useMonthClasses";
@@ -103,10 +102,9 @@ export function WeekGrid({ reference, classes, onSelectClass, selectedIds }: Pro
                             {c.booked_count}/{c.capacity_max}
                           </span>
                         </span>
-                        {c.teacher ? (
+                        {c.audience === "kids" ? (
                           <span className="block truncate pl-3.5 text-[11px] leading-tight text-muted-foreground">
-                            {teacherShort(c.teacher)}
-                            {c.audience === "kids" ? " · niños" : ""}
+                            niños
                           </span>
                         ) : null}
                       </button>
