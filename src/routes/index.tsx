@@ -23,6 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -145,7 +146,7 @@ function Index() {
 
       <main className="mx-auto w-full max-w-[1180px] px-4 sm:px-8">
         {/* Hero */}
-        <section className="flex flex-col items-center gap-8 pb-12 pt-16 text-center">
+        <section className="flex flex-col items-center gap-8 pb-12 pt-8 text-center">
           <span className="text-label">ESTUDIO DE CERÁMICA - RUZAFA</span>
           <div className="flex max-w-3xl flex-col gap-6">
             <h1 className="text-h1">Crea, aprende y disfruta del barro a tu ritmo.</h1>
@@ -206,46 +207,82 @@ function Index() {
             </p>
           </div>
 
-          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-            {PLANS.map((p) => (
-              <div key={p.classes} className="flex flex-col gap-3 border-t border-border pt-6">
-                {p.featured ? <span className="text-label">{p.featuredLabel}</span> : null}
-                <div className="flex items-baseline gap-2">
-                  <span className="text-h3">{p.classes}</span>
-                  <span className="text-label">{p.detail}</span>
-                </div>
-                {p.tagline ? <p className="text-body">{p.tagline}</p> : null}
-                <p className="text-body">{p.description}</p>
-                <div className="flex items-baseline gap-2 pt-2">
-                  <span className="font-display text-[32px] font-extralight tabular-nums tracking-[0.02em] text-foreground">
-                    {p.price}
-                  </span>
-                  <span className="text-label">{p.period}</span>
-                </div>
-                {p.trialNote ? (
-                  <p className="text-sm text-muted-foreground">{p.trialNote}</p>
-                ) : null}
-              </div>
-            ))}
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Plan</TableHead>
+                <TableHead className="text-right">Precio</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {PLANS.map((p) => (
+                <TableRow key={p.classes}>
+                  <TableCell className="py-2.5 align-middle">
+                    <span className="items-baseline gap-2">
+                      <span className="text-h3">{p.classes}</span>{" "}
+                      <span className="text-label">{p.detail}</span>
+                    </span>
+                  </TableCell>
+                  <TableCell className="py-2.5 text-right align-middle whitespace-nowrap">
+                    <span className="font-display text-[20px] font-extralight tabular-nums tracking-[0.02em] text-foreground">
+                      {p.price}
+                    </span>{" "}
+                    <span className="text-label">{p.period}</span>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
 
           <div className="flex flex-col gap-3 border-t border-border pt-6">
             <h3 className="text-h3">¿Quieres venir más de 4 veces al mes?</h3>
             <p className="text-body">Puedes añadir clases extra por 20 € cada una.</p>
           </div>
+        </section>
 
-          <div className="flex flex-col items-start gap-6 bg-muted px-6 py-10 sm:px-10 sm:py-12">
+        {/* Horarios y profesoras */}
+        <section className="flex flex-col gap-10 border-t border-border pb-12 pt-8">
+          <div className="flex flex-col gap-4">
+            <span className="text-label">Horarios y profesoras</span>
+            <h2 className="text-h2">¿Cuándo se imparten las clases?</h2>
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Día</TableHead>
+                <TableHead>Horario</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {SCHEDULE.flatMap((d) =>
+                d.slots.map((slot, i) => (
+                  <TableRow key={slot}>
+                    {i === 0 ? (
+                      <TableCell rowSpan={d.slots.length} className="align-top text-label">
+                        {d.day}
+                      </TableCell>
+                    ) : null}
+                    <TableCell className="text-body">{slot}</TableCell>
+                  </TableRow>
+                )),
+              )}
+            </TableBody>
+          </Table>
+
+          <div className="flex flex-col gap-3 border-t border-border pt-6">
             <p className="text-body max-w-2xl">
-              Tú eliges cuándo venir. Cada mes tienes un número de clases según el plan que elijas y
-              puedes reservarlas desde el calendario según la disponibilidad.
+              ¿Sois un grupo de 3 o más personas y queréis hacer una clase de cerámica durante la
+              semana? Escríbeme por WhatsApp y coordinamos un día y horario que os venga bien.
             </p>
-            <p className="text-sm text-muted-foreground">
-              Las clases no se acumulan de un mes a otro. Si no las usas, se reinician al comienzo
-              del siguiente mes.
-            </p>
-            <Button asChild>
-              <Link to="/solicitar">Ver clases y horarios</Link>
-            </Button>
+            <a
+              href="https://wa.me/34661499026"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 font-display text-[13px] uppercase tracking-[0.16em] text-primary underline-offset-8 hover:underline"
+            >
+              <MessageCircle className="h-4 w-4 shrink-0" />
+              +34 661 499 026
+            </a>
           </div>
         </section>
 
@@ -309,44 +346,6 @@ function Index() {
             Las clases recuperadas deben usarse dentro del mismo mes natural. No se acumulan ni se
             trasladan al mes siguiente.
           </p>
-        </section>
-
-        {/* Horarios y profesoras */}
-        <section className="flex flex-col gap-10 border-t border-border pb-12 pt-8">
-          <div className="flex flex-col gap-4">
-            <span className="text-label">Horarios y profesoras</span>
-            <h2 className="text-h2">¿Cuándo se imparten las clases?</h2>
-          </div>
-          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
-            {SCHEDULE.map((d) => (
-              <div key={d.day} className="flex flex-col gap-3 border-t border-border pt-6">
-                <span className="text-label">{d.day}</span>
-                <ul className="flex flex-col gap-1.5">
-                  {d.slots.map((slot) => (
-                    <li key={slot} className="text-body">
-                      {slot}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex flex-col gap-3 border-t border-border pt-6">
-            <p className="text-body max-w-2xl">
-              ¿Sois un grupo de 3 o más personas y queréis hacer una clase de cerámica durante la
-              semana? Escríbeme por WhatsApp y coordinamos un día y horario que os venga bien.
-            </p>
-            <a
-              href="https://wa.me/34661499026"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 font-display text-[13px] uppercase tracking-[0.16em] text-primary underline-offset-8 hover:underline"
-            >
-              <MessageCircle className="h-4 w-4 shrink-0" />
-              +34 661 499 026
-            </a>
-          </div>
         </section>
 
         {/* Detalle: bol de terracota */}
