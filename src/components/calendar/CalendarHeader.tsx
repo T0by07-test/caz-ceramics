@@ -24,8 +24,8 @@ export function CalendarHeader({
 }: Props) {
   const title = viewTitle(view, reference);
   return (
-    <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:gap-3 lg:justify-between lg:overflow-visible lg:pb-0">
-      <div className="flex shrink-0 items-center gap-0.5 sm:gap-2">
+    <div className="grid gap-3 pb-1 sm:flex sm:items-center sm:gap-3 lg:justify-between lg:pb-0">
+      <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:flex sm:shrink-0">
         <Button
           type="button"
           variant="outline"
@@ -36,7 +36,7 @@ export function CalendarHeader({
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <h2 className="shrink-0 whitespace-nowrap font-display text-[18px] font-extralight capitalize leading-[1.2] tracking-[0.02em] text-foreground sm:text-[26px] lg:min-w-[14ch] lg:text-left">
+        <h2 className="min-w-0 truncate text-center font-display text-[20px] font-extralight capitalize leading-[1.2] tracking-[0.02em] text-foreground sm:shrink-0 sm:text-[26px] lg:min-w-[14ch] lg:text-left">
           {title}
         </h2>
         <Button
@@ -59,7 +59,7 @@ export function CalendarHeader({
           Hoy
         </Button>
       </div>
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex min-w-0 items-center justify-between gap-2 sm:shrink-0 sm:justify-start">
         <ToggleGroup
           type="single"
           size="sm"

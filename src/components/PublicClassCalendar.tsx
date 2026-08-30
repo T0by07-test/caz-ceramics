@@ -126,35 +126,49 @@ export function PublicClassCalendar({
                   </span>
                 </div>
 
-                {/* Mobile: only availability dots; tap the day to see times below */}
-                <div className="flex flex-wrap justify-center gap-0.5 sm:hidden">
-                  {slots.slice(0, 4).map((c) => (
-                    <span
-                      key={c.id}
-                      className={[
-                        "h-1.5 w-1.5 rounded-full",
-                        isPast
-                          ? "bg-muted-foreground/40"
-                          : selectedIds.has(c.id)
-                            ? "bg-primary"
-                            : occupancy(c.id)
-                              ? capacityDotClass(
-                                  capacityLevel(
-                                    occupancy(c.id)!.booked_count,
-                                    occupancy(c.id)!.capacity_max,
-                                  ),
-                                )
-                              : "bg-success",
-                      ].join(" ")}
-                      aria-hidden
-                    />
-                  ))}
-                  {slots.length > 4 ? (
-                    <span className="text-[8px] leading-none text-muted-foreground">
-                      +{slots.length - 4}
-                    </span>
-                  ) : null}
-                </div>
+                {/* Mobile: compact chips with time + remaining spots */}
+                <ul className="flex flex-col gap-0.5 sm:hidden">
+                  {slots.map((c) => {
+                    const occ = occupancy(c.id);
+                    
+                    const full = isFull(c.id);
+                    return (
+                      <li key={c.id}>
+                        <button
+                          type="button"
+                          disabled={isPast || full}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onToggle(c.id);
+                          }}
+                          className={[
+                            "flex w-full flex-col items-center rounded border px-0.5 py-[1px] leading-[1.1]",
+                            isPast || full
+                              ? "border-transparent bg-muted/40 text-muted-foreground/60"
+                              : selectedIds.has(c.id)
+                                ? "border-primary bg-primary/15 text-foreground"
+                                : "border-border bg-background",
+                          ].join(" ")}
+                        >
+                          <span className="text-[8px] font-medium tabular-nums">
+                            {formatTime(c.start_time)}
+                          </span>
+                          {occ ? (
+                            <span
+                              className={[
+                                "text-[7px] tabular-nums",
+                                full ? "text-destructive" : "text-muted-foreground",
+                              ].join(" ")}
+                            >
+                              {occ.booked_count}/{occ.capacity_max}
+                            </span>
+                          ) : null}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+
 
                 {/* Desktop: full chips with time and teacher */}
                 <ul className="flex flex-col hidden gap-1.5 sm:block">
@@ -200,9 +214,7 @@ export function PublicClassCalendar({
                             </span>
                             {occupancy(c.id) ? (
                               <span className="ml-auto text-[10px] tabular-nums text-muted-foreground">
-                                {occupancy(c.id)!.capacity_max - occupancy(c.id)!.booked_count === 0
-                                  ? "completa"
-                                  : `${occupancy(c.id)!.capacity_max - occupancy(c.id)!.booked_count} libres`}
+                                {occupancy(c.id)!.booked_count}/{occupancy(c.id)!.capacity_max}
                               </span>
                             ) : null}
                           </span>
