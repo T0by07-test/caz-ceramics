@@ -99,9 +99,10 @@ export function MonthGrid({ reference, classes, onSelectClass, selectedIds }: Pr
                           <span className="text-[9px] font-normal tabular-nums sm:text-xs">
                             {formatTime(c.start_time)}
                           </span>
-                          <span className="ml-auto hidden shrink-0 tabular-nums text-xs text-muted-foreground sm:inline">
+                          <span className="ml-auto shrink-0 text-[8px] tabular-nums text-muted-foreground sm:text-xs">
                             {c.booked_count}/{c.capacity_max}
                           </span>
+
                         </span>
                         {!cancelled && level === "full" ? (
                           <span className="block text-[8px] font-medium text-destructive sm:pl-3 sm:text-[11px]">
