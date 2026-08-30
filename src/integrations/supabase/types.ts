@@ -1020,6 +1020,14 @@ export type Database = {
         Returns: undefined
       }
       promote_waitlist: { Args: { p_class_id: string }; Returns: undefined }
+      public_class_availability: {
+        Args: never
+        Returns: {
+          booked_count: number
+          capacity_max: number
+          class_id: string
+        }[]
+      }
       purchase_plan_cash: {
         Args: { p_month?: string; p_plan_id: string }
         Returns: undefined
