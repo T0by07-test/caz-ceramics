@@ -78,17 +78,29 @@ export async function sendPaymentReminder(studentId: string, planId: string): Pr
   if (data && data.ok === false) throw new Error(data.error ?? "No se pudo enviar el recordatorio");
 }
 
+const DELETE_MEMBER_ERRORS: Record<string, string> = {
+  ADMIN_REQUIRED: "Solo un admin puede eliminar miembros.",
+  MEMBER_NOT_FOUND: "El miembro ya no existe.",
+  ONLY_MEMBERS_CAN_BE_DELETED: "Solo se pueden eliminar cuentas con rol Miembro.",
+  HAS_REAL_PAYMENTS: "Este miembro tiene pagos registrados y no se puede eliminar.",
+};
+
 /**
- * Permanently delete a member account (test/junk profiles only — the edge
- * function refuses anyone with a real payment or a non-"user" role). Removes
- * the auth account, cascading to all their bookings/payments/tags/etc.
+ * Permanently delete a member account (test/junk profiles only — the RPC
+ * refuses anyone with a real payment or a non-"user" role). Removes the auth
+ * account, cascading to all their bookings/payments/tags/etc.
  */
 export async function deleteMember(studentId: string): Promise<void> {
-  const { data, error } = await supabase.functions.invoke("admin-delete-member", {
-    body: { studentId },
-  });
-  if (error) throw new Error(await getFunctionErrorMessage(error));
-  if (!data?.deleted) throw new Error(data?.error ?? "No se pudo eliminar el miembro");
+  const { error } = await (
+    supabase.rpc as unknown as (
+      fn: string,
+      args: Record<string, unknown>,
+    ) => Promise<{ error: { message: string } | null }>
+  )("admin_delete_member", { p_student_id: studentId });
+  if (error) {
+    const code = error.message.match(/^[A-Z_]+/)?.[0];
+    throw new Error((code && DELETE_MEMBER_ERRORS[code]) ?? error.message);
+  }
 }
 
 /** Copy text to the clipboard. Returns whether the copy succeeded. */
