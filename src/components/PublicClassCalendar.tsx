@@ -153,14 +153,14 @@ export function PublicClassCalendar({
                           <span className="text-[8px] font-medium tabular-nums">
                             {formatTime(c.start_time)}
                           </span>
-                          {free !== null ? (
+                          {occ ? (
                             <span
                               className={[
                                 "text-[7px] tabular-nums",
                                 full ? "text-destructive" : "text-muted-foreground",
                               ].join(" ")}
                             >
-                              {full ? "completa" : `${free} libre${free === 1 ? "" : "s"}`}
+                              {occ.booked_count}/{occ.capacity_max}
                             </span>
                           ) : null}
                         </button>
@@ -214,9 +214,7 @@ export function PublicClassCalendar({
                             </span>
                             {occupancy(c.id) ? (
                               <span className="ml-auto text-[10px] tabular-nums text-muted-foreground">
-                                {occupancy(c.id)!.capacity_max - occupancy(c.id)!.booked_count === 0
-                                  ? "completa"
-                                  : `${occupancy(c.id)!.capacity_max - occupancy(c.id)!.booked_count} libres`}
+                                {occupancy(c.id)!.booked_count}/{occupancy(c.id)!.capacity_max}
                               </span>
                             ) : null}
                           </span>
