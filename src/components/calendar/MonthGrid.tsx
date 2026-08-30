@@ -88,7 +88,7 @@ function MobileCells({ cells, byDay, onSelectClass, selectedIds }: CellsProps) {
                 const level = capacityLevel(c.booked_count, c.capacity_max);
                 const cancelled = c.status !== "scheduled";
                 const picked = selectedIds?.has(c.id) ?? false;
-                const remaining = Math.max(c.capacity_max - c.booked_count, 0);
+                
                 return (
                   <li key={c.id} className="min-w-0">
                     <button
@@ -118,7 +118,7 @@ function MobileCells({ cells, byDay, onSelectClass, selectedIds }: CellsProps) {
                           cancelled || level === "full" ? "text-destructive" : "text-muted-foreground",
                         ].join(" ")}
                       >
-                        {cancelled ? "Cancelada" : level === "full" ? "Completa" : `${remaining} libres`}
+                        {cancelled ? "Cancelada" : `${c.booked_count}/${c.capacity_max}`}
                       </span>
                       {c.audience === "kids" ? (
                         <span className="truncate text-[9px] text-muted-foreground">Niños</span>
