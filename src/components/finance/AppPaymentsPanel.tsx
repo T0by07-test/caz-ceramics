@@ -106,10 +106,14 @@ export function AppPaymentsPanel() {
       (r) => !TEST_STUDENT_IDS.has(r.student_id),
     );
     const studentIds = Array.from(new Set(rows.map((r) => r.student_id)));
-    const bookingIds = rows.map((r) => r.booking_id).filter((v): v is string => Boolean(v));
 
     // `.in()` with hundreds of ids blows past the request URL limit, so page it.
-    const fetchIn = async <T,>(table: string, cols: string, ids: string[]): Promise<T[]> => {
+    const fetchIn = async <T,>(
+      table: string,
+      cols: string,
+      ids: string[],
+      col = "id",
+    ): Promise<T[]> => {
       const out: T[] = [];
       for (let i = 0; i < ids.length; i += 100) {
         const chunk = ids.slice(i, i + 100);
@@ -119,7 +123,7 @@ export function AppPaymentsPanel() {
           }
         )(table)
           .select(cols)
-          .in("id", chunk);
+          .in(col, chunk);
         if (data) out.push(...data);
       }
       return out;
@@ -131,10 +135,14 @@ export function AppPaymentsPanel() {
         "id, name, surname, email",
         studentIds,
       ),
-      fetchIn<{ id: string; class_id: string }>(
+      // Fetch every booking of these alumnas (not only the ones directly linked to
+      // a payment) so plan-style payments can still be filed under the month their
+      // classes actually take place in.
+      fetchIn<{ id: string; class_id: string; student_id: string; status: string }>(
         "bookings",
-        "id, class_id",
-        Array.from(new Set(bookingIds)),
+        "id, class_id, student_id, status",
+        studentIds,
+        "student_id",
       ),
     ]);
 
@@ -150,11 +158,18 @@ export function AppPaymentsPanel() {
       ((classes ?? []) as { id: string; date: string }[]).map((c) => [c.id, c.date]),
     );
     const bookingClassDate = new Map(
-      ((bookings ?? []) as { id: string; class_id: string }[]).map((b) => [
-        b.id,
-        classDateById.get(b.class_id) ?? null,
-      ]),
+      bookings.map((b) => [b.id, classDateById.get(b.class_id) ?? null]),
     );
+    // The month a student's classes belong to: what the studio actually bills for.
+    const studentClassMonth = new Map<string, string>();
+    for (const b of bookings) {
+      if (!["reserved", "confirmed", "attended"].includes(b.status)) continue;
+      const date = classDateById.get(b.class_id);
+      if (!date) continue;
+      const m = monthKey(date);
+      const current = studentClassMonth.get(b.student_id);
+      if (!current || m < current) studentClassMonth.set(b.student_id, m);
+    }
 
     const byKey = new Map<string, Group>();
     for (const p of rows) {
@@ -164,6 +179,8 @@ export function AppPaymentsPanel() {
         p.stripe_session_id ??
         `${p.student_id}|${p.method ?? "-"}|${p.created_at.slice(0, 10)}`;
       const classDate = p.booking_id ? bookingClassDate.get(p.booking_id) ?? null : null;
+      const fallbackMonth =
+        studentClassMonth.get(p.student_id) ?? monthKey(p.created_at);
       const existing = byKey.get(key);
       if (existing) {
         existing.amountCents += p.amount_cents;
@@ -180,13 +197,14 @@ export function AppPaymentsPanel() {
           studentName: nameById.get(p.student_id) ?? "—",
           paidAt: p.created_at,
           classCount: p.booking_id ? 1 : 0,
-          classMonth: monthKey(classDate ?? p.created_at),
+          classMonth: classDate ? monthKey(classDate) : fallbackMonth,
           amountCents: p.amount_cents,
           method: p.method,
           collected: p.status === "confirmed",
         });
       }
     }
+
 
     const list = Array.from(byKey.values()).sort((a, b) => (a.paidAt < b.paidAt ? 1 : -1));
     setGroups(list);
@@ -406,7 +424,7 @@ export function AppPaymentsPanel() {
 function StatusBadge({ collected, method }: { collected: boolean; method: string | null }) {
   if (collected) return <Badge className="bg-success text-success-foreground">Cobrado</Badge>;
   return (
-    <Badge variant="secondary">
+    <Badge className="bg-warning text-warning-foreground">
       {method === "cash" ? "Pendiente · efectivo" : "Pendiente · sin pagar"}
     </Badge>
   );
