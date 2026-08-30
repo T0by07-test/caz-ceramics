@@ -31,10 +31,13 @@ export function MonthGrid({ reference, classes, onSelectClass, selectedIds }: Pr
   return (
     <div className="overflow-hidden rounded-none border border-border bg-surface">
       <div className="grid grid-cols-5 border-b border-border sm:grid-cols-7">
-        {ES_WEEKDAYS_SHORT.map((d) => (
+        {ES_WEEKDAYS_SHORT.map((d, index) => (
           <div
             key={d}
-            className="px-1 py-2 text-center text-[10px] font-medium uppercase tracking-wide text-muted-foreground last:hidden nth-last-2:hidden sm:block sm:text-label"
+            className={[
+              "px-1 py-2 text-center text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:text-label",
+              index > 4 ? "hidden sm:block" : "",
+            ].join(" ")}
           >
             {d}
           </div>
