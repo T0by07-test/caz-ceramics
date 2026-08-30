@@ -204,8 +204,8 @@ function formatDateOrMonth(entryDate: string | null, month: string | null): stri
 function rowBg(status: string | null, collector: string[] | null): string {
   const isSofi = (collector ?? []).some((c) => c?.toLowerCase() === "sofi");
   if (status === "Pagado" && isSofi) return "bg-sky-50 hover:bg-sky-100/60";
-  if (status === "Pagado") return "bg-muted hover:bg-muted/70";
-  if (status === "Pendiente") return "bg-secondary hover:bg-secondary/70";
+  if (status === "Pagado") return "bg-success/10 hover:bg-success/20";
+  if (status === "Pendiente") return "bg-warning/10 hover:bg-warning/20";
   if (status === "ausente") return "bg-muted/40 opacity-70 hover:opacity-100";
   return "";
 }
