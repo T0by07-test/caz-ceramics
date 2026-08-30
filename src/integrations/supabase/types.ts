@@ -900,6 +900,10 @@ export type Database = {
         Args: { p_payment_id: string }
         Returns: undefined
       }
+      admin_delete_member: {
+        Args: { p_student_id: string }
+        Returns: undefined
+      }
       admin_grant_makeup: {
         Args: { p_reason: string; p_student_id: string }
         Returns: string
@@ -1034,6 +1038,7 @@ export type Database = {
       }
       redeem_invite: { Args: { p_token: string }; Returns: Json }
       resolve_plan_month: { Args: { p_month: string }; Returns: string }
+      unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
