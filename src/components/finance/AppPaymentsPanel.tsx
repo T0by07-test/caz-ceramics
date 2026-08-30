@@ -157,9 +157,15 @@ export function AppPaymentsPanel() {
       }
     }
 
-    setGroups(
-      Array.from(byKey.values()).sort((a, b) => (a.paidAt < b.paidAt ? 1 : -1)),
-    );
+    const list = Array.from(byKey.values()).sort((a, b) => (a.paidAt < b.paidAt ? 1 : -1));
+    setGroups(list);
+    // Default to the month that actually has app bookings (the studio bills the
+    // month the classes happen in, which is usually ahead of "today").
+    setMonth((current) => {
+      if (list.some((g) => g.classMonth === current)) return current;
+      const latest = list.map((g) => g.classMonth).sort().pop();
+      return latest ?? current;
+    });
     setLoading(false);
   }, []);
 
