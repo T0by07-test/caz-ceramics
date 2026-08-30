@@ -598,6 +598,9 @@ function AdminLedgerPage() {
         </Card>
       </div>
 
+      <AppPaymentsPanel />
+
+
       {teacherPayouts.perTeacher.length > 0 && (
         <Card className="">
           <CardContent className="p-4">
