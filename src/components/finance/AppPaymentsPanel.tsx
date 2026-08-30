@@ -394,10 +394,11 @@ export function AppPaymentsPanel() {
   );
 }
 
-function StatusBadge({ collected }: { collected: boolean }) {
-  return collected ? (
-    <Badge className="bg-success text-success-foreground">Cobrado</Badge>
-  ) : (
-    <Badge variant="secondary">Pendiente · efectivo</Badge>
+function StatusBadge({ collected, method }: { collected: boolean; method: string | null }) {
+  if (collected) return <Badge className="bg-success text-success-foreground">Cobrado</Badge>;
+  return (
+    <Badge variant="secondary">
+      {method === "cash" ? "Pendiente · efectivo" : "Pendiente · sin pagar"}
+    </Badge>
   );
 }
