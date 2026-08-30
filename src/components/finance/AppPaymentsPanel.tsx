@@ -315,7 +315,7 @@ export function AppPaymentsPanel() {
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <StatusBadge collected={g.collected} />
+                    <StatusBadge collected={g.collected} method={g.method} />
                     {!g.collected && (
                       <Button
                         size="sm"
@@ -363,7 +363,7 @@ export function AppPaymentsPanel() {
                         </span>
                       </TableCell>
                       <TableCell>
-                        <StatusBadge collected={g.collected} />
+                        <StatusBadge collected={g.collected} method={g.method} />
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
                         {formatEur(g.amountCents)}
