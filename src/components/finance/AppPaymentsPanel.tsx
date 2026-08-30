@@ -189,7 +189,9 @@ export function AppPaymentsPanel() {
         `${p.student_id}|${p.method ?? "-"}|${p.created_at.slice(0, 10)}`;
       const classDate = p.booking_id ? bookingClassDate.get(p.booking_id) ?? null : null;
       const fallbackMonth =
-        studentClassMonth.get(p.student_id) ?? monthKey(p.created_at);
+        (p.subscription_id ? subscriptionMonth.get(p.subscription_id) : null) ??
+        studentClassMonth.get(p.student_id) ??
+        monthKey(p.created_at);
       const existing = byKey.get(key);
       if (existing) {
         existing.amountCents += p.amount_cents;
