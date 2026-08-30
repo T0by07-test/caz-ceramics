@@ -69,20 +69,42 @@ export function useClassesInRange(
 
     let counts = new Map<string, number>();
     if (ids.length > 0) {
-      const { data: bookings, error: bErr } = await supabase
-        .from("bookings")
-        .select("class_id, status")
-        .in("class_id", ids)
-        .in("status", ACTIVE_BOOKING_STATUSES as unknown as string[]);
-      if (bErr) {
-        setError(bErr.message);
-        setLoading(false);
-        return;
+      if (mode === "student") {
+        // A regular student's RLS grants (bookings_select_own) only let them
+        // see their OWN booking rows, so a direct bookings query here would
+        // undercount every class they're not personally in. The SECURITY
+        // DEFINER RPC returns just the aggregate count (no roster), which is
+        // the same source the public "Solicitar plaza" calendar uses.
+        const idSet = new Set(ids);
+        const { data: availability, error: availErr } = await supabase.rpc(
+          "public_class_availability",
+        );
+        if (availErr) {
+          setError(availErr.message);
+          setLoading(false);
+          return;
+        }
+        counts = new Map(
+          (availability ?? [])
+            .filter((r) => idSet.has(r.class_id))
+            .map((r) => [r.class_id, r.booked_count]),
+        );
+      } else {
+        const { data: bookings, error: bErr } = await supabase
+          .from("bookings")
+          .select("class_id, status")
+          .in("class_id", ids)
+          .in("status", ACTIVE_BOOKING_STATUSES as unknown as string[]);
+        if (bErr) {
+          setError(bErr.message);
+          setLoading(false);
+          return;
+        }
+        counts = (bookings ?? []).reduce((acc, b) => {
+          acc.set(b.class_id, (acc.get(b.class_id) ?? 0) + 1);
+          return acc;
+        }, new Map<string, number>());
       }
-      counts = (bookings ?? []).reduce((acc, b) => {
-        acc.set(b.class_id, (acc.get(b.class_id) ?? 0) + 1);
-        return acc;
-      }, new Map<string, number>());
     }
 
     setClasses(
