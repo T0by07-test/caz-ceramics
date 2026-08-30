@@ -130,7 +130,7 @@ export function PublicClassCalendar({
                 <ul className="flex flex-col gap-0.5 sm:hidden">
                   {slots.map((c) => {
                     const occ = occupancy(c.id);
-                    const free = occ ? Math.max(occ.capacity_max - occ.booked_count, 0) : null;
+                    
                     const full = isFull(c.id);
                     return (
                       <li key={c.id}>
