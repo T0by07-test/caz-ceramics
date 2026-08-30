@@ -129,7 +129,7 @@ export function AppPaymentsPanel() {
       return out;
     };
 
-    const [profiles, bookings] = await Promise.all([
+    const [profiles, bookings, subscriptions] = await Promise.all([
       fetchIn<{ id: string; name: string | null; surname: string | null; email: string | null }>(
         "profiles",
         "id, name, surname, email",
@@ -144,10 +144,19 @@ export function AppPaymentsPanel() {
         studentIds,
         "student_id",
       ),
+      // Plan payments carry no booking: the subscription's month is the month the
+      // studio actually bills for (a plan bought in August can be for September).
+      fetchIn<{ id: string; month: string }>(
+        "subscriptions",
+        "id, month",
+        Array.from(new Set(rows.map((r) => r.subscription_id).filter((v): v is string => !!v))),
+      ),
     ]);
 
+    const subscriptionMonth = new Map(subscriptions.map((s) => [s.id, monthKey(s.month)]));
     const classIds = Array.from(new Set(bookings.map((b) => b.class_id)));
     const classes = await fetchIn<{ id: string; date: string }>("classes", "id, date", classIds);
+
 
     const nameById = new Map(
       ((profiles ?? []) as { id: string; name: string | null; surname: string | null; email: string | null }[]).map(
