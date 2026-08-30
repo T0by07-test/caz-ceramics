@@ -60,7 +60,7 @@ function methodLabel(method: string | null) {
   if (method === "cash") return "Efectivo";
   if (method === "bizum") return "Bizum";
   if (method === "card") return "Tarjeta";
-  return "Tarjeta";
+  return "Sin método";
 }
 
 function monthLabel(month: string) {
