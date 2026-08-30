@@ -59,6 +59,7 @@ import { MultiTeacherSelect } from "@/components/finance/MultiTeacherSelect";
 import { RouteGuard } from "@/components/RouteGuard";
 import { monthOrder } from "@/lib/finance/dates";
 import { ExportDialog } from "@/components/finance/ExportDialog";
+import { AppPaymentsPanel } from "@/components/finance/AppPaymentsPanel";
 import { tbl, type CommissionRateRow } from "@/lib/finance/db";
 
 export const Route = createFileRoute("/admin/registro")({
