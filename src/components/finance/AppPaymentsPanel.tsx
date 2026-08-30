@@ -139,11 +139,6 @@ export function AppPaymentsPanel() {
         existing.classCount += p.booking_id ? 1 : 0;
         existing.paymentIds.push(p.id);
         existing.collected = existing.collected && p.status === "confirmed";
-        if (classDate && classDate < existing.classMonth + "-99") {
-          existing.classMonth = monthKey(
-            classDate < (existing.classMonth || classDate) ? classDate : classDate,
-          );
-        }
         if (classDate && monthKey(classDate) < existing.classMonth) {
           existing.classMonth = monthKey(classDate);
         }
