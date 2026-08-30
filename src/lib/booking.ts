@@ -23,6 +23,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   CLASS_NOT_SCHEDULED: "Esta clase no está disponible.",
   CLASS_FULL: "La clase está completa.",
   NO_PLAN_THIS_MONTH: "No tienes un plan activo este mes.",
+  PLAN_LIMIT_REACHED: "Ya has usado todas las clases de tu plan este mes.",
   PAYMENT_CHOICE_REQUIRED: "Elige primero cómo quieres pagar para reservar.",
   BOOKING_NOT_FOUND: "La reserva no existe.",
   NOT_OWNER: "No puedes cancelar una reserva que no es tuya.",

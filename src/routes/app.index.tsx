@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Banknote, CreditCard, X } from "lucide-react";
+import { BadgeCheck, Banknote, CreditCard, X } from "lucide-react";
 import {
   addMonths,
   capacityDotClass,
@@ -29,6 +29,7 @@ import {
 } from "@/lib/calendar";
 import { useClassesInRange, type ClassWithCount } from "@/hooks/useClassesInRange";
 import { useMyBookedClassIds } from "@/hooks/useMyBookedClassIds";
+import { useMyPlan } from "@/hooks/useMyPlan";
 import { bookClass } from "@/lib/booking";
 import { formatEuros, selectionPriceCents } from "@/lib/pricing";
 import { studioClosureFor } from "@/lib/closures";
@@ -375,10 +376,23 @@ function DropInPaymentFlow({
   const [cashLoading, setCashLoading] = useState(false);
   const [cashDoneOpen, setCashDoneOpen] = useState(false);
   const [cashDoneTotal, setCashDoneTotal] = useState("");
+  const [planLoading, setPlanLoading] = useState(false);
 
   const count = classes.length;
   const paidClasses = reservedClasses.length > 0 ? reservedClasses : classes;
   const totalLabel = formatEuros(selectionPriceCents(paidClasses));
+
+  // Plan credits only make sense when every selected class falls in the same
+  // month (a plan is scoped to one month); mixed-month selections just fall
+  // through to the regular cash/card flow below.
+  const monthKeys = useMemo(() => new Set(classes.map((c) => c.date.slice(0, 7))), [classes]);
+  const singleMonth = monthKeys.size === 1 ? classes[0]?.date : null;
+  const monthDate = useMemo(
+    () => (singleMonth ? new Date(`${singleMonth}-01T00:00:00`) : undefined),
+    [singleMonth],
+  );
+  const { hasPlan, remaining, planName } = useMyPlan(monthDate);
+  const canUsePlan = Boolean(singleMonth) && hasPlan && count > 0 && remaining >= count;
 
   useEffect(() => {
     if (count > 0) setMethodOpen(true);
@@ -432,6 +446,41 @@ function DropInPaymentFlow({
     if (createdIds.length === 0) throw new Error("No se pudo preparar ninguna reserva.");
     return createdIds;
   }, [bookingIds, classes]);
+
+  const handlePlanBooking = async () => {
+    if (count === 0) return;
+    setPlanLoading(true);
+    const ordered = [...classes].sort((a, b) =>
+      `${a.date}${a.start_time}`.localeCompare(`${b.date}${b.start_time}`),
+    );
+    const createdIds: string[] = [];
+    const failed: string[] = [];
+    for (const c of ordered) {
+      try {
+        await bookClass(c.id, "plan");
+        createdIds.push(c.id);
+      } catch (err) {
+        failed.push(
+          `${formatLongDate(c.date)} · ${formatTimeRange(c.start_time, c.end_time)}${
+            err instanceof Error ? ` — ${err.message}` : ""
+          }`,
+        );
+      }
+    }
+    setPlanLoading(false);
+    if (failed.length > 0) {
+      toast.error(
+        createdIds.length > 0 ? "Algunas clases no se pudieron reservar" : "No se pudo reservar",
+        { description: failed.join(" | ") },
+      );
+    }
+    if (createdIds.length === 0) return;
+    setMethodOpen(false);
+    toast.success(
+      createdIds.length === 1 ? "Plaza reservada con tu plan" : "Plazas reservadas con tu plan",
+    );
+    onClose();
+  };
 
   const handleDropInCash = async () => {
     if (count === 0) return;
@@ -507,11 +556,31 @@ function DropInPaymentFlow({
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
+            {canUsePlan ? (
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-auto items-start justify-start gap-3 whitespace-normal border-primary py-4 text-left"
+                disabled={cashLoading || reserving || planLoading}
+                onClick={() => void handlePlanBooking()}
+              >
+                <BadgeCheck className="h-5 w-5 shrink-0 text-primary" />
+                <span className="flex flex-col">
+                  <span className="font-medium">
+                    Usar mi plan{planName ? ` · ${planName}` : ""}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    Incluida en tu plan · te queda{remaining === 1 ? "" : "n"} {remaining} clase
+                    {remaining === 1 ? "" : "s"} este mes
+                  </span>
+                </span>
+              </Button>
+            ) : null}
             <Button
               variant="outline"
               size="lg"
               className="h-auto items-start justify-start gap-3 whitespace-normal py-4 text-left"
-              disabled={cashLoading || reserving}
+              disabled={cashLoading || reserving || planLoading}
               onClick={() => void handleDropInCash()}
             >
               <Banknote className="h-5 w-5 shrink-0" />
@@ -526,7 +595,7 @@ function DropInPaymentFlow({
               variant="outline"
               size="lg"
               className="h-auto items-start justify-start gap-3 whitespace-normal py-4 text-left"
-              disabled={cashLoading || reserving}
+              disabled={cashLoading || reserving || planLoading}
               onClick={() => {
                 setMethodOpen(false);
                 setCheckoutOpen(true);
