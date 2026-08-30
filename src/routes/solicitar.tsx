@@ -53,6 +53,7 @@ function SolicitarPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const [classes, setClasses] = useState<UpcomingClass[] | null>(null);
+  const availability = usePublicAvailability();
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [monthRef, setMonthRef] = useState<Date>(() => startOfMonth(DEFAULT_CALENDAR_MONTH));

@@ -462,6 +462,7 @@ function InfoDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: b
 
 function TrialBooking() {
   const [classes, setClasses] = useState<UpcomingClass[] | null>(null);
+  const availability = usePublicAvailability();
   const [monthRef, setMonthRef] = useState<Date>(() => startOfMonth(DEFAULT_CALENDAR_MONTH));
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
