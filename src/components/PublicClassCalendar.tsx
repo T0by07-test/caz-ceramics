@@ -3,6 +3,9 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   ES_WEEKDAYS_SHORT,
+  capacityDotClass,
+  capacityLabel,
+  capacityLevel,
   addMonths,
   buildMonthGrid,
   formatLongDate,
@@ -32,6 +35,7 @@ export function PublicClassCalendar({
   selectedDay,
   onSelectDay,
   onToggle,
+  availability,
 }: {
   monthRef: Date;
   onMonthChange: (d: Date) => void;
@@ -41,10 +45,16 @@ export function PublicClassCalendar({
   selectedDay: string | null;
   onSelectDay: (iso: string | null) => void;
   onToggle: (id: string) => void;
+  availability?: Map<string, { booked_count: number; capacity_max: number }>;
 }) {
   const cells = useMemo(() => buildMonthGrid(monthRef), [monthRef]);
   const todayIso = toIsoDate(new Date());
   const daySlots = selectedDay ? (byDate.get(selectedDay) ?? []) : [];
+  const occupancy = (id: string) => availability?.get(id) ?? null;
+  const isFull = (id: string) => {
+    const a = occupancy(id);
+    return a ? a.booked_count >= a.capacity_max : false;
+  };
 
   return (
     <div className="rounded-lg border border-border bg-surface p-3">
@@ -127,7 +137,14 @@ export function PublicClassCalendar({
                           ? "bg-muted-foreground/40"
                           : selectedIds.has(c.id)
                             ? "bg-primary"
-                            : "bg-success",
+                            : occupancy(c.id)
+                              ? capacityDotClass(
+                                  capacityLevel(
+                                    occupancy(c.id)!.booked_count,
+                                    occupancy(c.id)!.capacity_max,
+                                  ),
+                                )
+                              : "bg-success",
                       ].join(" ")}
                       aria-hidden
                     />
@@ -147,14 +164,14 @@ export function PublicClassCalendar({
                       <li key={c.id}>
                         <button
                           type="button"
-                          disabled={isPast}
+                          disabled={isPast || isFull(c.id)}
                           onClick={(e) => {
                             e.stopPropagation();
                             onToggle(c.id);
                           }}
                           className={[
                             "flex w-full flex-col gap-0.5 rounded border px-1 py-0.5 text-left leading-[1.15] transition-colors",
-                            isPast
+                            isPast || isFull(c.id)
                               ? "cursor-not-allowed border-transparent bg-muted/40 text-muted-foreground/60"
                               : checked
                                 ? "border-primary bg-primary/15 text-foreground"
@@ -165,13 +182,29 @@ export function PublicClassCalendar({
                             <span
                               className={[
                                 "h-1.5 w-1.5 shrink-0 rounded-full",
-                                checked ? "bg-primary" : "bg-success",
+                                checked
+                                  ? "bg-primary"
+                                  : occupancy(c.id)
+                                    ? capacityDotClass(
+                                        capacityLevel(
+                                          occupancy(c.id)!.booked_count,
+                                          occupancy(c.id)!.capacity_max,
+                                        ),
+                                      )
+                                    : "bg-success",
                               ].join(" ")}
                               aria-hidden
                             />
                             <span className="text-[11px] font-normal tabular-nums">
                               {formatTime(c.start_time)}
                             </span>
+                            {occupancy(c.id) ? (
+                              <span className="ml-auto text-[10px] tabular-nums text-muted-foreground">
+                                {occupancy(c.id)!.capacity_max - occupancy(c.id)!.booked_count === 0
+                                  ? "completa"
+                                  : `${occupancy(c.id)!.capacity_max - occupancy(c.id)!.booked_count} libres`}
+                              </span>
+                            ) : null}
                           </span>
                           {c.teacher ? (
                             <span className="block text-[10px] text-muted-foreground">
@@ -208,21 +241,37 @@ export function PublicClassCalendar({
             <ul className="flex flex-col gap-2">
               {daySlots.map((c) => {
                 const checked = selectedIds.has(c.id);
+                const occ = occupancy(c.id);
+                const full = isFull(c.id);
                 return (
                   <li key={c.id}>
                     <label
                       className={[
-                        "flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors",
-                        checked ? "border-primary bg-primary/5" : "border-border hover:bg-muted/40",
+                        "flex items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors",
+                        full
+                          ? "cursor-not-allowed border-border bg-muted/40 text-muted-foreground"
+                          : checked
+                            ? "cursor-pointer border-primary bg-primary/5"
+                            : "cursor-pointer border-border hover:bg-muted/40",
                       ].join(" ")}
                     >
-                      <Checkbox checked={checked} onCheckedChange={() => onToggle(c.id)} />
+                      <Checkbox
+                        checked={checked}
+                        disabled={full}
+                        onCheckedChange={() => onToggle(c.id)}
+                      />
                       <span className="flex flex-col">
                         <span className="tabular-nums">
                           {formatTimeRange(c.start_time, c.end_time)}
                         </span>
                         {c.teacher ? (
                           <span className="text-xs text-muted-foreground">Profe {c.teacher}</span>
+                        ) : null}
+                        {occ ? (
+                          <span className="text-xs text-muted-foreground tabular-nums">
+                            {capacityLabel(capacityLevel(occ.booked_count, occ.capacity_max))} ·{" "}
+                            {occ.booked_count}/{occ.capacity_max}
+                          </span>
                         ) : null}
                       </span>
                       {c.audience === "kids" ? (
