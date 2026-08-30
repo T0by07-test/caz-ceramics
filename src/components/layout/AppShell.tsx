@@ -1,13 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import {
-  Calendar,
-  BookmarkCheck,
-  RotateCcw,
-  User,
-  LogOut,
-  CreditCard,
-  MoreHorizontal,
-} from "lucide-react";
+import { Calendar, BookmarkCheck, RotateCcw, User, LogOut, MoreHorizontal } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -198,6 +190,5 @@ export const studentNavItems: NavItem[] = [
   { to: "/app", label: "Calendario", icon: Calendar },
   { to: "/app/reservas", label: "Reservas", icon: BookmarkCheck },
   { to: "/app/recuperaciones", label: "Recuperaciones", icon: RotateCcw },
-  { to: "/app/planes", label: "Planes", icon: CreditCard },
   { to: "/app/perfil", label: "Perfil", icon: User },
 ];

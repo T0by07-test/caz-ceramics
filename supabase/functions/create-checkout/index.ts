@@ -108,12 +108,11 @@ Deno.serve(async (req) => {
     const user = userData.user;
 
     const body = rawBody;
-    const { purpose, environment, returnUrl, paymentMethod, month, hosted } = body as {
-      purpose: "drop_in" | "plan";
+    const { purpose, environment, returnUrl, paymentMethod, hosted } = body as {
+      purpose: "drop_in";
       environment: StripeEnv;
       returnUrl: string;
       paymentMethod?: "card" | "bizum";
-      month?: string;
       hosted?: boolean;
     };
     if (environment !== "sandbox" && environment !== "live") {
@@ -128,14 +127,8 @@ Deno.serve(async (req) => {
     if (paymentMethod !== undefined && paymentMethod !== "card" && paymentMethod !== "bizum") {
       return jsonResponse({ error: "Invalid paymentMethod" }, 400);
     }
-    // Optional target month for a plan purchase ("YYYY-MM-01"). The database
-    // enforces which months are actually allowed (current, or next from day 20).
-    if (month !== undefined && !/^\d{4}-\d{2}-01$/.test(month)) {
-      return jsonResponse({ error: "Invalid month" }, 400);
-    }
 
     const stripe = createStripeClient(environment);
-    let priceId: string;
     let dropInCount = 0;
 
     const metadata: Record<string, string> = {
@@ -186,20 +179,6 @@ Deno.serve(async (req) => {
       metadata.classCount = String(bookingIds.length);
       metadata.adultCount = String(adultCount);
       metadata.kidsCount = String(kidsCount);
-    } else if (purpose === "plan") {
-      const planId = body.planId as string | undefined;
-      if (!planId || !/^[0-9a-f-]{36}$/i.test(planId)) {
-        return jsonResponse({ error: "Invalid planId" }, 400);
-      }
-      const { data: plan, error: pErr } = await admin
-        .from("plans")
-        .select("id, stripe_price_id, active")
-        .eq("id", planId)
-        .single();
-      if (pErr || !plan || !plan.active) return jsonResponse({ error: "Plan not available" }, 404);
-      priceId = plan.stripe_price_id;
-      metadata.planId = planId;
-      if (month) metadata.month = month;
     } else {
       return jsonResponse({ error: "Invalid purpose" }, 400);
     }
@@ -215,28 +194,22 @@ Deno.serve(async (req) => {
     // kids classes (lunes 17:00, 1h) are priced individually at 12€.
     const lineItems: { price: string; quantity: number }[] = [];
     let totalCents = 0;
-    if (purpose === "drop_in") {
-      const adultTier = Math.min(adultCount, 4);
-      if (adultTier > 0) {
-        const tierPrice = await resolvePrice(`plan_${adultTier}_class_month`);
-        lineItems.push({ price: tierPrice.id, quantity: 1 });
-        totalCents += tierPrice.unit_amount ?? 0;
-      }
-      const adultExtras = adultCount - adultTier;
-      if (adultExtras > 0) {
-        const extraPrice = await resolvePrice("drop_in_class_single");
-        lineItems.push({ price: extraPrice.id, quantity: adultExtras });
-        totalCents += (extraPrice.unit_amount ?? 0) * adultExtras;
-      }
-      if (kidsCount > 0) {
-        const kidsPrice = await resolvePrice("kids_class_single");
-        lineItems.push({ price: kidsPrice.id, quantity: kidsCount });
-        totalCents += (kidsPrice.unit_amount ?? 0) * kidsCount;
-      }
-    } else {
-      const planPrice = await resolvePrice(priceId);
-      lineItems.push({ price: planPrice.id, quantity: 1 });
-      totalCents += planPrice.unit_amount ?? 0;
+    const adultTier = Math.min(adultCount, 4);
+    if (adultTier > 0) {
+      const tierPrice = await resolvePrice(`plan_${adultTier}_class_month`);
+      lineItems.push({ price: tierPrice.id, quantity: 1 });
+      totalCents += tierPrice.unit_amount ?? 0;
+    }
+    const adultExtras = adultCount - adultTier;
+    if (adultExtras > 0) {
+      const extraPrice = await resolvePrice("drop_in_class_single");
+      lineItems.push({ price: extraPrice.id, quantity: adultExtras });
+      totalCents += (extraPrice.unit_amount ?? 0) * adultExtras;
+    }
+    if (kidsCount > 0) {
+      const kidsPrice = await resolvePrice("kids_class_single");
+      lineItems.push({ price: kidsPrice.id, quantity: kidsCount });
+      totalCents += (kidsPrice.unit_amount ?? 0) * kidsCount;
     }
 
     const sessionParams: Record<string, unknown> = {
@@ -280,22 +253,14 @@ Deno.serve(async (req) => {
     // Adults share the tiered total evenly; each kids class is 12 €.
     const adultTotalCents = adultCount > 0 ? totalCents - (kidsCount * 1200) : 0;
     const perAdultCents = adultCount > 0 ? Math.round(adultTotalCents / adultCount) : 0;
-    const paymentRows = purpose === "drop_in"
-      ? bookings.map((b) => ({
-        student_id: user.id,
-        amount_cents: audienceByClass.get(b.class_id) === "kids" ? 1200 : perAdultCents,
-        status: "pending",
-        stripe_session_id: session.id,
-        booking_id: b.id,
-        ...(paymentMethod ? { method: paymentMethod } : {}),
-      }))
-      : [{
-        student_id: user.id,
-        amount_cents: totalCents,
-        status: "pending",
-        stripe_session_id: session.id,
-        ...(paymentMethod ? { method: paymentMethod } : {}),
-      }];
+    const paymentRows = bookings.map((b) => ({
+      student_id: user.id,
+      amount_cents: audienceByClass.get(b.class_id) === "kids" ? 1200 : perAdultCents,
+      status: "pending",
+      stripe_session_id: session.id,
+      booking_id: b.id,
+      ...(paymentMethod ? { method: paymentMethod } : {}),
+    }));
     const { error: paymentInsertError } = await admin.from("payments").insert(paymentRows);
     if (paymentInsertError) {
       // Never hand out a live Stripe checkout we have no bookkeeping record of —

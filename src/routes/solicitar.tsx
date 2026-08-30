@@ -165,7 +165,7 @@ function SolicitarPage() {
               {isTrial
                 ? "Reserva tu clase de prueba"
                 : isRegular
-                  ? "Elige tu plan"
+                  ? "Elige tu frecuencia"
                   : "Solicitar plaza"}
             </CardTitle>
             <CardDescription>
@@ -179,8 +179,8 @@ function SolicitarPage() {
                 </>
               ) : isRegular ? (
                 <>
-                  Elige el plan que mejor se adapte a tu ritmo, consulta los horarios y reserva tus
-                  clases.
+                  Elige la frecuencia que mejor se adapte a tu ritmo, consulta los horarios y
+                  reserva tus clases.
                 </>
               ) : (
                 <>

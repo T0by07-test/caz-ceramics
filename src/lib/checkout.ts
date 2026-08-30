@@ -28,14 +28,6 @@ type CreateDropInArgs = {
   /** Ask for a top-level hosted Checkout URL instead of an embedded clientSecret. */
   hosted?: boolean;
 };
-type CreatePlanArgs = {
-  planId: string;
-  returnUrl: string;
-  paymentMethod?: PaymentMethod;
-  /** First day of the target month, "YYYY-MM-01". Defaults to the current month. */
-  month?: string;
-  hosted?: boolean;
-};
 
 export async function createDropInCheckout({
   bookingIds,
@@ -49,33 +41,6 @@ export async function createDropInCheckout({
       bookingIds,
       returnUrl,
       ...(paymentMethod ? { paymentMethod } : {}),
-      ...(hosted ? { hosted: true } : {}),
-      environment: getStripeEnvironment(),
-    },
-  });
-  if (error) throw new Error(await functionErrorMessage(error));
-  if (hosted) {
-    if (!data?.url) throw new Error(data?.error ?? "No checkout URL returned");
-  } else if (!data?.clientSecret) {
-    throw new Error(data?.error ?? "No clientSecret returned");
-  }
-  return data as { clientSecret: string; url: string; sessionId: string };
-}
-
-export async function createPlanCheckout({
-  planId,
-  returnUrl,
-  paymentMethod,
-  month,
-  hosted,
-}: CreatePlanArgs) {
-  const { data, error } = await supabase.functions.invoke("create-checkout", {
-    body: {
-      purpose: "plan",
-      planId,
-      returnUrl,
-      ...(paymentMethod ? { paymentMethod } : {}),
-      ...(month ? { month } : {}),
       ...(hosted ? { hosted: true } : {}),
       environment: getStripeEnvironment(),
     },

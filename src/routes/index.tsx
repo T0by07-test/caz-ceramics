@@ -24,7 +24,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -61,40 +68,31 @@ const STEPS = [
 const PLANS = [
   {
     classes: "1 clase",
-    detail: "al mes",
     tagline: "Para empezar",
-    description:
-      "Una clase al mes para descubrir la cerámica y disfrutar del proceso, sin compromiso.",
+    description: "Una clase para descubrir la cerámica y disfrutar del proceso, sin compromiso.",
     price: "30 €",
-    period: "/mes",
     trialNote:
       "¿Solo quieres probar una clase? La clase de prueba de un día tiene un precio de 35 €.",
   },
   {
     classes: "2 clases",
-    detail: "al mes",
     tagline: "Para mantener la práctica",
     description: "El equilibrio perfecto para mantener la cerámica en tu rutina.",
     price: "55 €",
-    period: "/mes",
   },
   {
     classes: "3 clases",
-    detail: "al mes",
     tagline: "Para crear con más libertad",
     description:
       "Más tiempo para experimentar, avanzar en tus proyectos y aprender nuevas técnicas.",
     price: "70 €",
-    period: "/mes",
   },
   {
     classes: "4 clases",
-    detail: "al mes",
     tagline: "Para hacer de la cerámica parte de tu rutina",
     description:
       "La opción ideal si quieres venir con frecuencia y aprovechar al máximo tu práctica.",
     price: "85 €",
-    period: "/mes",
     featured: true,
     featuredLabel: "El más elegido",
   },
@@ -194,24 +192,21 @@ function Index() {
           </ol>
         </section>
 
-        {/* Planes / precios */}
+        {/* Precios */}
         <section className="flex flex-col gap-10 border-t border-border pb-12 pt-8">
           <div className="flex flex-col gap-4">
-            <h2 className="text-h2">Planes mensuales</h2>
+            <h2 className="text-h2">Precios</h2>
             <p className="text-body max-w-xl">
-              Elige cuántas clases quieres hacer al mes y organiza tus clases según tu
-              disponibilidad.
-            </p>
-            <p className="text-body max-w-xl">
-              Todos los planes te permiten elegir libremente los días y horarios disponibles al
-              reservar tus clases.
+              Cuantas más clases reserves juntas, más económica sale cada una. Reserva y paga tus
+              clases directamente desde el calendario, eligiendo libremente los días y horarios
+              disponibles.
             </p>
           </div>
 
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Plan</TableHead>
+                <TableHead>Clases</TableHead>
                 <TableHead className="text-right">Precio</TableHead>
               </TableRow>
             </TableHeader>
@@ -219,16 +214,12 @@ function Index() {
               {PLANS.map((p) => (
                 <TableRow key={p.classes}>
                   <TableCell className="py-2.5 align-middle">
-                    <span className="items-baseline gap-2">
-                      <span className="text-h3">{p.classes}</span>{" "}
-                      <span className="text-label">{p.detail}</span>
-                    </span>
+                    <span className="text-h3">{p.classes}</span>
                   </TableCell>
                   <TableCell className="py-2.5 text-right align-middle whitespace-nowrap">
                     <span className="font-display text-[20px] font-extralight tabular-nums tracking-[0.02em] text-foreground">
                       {p.price}
-                    </span>{" "}
-                    <span className="text-label">{p.period}</span>
+                    </span>
                   </TableCell>
                 </TableRow>
               ))}
@@ -236,7 +227,7 @@ function Index() {
           </Table>
 
           <div className="flex flex-col gap-3 border-t border-border pt-6">
-            <h3 className="text-h3">¿Quieres venir más de 4 veces al mes?</h3>
+            <h3 className="text-h3">¿Quieres reservar más de 4 clases juntas?</h3>
             <p className="text-body">Puedes añadir clases extra por 20 € cada una.</p>
           </div>
         </section>
@@ -313,8 +304,8 @@ function Index() {
             <span className="text-label">Cosas a tener en cuenta</span>
             <h2 className="text-h2">Cancelaciones y recuperaciones</h2>
             <p className="text-body max-w-xl">
-              Pagas por las clases del plan que elijas (1, 2, 3 o 4 al mes). Si no puedes asistir a
-              alguna, esto es lo que necesitas saber.
+              Pagas por las clases que reserves (1, 2, 3 o 4 juntas). Si no puedes asistir a alguna,
+              esto es lo que necesitas saber.
             </p>
           </div>
           <ol className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
@@ -445,7 +436,7 @@ function InfoDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: b
           <div className="flex flex-col items-start gap-3 border-t border-border pt-6">
             <span className="text-label">Quiero empezar con clases regulares</span>
             <p className="text-body">
-              Elige el plan que mejor se adapte a tu ritmo y reserva tus clases según tu
+              Elige la frecuencia que mejor se adapte a tu ritmo y reserva tus clases según tu
               disponibilidad.
             </p>
             <Button asChild className="w-full">
