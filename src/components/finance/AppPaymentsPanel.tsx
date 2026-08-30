@@ -178,11 +178,15 @@ export function AppPaymentsPanel() {
     setGroups(list);
     // Default to the month that actually has app bookings (the studio bills the
     // month the classes happen in, which is usually ahead of "today").
-    setMonth((current) => {
-      if (list.some((g) => g.classMonth === current)) return current;
-      const latest = list.map((g) => g.classMonth).sort().pop();
-      return latest ?? current;
-    });
+    if (!initialized.current) {
+      initialized.current = true;
+      // Land on the month with most bookings (the studio bills the month the
+      // classes happen in, usually ahead of "today").
+      const counts = new Map<string, number>();
+      for (const g of list) counts.set(g.classMonth, (counts.get(g.classMonth) ?? 0) + 1);
+      const best = Array.from(counts.entries()).sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? 1 : -1))[0];
+      if (best) setMonth(best[0]);
+    }
     setLoading(false);
   }, []);
 
