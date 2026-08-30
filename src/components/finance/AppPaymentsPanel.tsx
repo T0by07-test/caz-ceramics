@@ -149,7 +149,11 @@ export function AppPaymentsPanel() {
 
     const byKey = new Map<string, Group>();
     for (const p of rows) {
-      const key = p.stripe_session_id ?? p.id;
+      // Older per-booking cash payments carry no session key: fold rows made by
+      // the same alumna in the same minute into one ledger line.
+      const key =
+        p.stripe_session_id ??
+        `${p.student_id}|${p.method ?? "-"}|${p.created_at.slice(0, 16)}`;
       const classDate = p.booking_id ? bookingClassDate.get(p.booking_id) ?? null : null;
       const existing = byKey.get(key);
       if (existing) {
