@@ -1,6 +1,5 @@
 import {
   capacityDotClass,
-  capacityLabel,
   capacityLevel,
   formatLongDate,
   formatTimeRange,
