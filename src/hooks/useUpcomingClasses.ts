@@ -76,10 +76,22 @@ export function useUpcomingClasses(limit: number) {
         ? supabase.from("payments").select("subscription_id, status").in("subscription_id", subIds)
         : Promise.resolve({ data: [] as { subscription_id: string | null; status: string }[] }),
     ]);
-    const paymentByBooking = new Map((bookingPayments ?? []).map((p) => [p.booking_id, p.status]));
-    const paymentBySubscription = new Map(
-      (subPayments ?? []).map((p) => [p.subscription_id, p.status]),
-    );
+// A booking can have several payment rows (book_class() writes a 0 € placeholder
+// before checkout, the confirmed Stripe/cash row lands afterwards). A confirmed
+// row always wins so a paid booking never shows as pending.
+const rank = (s: string) => (s === "confirmed" ? 2 : s === "pending" ? 1 : 0);
+const paymentByBooking = new Map<string | null, string>();
+for (const p of bookingPayments ?? []) {
+  const current = paymentByBooking.get(p.booking_id);
+  if (!current || rank(p.status) > rank(current)) paymentByBooking.set(p.booking_id, p.status);
+}
+const paymentBySubscription = new Map<string | null, string>();
+for (const p of subPayments ?? []) {
+  const current = paymentBySubscription.get(p.subscription_id);
+  if (!current || rank(p.status) > rank(current))
+    paymentBySubscription.set(p.subscription_id, p.status);
+}
+
 
     const bookingsByClass = new Map<string, BookingRow[]>();
     for (const b of bookings) {
