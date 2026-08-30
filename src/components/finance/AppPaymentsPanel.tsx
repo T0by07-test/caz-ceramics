@@ -98,21 +98,38 @@ export function AppPaymentsPanel() {
     const studentIds = Array.from(new Set(rows.map((r) => r.student_id)));
     const bookingIds = rows.map((r) => r.booking_id).filter((v): v is string => Boolean(v));
 
-    const [{ data: profiles }, { data: bookings }] = await Promise.all([
-      studentIds.length
-        ? supabase.from("profiles").select("id, name, surname, email").in("id", studentIds)
-        : Promise.resolve({ data: [] }),
-      bookingIds.length
-        ? supabase.from("bookings").select("id, class_id, status").in("id", bookingIds)
-        : Promise.resolve({ data: [] }),
+    // `.in()` with hundreds of ids blows past the request URL limit, so page it.
+    const fetchIn = async <T,>(table: string, cols: string, ids: string[]): Promise<T[]> => {
+      const out: T[] = [];
+      for (let i = 0; i < ids.length; i += 100) {
+        const chunk = ids.slice(i, i + 100);
+        const { data } = await (
+          supabase.from as unknown as (t: string) => {
+            select: (c: string) => { in: (col: string, v: string[]) => Promise<{ data: T[] | null }> };
+          }
+        )(table)
+          .select(cols)
+          .in("id", chunk);
+        if (data) out.push(...data);
+      }
+      return out;
+    };
+
+    const [profiles, bookings] = await Promise.all([
+      fetchIn<{ id: string; name: string | null; surname: string | null; email: string | null }>(
+        "profiles",
+        "id, name, surname, email",
+        studentIds,
+      ),
+      fetchIn<{ id: string; class_id: string }>(
+        "bookings",
+        "id, class_id",
+        Array.from(new Set(bookingIds)),
+      ),
     ]);
 
-    const classIds = Array.from(
-      new Set(((bookings ?? []) as { class_id: string }[]).map((b) => b.class_id)),
-    );
-    const { data: classes } = classIds.length
-      ? await supabase.from("classes").select("id, date").in("id", classIds)
-      : { data: [] };
+    const classIds = Array.from(new Set(bookings.map((b) => b.class_id)));
+    const classes = await fetchIn<{ id: string; date: string }>("classes", "id, date", classIds);
 
     const nameById = new Map(
       ((profiles ?? []) as { id: string; name: string | null; surname: string | null; email: string | null }[]).map(
