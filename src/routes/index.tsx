@@ -10,6 +10,7 @@ import { withoutClosedDates } from "@/lib/closures";
 import { createTrialCheckout } from "@/lib/checkout";
 import { startOfMonth, toIsoDate, DEFAULT_CALENDAR_MONTH } from "@/lib/calendar";
 import { PublicClassCalendar, type UpcomingClass } from "@/components/PublicClassCalendar";
+import { usePublicAvailability } from "@/hooks/usePublicAvailability";
 
 import logoAsset from "@/assets/logo-cazu-v2.png.asset.json";
 import piezasCrudasAsset from "@/assets/piezas-crudas.jpg.asset.json";
@@ -574,6 +575,7 @@ function TrialBooking() {
         Elige el día y la hora que te vengan bien (35 € · 2 h).
       </p>
       <PublicClassCalendar
+        availability={availability}
         monthRef={monthRef}
         onMonthChange={(d) => {
           setMonthRef(d);
