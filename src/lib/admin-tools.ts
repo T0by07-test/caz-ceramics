@@ -78,6 +78,19 @@ export async function sendPaymentReminder(studentId: string, planId: string): Pr
   if (data && data.ok === false) throw new Error(data.error ?? "No se pudo enviar el recordatorio");
 }
 
+/**
+ * Permanently delete a member account (test/junk profiles only — the edge
+ * function refuses anyone with a real payment or a non-"user" role). Removes
+ * the auth account, cascading to all their bookings/payments/tags/etc.
+ */
+export async function deleteMember(studentId: string): Promise<void> {
+  const { data, error } = await supabase.functions.invoke("admin-delete-member", {
+    body: { studentId },
+  });
+  if (error) throw new Error(await getFunctionErrorMessage(error));
+  if (!data?.deleted) throw new Error(data?.error ?? "No se pudo eliminar el miembro");
+}
+
 /** Copy text to the clipboard. Returns whether the copy succeeded. */
 export async function copyToClipboard(text: string): Promise<boolean> {
   try {

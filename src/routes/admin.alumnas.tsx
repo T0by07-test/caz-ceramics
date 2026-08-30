@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Archive,
   ArchiveRestore,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +36,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -62,7 +73,7 @@ import {
   toIsoDate,
   weekdayOf,
 } from "@/lib/calendar";
-import { sendPaymentReminder } from "@/lib/admin-tools";
+import { deleteMember, sendPaymentReminder } from "@/lib/admin-tools";
 import { useAuth } from "@/lib/auth";
 import type { Role } from "@/lib/auth";
 import {
@@ -101,6 +112,7 @@ type StudentRow = {
   estado: Estado;
   assigned_instructor: string | null;
   month_classes: MonthClassDay[];
+  has_real_payment: boolean;
 };
 
 function SortableHeader({
@@ -165,6 +177,8 @@ function AdminStudentsPage() {
   const [showArchived, setShowArchived] = useState(false);
   const [sortKey, setSortKey] = useState<MemberSortKey>("name");
   const [sortDir, setSortDir] = useState<MemberSortDir>("asc");
+  const [deleteTarget, setDeleteTarget] = useState<StudentRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [selected, setSelected] = useState<StudentRow | null>(null);
   const [grantOpen, setGrantOpen] = useState(false);
   const [grantStudent, setGrantStudent] = useState<StudentRow | null>(null);
@@ -214,22 +228,28 @@ function AdminStudentsPage() {
       .order("created_at", { ascending: false }) as unknown as Promise<{
       data: ProfileRow[] | null;
     }>);
-    const [{ data: subs }, { data: makeups }, { data: plansList }, { data: monthBookings }] =
-      await Promise.all([
-        supabase.from("subscriptions").select("student_id, plan_id").eq("month", monthStart),
-        supabase
-          .from("makeups")
-          .select("student_id")
-          .is("used_booking_id", null)
-          .gt("expires_at", new Date().toISOString()),
-        supabase.from("plans").select("id, name"),
-        supabase
-          .from("bookings")
-          .select("student_id, classes!inner(date)")
-          .gte("classes.date", monthStart)
-          .lte("classes.date", monthEndIso)
-          .in("status", ["reserved", "confirmed", "attended"]),
-      ]);
+    const [
+      { data: subs },
+      { data: makeups },
+      { data: plansList },
+      { data: monthBookings },
+      { data: realPayments },
+    ] = await Promise.all([
+      supabase.from("subscriptions").select("student_id, plan_id").eq("month", monthStart),
+      supabase
+        .from("makeups")
+        .select("student_id")
+        .is("used_booking_id", null)
+        .gt("expires_at", new Date().toISOString()),
+      supabase.from("plans").select("id, name"),
+      supabase
+        .from("bookings")
+        .select("student_id, classes!inner(date)")
+        .gte("classes.date", monthStart)
+        .lte("classes.date", monthEndIso)
+        .in("status", ["reserved", "confirmed", "attended"]),
+      supabase.from("payments").select("student_id").gt("amount_cents", 0),
+    ]);
     const planNameById = new Map((plansList ?? []).map((p) => [p.id, p.name]));
     const subByStudent = new Map(
       (subs ?? []).map((s) => [s.student_id, { plan_name: planNameById.get(s.plan_id) ?? null }]),
@@ -238,6 +258,7 @@ function AdminStudentsPage() {
     for (const m of makeups ?? [])
       makeupCount.set(m.student_id, (makeupCount.get(m.student_id) ?? 0) + 1);
     const bookedThisMonth = new Set((monthBookings ?? []).map((b) => b.student_id));
+    const studentsWithRealPayment = new Set((realPayments ?? []).map((p) => p.student_id));
     const monthClassesByStudent = new Map<string, MonthClassDay[]>();
     for (const b of (monthBookings ?? []) as { student_id: string; classes: { date: string } }[]) {
       const list = monthClassesByStudent.get(b.student_id) ?? [];
@@ -269,6 +290,7 @@ function AdminStudentsPage() {
         estado: deriveEstado(membership, bookedThisMonth.has(p.id), isRegular),
         assigned_instructor: p.assigned_instructor ?? null,
         month_classes: monthClassesByStudent.get(p.id) ?? [],
+        has_real_payment: studentsWithRealPayment.has(p.id),
       };
     });
     setRows(result);
@@ -319,6 +341,25 @@ function AdminStudentsPage() {
     }
     toast.success(r.is_archived ? "Miembro desarchivado" : "Miembro archivado");
     void load();
+  };
+
+  const canDelete = (r: StudentRow) => r.role === "user" && !r.has_real_payment;
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await deleteMember(deleteTarget.id);
+      toast.success("Miembro eliminado");
+      setDeleteTarget(null);
+      void load();
+    } catch (err) {
+      toast.error("No se pudo eliminar el miembro", {
+        description: err instanceof Error ? err.message : undefined,
+      });
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -487,6 +528,20 @@ function AdminStudentsPage() {
                               <Archive className="h-4 w-4" />
                             )}
                           </Button>
+                          {canDelete(r) ? (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-destructive hover:text-destructive"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteTarget(r);
+                              }}
+                              aria-label="Eliminar miembro"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          ) : null}
                         </div>
                       ) : null}
                     </li>
@@ -690,6 +745,25 @@ function AdminStudentsPage() {
                                       {r.is_archived ? "Desarchivar miembro" : "Archivar miembro"}
                                     </TooltipContent>
                                   </Tooltip>
+                                  {canDelete(r) ? (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          size="icon"
+                                          variant="ghost"
+                                          className="text-destructive hover:text-destructive"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setDeleteTarget(r);
+                                          }}
+                                          aria-label="Eliminar miembro"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>Eliminar miembro</TooltipContent>
+                                    </Tooltip>
+                                  ) : null}
                                 </div>
                               ) : (
                                 <span className="text-muted-foreground">—</span>
@@ -733,6 +807,32 @@ function AdminStudentsPage() {
           student={reminderStudent}
           plans={plans}
         />
+
+        <AlertDialog open={deleteTarget !== null} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Eliminar miembro</AlertDialogTitle>
+              <AlertDialogDescription>
+                {deleteTarget
+                  ? `${fullName(deleteTarget)} se eliminará permanentemente, junto con todas sus reservas, tags y datos asociados. Esta acción no se puede deshacer.`
+                  : ""}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  void handleDelete();
+                }}
+                disabled={deleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleting ? "Eliminando…" : "Eliminar"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </TooltipProvider>
   );
