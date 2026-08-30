@@ -11,6 +11,7 @@ import { withoutClosedDates } from "@/lib/closures";
 import { createEnrollmentRequest } from "@/lib/requests";
 import { startOfMonth, toIsoDate, DEFAULT_CALENDAR_MONTH } from "@/lib/calendar";
 import { PublicClassCalendar, type UpcomingClass } from "@/components/PublicClassCalendar";
+import { usePublicAvailability } from "@/hooks/usePublicAvailability";
 
 import { z } from "zod";
 
@@ -52,6 +53,7 @@ function SolicitarPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const [classes, setClasses] = useState<UpcomingClass[] | null>(null);
+  const availability = usePublicAvailability();
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [monthRef, setMonthRef] = useState<Date>(() => startOfMonth(DEFAULT_CALENDAR_MONTH));
@@ -247,6 +249,7 @@ function SolicitarPage() {
                   Marca al menos una. Cande confirmará la disponibilidad final.
                 </p>
                 <PublicClassCalendar
+                  availability={availability}
                   monthRef={monthRef}
                   onMonthChange={(d) => {
                     setMonthRef(d);
