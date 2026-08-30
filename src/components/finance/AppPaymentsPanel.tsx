@@ -73,6 +73,13 @@ function monthKey(date: string) {
   return date.slice(0, 7);
 }
 
+/** Cuentas de prueba: no deben aparecer en el cuaderno de ingresos. */
+const TEST_STUDENT_IDS = new Set([
+  "be13cdc7-b2e0-4d4a-a547-7d7bce40bc82", // Cande Test fianl
+  "f6697c19-790f-4edb-87c6-9245eace67cd", // Sofia Cordi
+  "9a95373a-b8ee-44f6-8deb-d9ac705a11ba", // qwe werqw
+]);
+
 export function AppPaymentsPanel() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,7 +102,9 @@ export function AppPaymentsPanel() {
       .order("created_at", { ascending: false })
       .limit(1000);
 
-    const rows = (payments ?? []) as PaymentRow[];
+    const rows = ((payments ?? []) as PaymentRow[]).filter(
+      (r) => !TEST_STUDENT_IDS.has(r.student_id),
+    );
     const studentIds = Array.from(new Set(rows.map((r) => r.student_id)));
     const bookingIds = rows.map((r) => r.booking_id).filter((v): v is string => Boolean(v));
 
