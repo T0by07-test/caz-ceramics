@@ -102,7 +102,9 @@ export function AppPaymentsPanel() {
       .order("created_at", { ascending: false })
       .limit(1000);
 
-    const rows = (payments ?? []) as PaymentRow[];
+    const rows = ((payments ?? []) as PaymentRow[]).filter(
+      (r) => !TEST_STUDENT_IDS.has(r.student_id),
+    );
     const studentIds = Array.from(new Set(rows.map((r) => r.student_id)));
     const bookingIds = rows.map((r) => r.booking_id).filter((v): v is string => Boolean(v));
 
