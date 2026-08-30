@@ -1,4 +1,5 @@
 import { MonthGrid } from "./MonthGrid";
+import { MobileWeekList } from "./MobileWeekList";
 import { WeekGrid } from "./WeekGrid";
 import { DayView } from "./DayView";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -42,6 +43,17 @@ export function CalendarBoard({
   if (view === "week") {
     return (
       <WeekGrid
+        reference={reference}
+        classes={classes}
+        onSelectClass={onSelectClass}
+        selectedIds={selectedIds}
+      />
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <MobileWeekList
         reference={reference}
         classes={classes}
         onSelectClass={onSelectClass}

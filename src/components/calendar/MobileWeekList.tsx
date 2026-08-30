@@ -47,13 +47,14 @@ export function MobileWeekList({ reference, classes, onSelectClass, selectedIds 
               const level = capacityLevel(c.booked_count, c.capacity_max);
               const cancelled = c.status !== "scheduled";
               const picked = selectedIds?.has(c.id) ?? false;
+              const remaining = Math.max(c.capacity_max - c.booked_count, 0);
               return (
                 <li key={c.id}>
                   <button
                     type="button"
                     onClick={() => onSelectClass(c)}
                     className={[
-                      "flex w-full items-center gap-3 rounded-none border p-3 text-left transition-colors",
+                      "grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-md border p-3 text-left transition-colors",
                       picked
                         ? "border-primary bg-primary/10"
                         : "border-border bg-surface hover:bg-accent",
@@ -66,18 +67,33 @@ export function MobileWeekList({ reference, classes, onSelectClass, selectedIds 
                       ].join(" ")}
                       aria-hidden
                     />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-normal">
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium tabular-nums text-foreground">
                         {formatTimeRange(c.start_time, c.end_time)}
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {cancelled ? "Cancelada" : capacityLabel(level)}
-                        {c.teacher ? ` · Profe ${c.teacher}` : ""}
-                        {c.audience === "kids" ? " · Clase infantil" : ""}
+                      <div className="truncate text-xs text-muted-foreground">
+                        {c.teacher ? `Profe ${c.teacher}` : "Sin profesora"}
+                        {c.audience === "kids" ? " · Infantil" : " · Adultos"}
                       </div>
                     </div>
-                    <div className="text-xs tabular-nums text-muted-foreground">
-                      {c.booked_count}/{c.capacity_max}
+                    <div className="min-w-[5.75rem] text-right">
+                      <div
+                        className={[
+                          "text-xs font-medium tabular-nums",
+                          cancelled || level === "full" ? "text-destructive" : "text-foreground",
+                        ].join(" ")}
+                      >
+                        {cancelled
+                          ? "Cancelada"
+                          : level === "full"
+                            ? "Completa"
+                            : `${remaining} ${remaining === 1 ? "plaza libre" : "plazas libres"}`}
+                      </div>
+                      {!cancelled ? (
+                        <div className="text-[11px] tabular-nums text-muted-foreground">
+                          {c.booked_count}/{c.capacity_max} reservadas
+                        </div>
+                      ) : null}
                     </div>
                   </button>
                 </li>
