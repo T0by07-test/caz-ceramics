@@ -574,8 +574,8 @@ function AdminStudentsPage() {
                         {viewerRole === "admin" && (
                           <>
                             <SortableHeader
-                              label="Plan del mes"
-                              sortKey="plan"
+                              label="Reservas"
+                              sortKey="reservas"
                               activeKey={sortKey}
                               dir={sortDir}
                               onSort={handleSort}
