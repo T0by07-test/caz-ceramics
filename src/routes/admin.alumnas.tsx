@@ -669,10 +669,14 @@ function AdminStudentsPage() {
                             {viewerRole === "admin" && (
                               <>
                                 <TableCell className="whitespace-nowrap">
-                                  {r.plan_name ? (
-                                    <Badge variant="secondary">{r.plan_name}</Badge>
+                                  {monthSummary.count > 0 ? (
+                                    <Badge className="bg-success text-success-foreground">
+                                      Sí · {monthSummary.count}
+                                    </Badge>
                                   ) : (
-                                    <span className="text-muted-foreground">Sin plan</span>
+                                    <Badge variant="outline" className="text-muted-foreground">
+                                      No
+                                    </Badge>
                                   )}
                                 </TableCell>
                                 <TableCell className="text-center">
