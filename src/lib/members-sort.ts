@@ -1,4 +1,4 @@
-export type MemberSortKey = "name" | "estado" | "plan" | "recup";
+export type MemberSortKey = "name" | "estado" | "plan" | "recup" | "reservas";
 export type MemberSortDir = "asc" | "desc";
 
 type Sortable = {
@@ -8,6 +8,7 @@ type Sortable = {
   estado: string;
   plan_name: string | null;
   pending_makeups: number;
+  month_classes?: unknown[];
 };
 
 const ESTADO_ORDER: Record<string, number> = {
