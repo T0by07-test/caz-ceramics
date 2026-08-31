@@ -1,4 +1,4 @@
-export type MemberSortKey = "name" | "estado" | "plan" | "recup";
+export type MemberSortKey = "name" | "estado" | "plan" | "recup" | "reservas";
 export type MemberSortDir = "asc" | "desc";
 
 type Sortable = {
@@ -8,6 +8,7 @@ type Sortable = {
   estado: string;
   plan_name: string | null;
   pending_makeups: number;
+  month_classes?: unknown[];
 };
 
 const ESTADO_ORDER: Record<string, number> = {
@@ -36,6 +37,11 @@ export function compareMembers<T extends Sortable>(
       return applyDir(nameOf(a).localeCompare(nameOf(b), "es", { sensitivity: "base" }), dir);
     case "recup":
       return applyDir(a.pending_makeups - b.pending_makeups, dir);
+    case "reservas": {
+      const na = (a.month_classes?.length ?? 0) > 0 ? 1 : 0;
+      const nb = (b.month_classes?.length ?? 0) > 0 ? 1 : 0;
+      return applyDir(nb - na, dir);
+    }
     case "plan": {
       if (a.plan_name === null && b.plan_name === null) return 0;
       if (a.plan_name === null) return 1;

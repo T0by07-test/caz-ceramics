@@ -479,7 +479,15 @@ function AdminStudentsPage() {
                       </div>
                       <div className="flex flex-wrap items-center gap-1.5 text-xs">
                         <Badge variant="outline">{ROLE_LABELS[r.role]}</Badge>
-                        {r.plan_name ? <Badge variant="secondary">{r.plan_name}</Badge> : null}
+                        {r.month_classes.length > 0 ? (
+                          <Badge className="bg-success text-success-foreground">
+                            Reservas · {r.month_classes.length}
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-muted-foreground">
+                            Sin reservas
+                          </Badge>
+                        )}
                         {viewerRole === "admin" && r.pending_makeups > 0 ? (
                           <span className="text-muted-foreground">{r.pending_makeups} recup.</span>
                         ) : null}
@@ -574,8 +582,8 @@ function AdminStudentsPage() {
                         {viewerRole === "admin" && (
                           <>
                             <SortableHeader
-                              label="Plan del mes"
-                              sortKey="plan"
+                              label="Reservas"
+                              sortKey="reservas"
                               activeKey={sortKey}
                               dir={sortDir}
                               onSort={handleSort}
@@ -669,10 +677,14 @@ function AdminStudentsPage() {
                             {viewerRole === "admin" && (
                               <>
                                 <TableCell className="whitespace-nowrap">
-                                  {r.plan_name ? (
-                                    <Badge variant="secondary">{r.plan_name}</Badge>
+                                  {monthSummary.count > 0 ? (
+                                    <Badge className="bg-success text-success-foreground">
+                                      Sí · {monthSummary.count}
+                                    </Badge>
                                   ) : (
-                                    <span className="text-muted-foreground">Sin plan</span>
+                                    <Badge variant="outline" className="text-muted-foreground">
+                                      No
+                                    </Badge>
                                   )}
                                 </TableCell>
                                 <TableCell className="text-center">
