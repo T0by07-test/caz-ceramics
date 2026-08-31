@@ -261,10 +261,16 @@ function AdminStudentsPage() {
     const makeupCount = new Map<string, number>();
     for (const m of makeups ?? [])
       makeupCount.set(m.student_id, (makeupCount.get(m.student_id) ?? 0) + 1);
-    const bookedThisMonth = new Set((monthBookings ?? []).map((b) => b.student_id));
+    type BookingRow = { student_id: string; classes: { date: string } };
+    const allBookings = (monthBookings ?? []) as BookingRow[];
+    // Si el mes en curso aún no tiene reservas, mostramos las del mes siguiente.
+    const currentMonthBookings = allBookings.filter((b) => b.classes.date <= monthEndIso);
+    const activeBookings =
+      currentMonthBookings.length > 0 ? currentMonthBookings : allBookings;
+    const bookedThisMonth = new Set(activeBookings.map((b) => b.student_id));
     const studentsWithRealPayment = new Set((realPayments ?? []).map((p) => p.student_id));
     const monthClassesByStudent = new Map<string, MonthClassDay[]>();
-    for (const b of (monthBookings ?? []) as { student_id: string; classes: { date: string } }[]) {
+    for (const b of activeBookings) {
       const list = monthClassesByStudent.get(b.student_id) ?? [];
       list.push({ date: b.classes.date, weekday: weekdayOf(b.classes.date) });
       monthClassesByStudent.set(b.student_id, list);
