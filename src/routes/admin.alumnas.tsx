@@ -250,7 +250,7 @@ function AdminStudentsPage() {
         .from("bookings")
         .select("student_id, classes!inner(date)")
         .gte("classes.date", monthStart)
-        .lte("classes.date", monthEndIso)
+        .lte("classes.date", nextMonthEndIso)
         .in("status", ["reserved", "confirmed", "attended"]),
       supabase.from("payments").select("student_id").gt("amount_cents", 0),
     ]);
