@@ -479,7 +479,15 @@ function AdminStudentsPage() {
                       </div>
                       <div className="flex flex-wrap items-center gap-1.5 text-xs">
                         <Badge variant="outline">{ROLE_LABELS[r.role]}</Badge>
-                        {r.plan_name ? <Badge variant="secondary">{r.plan_name}</Badge> : null}
+                        {r.month_classes.length > 0 ? (
+                          <Badge className="bg-success text-success-foreground">
+                            Reservas · {r.month_classes.length}
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-muted-foreground">
+                            Sin reservas
+                          </Badge>
+                        )}
                         {viewerRole === "admin" && r.pending_makeups > 0 ? (
                           <span className="text-muted-foreground">{r.pending_makeups} recup.</span>
                         ) : null}
