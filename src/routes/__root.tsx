@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+
 
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth";
@@ -82,7 +84,44 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+// After a new deploy the old page keeps asking for chunk files that no longer
+// exist ("Failed to fetch dynamically imported module"), which surfaces as a
+// generic "Something went wrong" screen. Reload once to pick up the new build.
+function useStaleChunkRecovery() {
+  useEffect(() => {
+    const KEY = "cazu:chunk-reload";
+    const recover = () => {
+      if (sessionStorage.getItem(KEY)) return;
+      sessionStorage.setItem(KEY, "1");
+      window.location.reload();
+    };
+    const onPreloadError = (e: Event) => {
+      e.preventDefault();
+      recover();
+    };
+    const onRejection = (e: PromiseRejectionEvent) => {
+      const msg = String(e.reason?.message ?? e.reason ?? "");
+      if (
+        /dynamically imported module|Importing a module script failed|error loading dynamically imported module/i.test(
+          msg,
+        )
+      ) {
+        recover();
+      }
+    };
+    window.addEventListener("vite:preloadError", onPreloadError);
+    window.addEventListener("unhandledrejection", onRejection);
+    // A successful load means the app is on a fresh build again.
+    sessionStorage.removeItem(KEY);
+    return () => {
+      window.removeEventListener("vite:preloadError", onPreloadError);
+      window.removeEventListener("unhandledrejection", onRejection);
+    };
+  }, []);
+}
+
 function RootComponent() {
+  useStaleChunkRecovery();
   return (
     <AuthProvider>
       <Outlet />
@@ -90,3 +129,4 @@ function RootComponent() {
     </AuthProvider>
   );
 }
+
