@@ -113,7 +113,17 @@ type StudentRow = {
   assigned_instructor: string | null;
   month_classes: MonthClassDay[];
   has_real_payment: boolean;
+  payment: PaymentState;
 };
+
+/** Cómo está el pago de las clases de una alumna: ya cobrado (tarjeta/Bizum),
+ * pendiente (normalmente efectivo en el taller) o sin ningún pago registrado. */
+type PaymentState = {
+  tone: "paid" | "pending" | "none";
+  label: string;
+};
+
+
 
 function SortableHeader({
   label,
@@ -252,7 +262,12 @@ function AdminStudentsPage() {
         .gte("classes.date", monthStart)
         .lte("classes.date", nextMonthEndIso)
         .in("status", ["reserved", "confirmed", "attended"]),
-      supabase.from("payments").select("student_id").gt("amount_cents", 0),
+      supabase
+        .from("payments")
+        .select("student_id, status, method, created_at")
+        .gt("amount_cents", 0)
+        .order("created_at", { ascending: true }),
+
     ]);
     const planNameById = new Map((plansList ?? []).map((p) => [p.id, p.name]));
     const subByStudent = new Map(
@@ -268,7 +283,33 @@ function AdminStudentsPage() {
     const activeBookings =
       currentMonthBookings.length > 0 ? currentMonthBookings : allBookings;
     const bookedThisMonth = new Set(activeBookings.map((b) => b.student_id));
-    const studentsWithRealPayment = new Set((realPayments ?? []).map((p) => p.student_id));
+    type PaymentRow = {
+      student_id: string;
+      status: string;
+      method: string | null;
+      created_at: string;
+    };
+    const paymentRows = (realPayments ?? []) as PaymentRow[];
+    const studentsWithRealPayment = new Set(paymentRows.map((p) => p.student_id));
+    // Un pago confirmado manda sobre cualquier intento pendiente o fallido.
+    const paymentByStudent = new Map<string, PaymentState>();
+    for (const p of paymentRows) {
+      const current = paymentByStudent.get(p.student_id);
+      if (p.status === "confirmed") {
+        paymentByStudent.set(p.student_id, {
+          tone: "paid",
+          label: `Pagado · ${paymentMethodLabel(p.method)}`,
+        });
+      } else if (p.status === "pending" && current?.tone !== "paid") {
+        paymentByStudent.set(p.student_id, {
+          tone: "pending",
+          label: `Pendiente · ${paymentMethodLabel(p.method)}`,
+        });
+      } else if (!current) {
+        paymentByStudent.set(p.student_id, { tone: "none", label: "Pago no completado" });
+      }
+    }
+
     const monthClassesByStudent = new Map<string, MonthClassDay[]>();
     for (const b of activeBookings) {
       const list = monthClassesByStudent.get(b.student_id) ?? [];
@@ -301,6 +342,9 @@ function AdminStudentsPage() {
         assigned_instructor: p.assigned_instructor ?? null,
         month_classes: monthClassesByStudent.get(p.id) ?? [],
         has_real_payment: studentsWithRealPayment.has(p.id),
+        payment:
+          paymentByStudent.get(p.id) ?? { tone: "none" as const, label: "Sin pago registrado" },
+
       };
     });
     setRows(result);
@@ -498,6 +542,8 @@ function AdminStudentsPage() {
                             Sin reservas
                           </Badge>
                         )}
+                        {viewerRole === "admin" ? <PaymentBadge payment={r.payment} /> : null}
+
                         {viewerRole === "admin" && r.pending_makeups > 0 ? (
                           <span className="text-muted-foreground">{r.pending_makeups} recup.</span>
                         ) : null}
@@ -599,6 +645,8 @@ function AdminStudentsPage() {
                               onSort={handleSort}
                               className="whitespace-nowrap"
                             />
+                            <TableHead className="whitespace-nowrap">Pago</TableHead>
+
                             <SortableHeader
                               label="Recup."
                               sortKey="recup"
@@ -697,6 +745,10 @@ function AdminStudentsPage() {
                                     </Badge>
                                   )}
                                 </TableCell>
+                                <TableCell className="whitespace-nowrap">
+                                  <PaymentBadge payment={r.payment} />
+                                </TableCell>
+
                                 <TableCell className="text-center">
                                   {r.pending_makeups > 0 ? (
                                     <Badge variant="outline">{r.pending_makeups}</Badge>
@@ -1514,5 +1566,17 @@ function PaymentReminderDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function PaymentBadge({ payment }: { payment: PaymentState }) {
+  if (payment.tone === "paid")
+    return <Badge className="bg-success text-success-foreground">{payment.label}</Badge>;
+  if (payment.tone === "pending")
+    return <Badge className="bg-warning text-warning-foreground">{payment.label}</Badge>;
+  return (
+    <Badge variant="outline" className="text-muted-foreground">
+      {payment.label}
+    </Badge>
   );
 }
