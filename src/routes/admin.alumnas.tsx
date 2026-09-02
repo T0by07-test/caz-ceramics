@@ -1574,3 +1574,15 @@ function PaymentReminderDialog({
     </Dialog>
   );
 }
+
+function PaymentBadge({ payment }: { payment: PaymentState }) {
+  if (payment.tone === "paid")
+    return <Badge className="bg-success text-success-foreground">{payment.label}</Badge>;
+  if (payment.tone === "pending")
+    return <Badge className="bg-warning text-warning-foreground">{payment.label}</Badge>;
+  return (
+    <Badge variant="outline" className="text-muted-foreground">
+      {payment.label}
+    </Badge>
+  );
+}
