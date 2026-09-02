@@ -268,7 +268,12 @@ function AdminStudentsPage() {
         .gte("classes.date", monthStart)
         .lte("classes.date", nextMonthEndIso)
         .in("status", ["reserved", "confirmed", "attended"]),
-      supabase.from("payments").select("student_id").gt("amount_cents", 0),
+      supabase
+        .from("payments")
+        .select("student_id, status, method, created_at")
+        .gt("amount_cents", 0)
+        .order("created_at", { ascending: true }),
+
     ]);
     const planNameById = new Map((plansList ?? []).map((p) => [p.id, p.name]));
     const subByStudent = new Map(
