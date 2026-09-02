@@ -289,7 +289,33 @@ function AdminStudentsPage() {
     const activeBookings =
       currentMonthBookings.length > 0 ? currentMonthBookings : allBookings;
     const bookedThisMonth = new Set(activeBookings.map((b) => b.student_id));
-    const studentsWithRealPayment = new Set((realPayments ?? []).map((p) => p.student_id));
+    type PaymentRow = {
+      student_id: string;
+      status: string;
+      method: string | null;
+      created_at: string;
+    };
+    const paymentRows = (realPayments ?? []) as PaymentRow[];
+    const studentsWithRealPayment = new Set(paymentRows.map((p) => p.student_id));
+    // Un pago confirmado manda sobre cualquier intento pendiente o fallido.
+    const paymentByStudent = new Map<string, PaymentState>();
+    for (const p of paymentRows) {
+      const current = paymentByStudent.get(p.student_id);
+      if (p.status === "confirmed") {
+        paymentByStudent.set(p.student_id, {
+          tone: "paid",
+          label: `Pagado · ${paymentMethodLabel(p.method)}`,
+        });
+      } else if (p.status === "pending" && current?.tone !== "paid") {
+        paymentByStudent.set(p.student_id, {
+          tone: "pending",
+          label: `Pendiente · ${paymentMethodLabel(p.method)}`,
+        });
+      } else if (!current) {
+        paymentByStudent.set(p.student_id, { tone: "none", label: "Pago no completado" });
+      }
+    }
+
     const monthClassesByStudent = new Map<string, MonthClassDay[]>();
     for (const b of activeBookings) {
       const list = monthClassesByStudent.get(b.student_id) ?? [];
