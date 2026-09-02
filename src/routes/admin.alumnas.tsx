@@ -113,7 +113,23 @@ type StudentRow = {
   assigned_instructor: string | null;
   month_classes: MonthClassDay[];
   has_real_payment: boolean;
+  payment: PaymentState;
 };
+
+/** Cómo está el pago de las clases de una alumna: ya cobrado (tarjeta/Bizum),
+ * pendiente (normalmente efectivo en el taller) o sin ningún pago registrado. */
+type PaymentState = {
+  tone: "paid" | "pending" | "none";
+  label: string;
+};
+
+function paymentMethodLabel(method: string | null) {
+  if (method === "cash") return "Efectivo";
+  if (method === "bizum") return "Bizum";
+  if (method === "card") return "Tarjeta";
+  return "Sin método";
+}
+
 
 function SortableHeader({
   label,
