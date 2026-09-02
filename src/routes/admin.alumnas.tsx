@@ -348,6 +348,9 @@ function AdminStudentsPage() {
         assigned_instructor: p.assigned_instructor ?? null,
         month_classes: monthClassesByStudent.get(p.id) ?? [],
         has_real_payment: studentsWithRealPayment.has(p.id),
+        payment:
+          paymentByStudent.get(p.id) ?? { tone: "none" as const, label: "Sin pago registrado" },
+
       };
     });
     setRows(result);
