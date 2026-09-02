@@ -102,9 +102,28 @@ export function AppPaymentsPanel() {
       .order("created_at", { ascending: false })
       .limit(1000);
 
-    const rows = ((payments ?? []) as PaymentRow[]).filter(
+    const allRows = ((payments ?? []) as PaymentRow[]).filter(
       (r) => !TEST_STUDENT_IDS.has(r.student_id),
     );
+    // Un checkout abandonado deja una fila "pending" para la misma reserva que
+    // ya tiene un pago confirmado: no debe contarse como una segunda línea.
+    const confirmedBookings = new Set(
+      allRows.filter((r) => r.status === "confirmed" && r.booking_id).map((r) => r.booking_id!),
+    );
+    const confirmedSubs = new Set(
+      allRows
+        .filter((r) => r.status === "confirmed" && r.subscription_id)
+        .map((r) => r.subscription_id!),
+    );
+    const rows = allRows.filter(
+      (r) =>
+        r.status === "confirmed" ||
+        !(
+          (r.booking_id && confirmedBookings.has(r.booking_id)) ||
+          (r.subscription_id && confirmedSubs.has(r.subscription_id))
+        ),
+    );
+
     const studentIds = Array.from(new Set(rows.map((r) => r.student_id)));
 
     // `.in()` with hundreds of ids blows past the request URL limit, so page it.
