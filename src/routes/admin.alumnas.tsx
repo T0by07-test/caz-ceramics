@@ -751,6 +751,10 @@ function AdminStudentsPage() {
                                     </Badge>
                                   )}
                                 </TableCell>
+                                <TableCell className="whitespace-nowrap">
+                                  <PaymentBadge payment={r.payment} />
+                                </TableCell>
+
                                 <TableCell className="text-center">
                                   {r.pending_makeups > 0 ? (
                                     <Badge variant="outline">{r.pending_makeups}</Badge>
