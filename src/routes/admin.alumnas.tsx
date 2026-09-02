@@ -651,6 +651,8 @@ function AdminStudentsPage() {
                               onSort={handleSort}
                               className="whitespace-nowrap"
                             />
+                            <TableHead className="whitespace-nowrap">Pago</TableHead>
+
                             <SortableHeader
                               label="Recup."
                               sortKey="recup"
