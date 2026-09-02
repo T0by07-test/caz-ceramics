@@ -548,6 +548,8 @@ function AdminStudentsPage() {
                             Sin reservas
                           </Badge>
                         )}
+                        {viewerRole === "admin" ? <PaymentBadge payment={r.payment} /> : null}
+
                         {viewerRole === "admin" && r.pending_makeups > 0 ? (
                           <span className="text-muted-foreground">{r.pending_makeups} recup.</span>
                         ) : null}
