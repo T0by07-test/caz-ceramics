@@ -379,16 +379,30 @@ function DropInPaymentFlow({
   const [cashDoneOpen, setCashDoneOpen] = useState(false);
   const [cashDoneTotal, setCashDoneTotal] = useState("");
   const [planLoading, setPlanLoading] = useState(false);
+  const [makeupLoading, setMakeupLoading] = useState(false);
+  // Classes already covered by a make-up (a class the student had paid and
+  // cancelled in time) — they drop out of the amount left to pay.
+  const [covered, setCovered] = useState<Set<string>>(new Set());
 
-  const count = classes.length;
-  const paidClasses = reservedClasses.length > 0 ? reservedClasses : classes;
+  const activeClasses = useMemo(
+    () => classes.filter((c) => !covered.has(c.id)),
+    [classes, covered],
+  );
+  const count = activeClasses.length;
+  const paidClasses = reservedClasses.length > 0 ? reservedClasses : activeClasses;
   const totalLabel = formatEuros(selectionPriceCents(paidClasses));
+
+  const { count: makeupCount, refresh: refreshMakeups } = useMyMakeups();
+  const usableMakeups = Math.min(makeupCount, count);
 
   // Plan credits only make sense when every selected class falls in the same
   // month (a plan is scoped to one month); mixed-month selections just fall
   // through to the regular cash/card flow below.
-  const monthKeys = useMemo(() => new Set(classes.map((c) => c.date.slice(0, 7))), [classes]);
-  const singleMonth = monthKeys.size === 1 ? classes[0]?.date : null;
+  const monthKeys = useMemo(
+    () => new Set(activeClasses.map((c) => c.date.slice(0, 7))),
+    [activeClasses],
+  );
+  const singleMonth = monthKeys.size === 1 ? activeClasses[0]?.date : null;
   const monthDate = useMemo(
     () => (singleMonth ? new Date(`${singleMonth}-01T00:00:00`) : undefined),
     [singleMonth],
@@ -401,17 +415,65 @@ function DropInPaymentFlow({
   }, [count]);
 
   useEffect(() => {
-    if (count === 0) {
+    if (classes.length === 0) {
       setBookingIds([]);
       setReservedClasses([]);
       setReserving(false);
       setCashLoading(false);
+      setCovered(new Set());
     }
-  }, [count]);
+  }, [classes.length]);
+
+  const handleMakeupBooking = async () => {
+    if (usableMakeups === 0) return;
+    setMakeupLoading(true);
+    const ordered = [...activeClasses].sort((a, b) =>
+      `${a.date}${a.start_time}`.localeCompare(`${b.date}${b.start_time}`),
+    );
+    const target = ordered.slice(0, usableMakeups);
+    const done: string[] = [];
+    const failed: string[] = [];
+    for (const c of target) {
+      try {
+        await bookMakeup(c.id);
+        done.push(c.id);
+      } catch (err) {
+        failed.push(
+          `${formatLongDate(c.date)} · ${formatTimeRange(c.start_time, c.end_time)}${
+            err instanceof Error ? ` — ${err.message}` : ""
+          }`,
+        );
+      }
+    }
+    setMakeupLoading(false);
+    void refreshMakeups();
+    if (failed.length > 0) {
+      toast.error(
+        done.length > 0 ? "Algunas clases no se pudieron recuperar" : "No se pudo recuperar",
+        { description: failed.join(" | ") },
+      );
+    }
+    if (done.length === 0) return;
+    toast.success(
+      done.length === 1
+        ? "Clase recuperada · ya estaba pagada"
+        : `${done.length} clases recuperadas · ya estaban pagadas`,
+    );
+    if (done.length === count) {
+      setMethodOpen(false);
+      onClose();
+      return;
+    }
+    setCovered((prev) => new Set([...prev, ...done]));
+    toast.info("Te quedan clases por pagar", {
+      description: "Elige cómo quieres pagar las clases restantes.",
+    });
+  };
 
   const reserveBookings = useCallback(async () => {
     if (bookingIds.length > 0) return bookingIds;
-    if (classes.length === 0) throw new Error("No hay clases seleccionadas.");
+    if (activeClasses.length === 0) throw new Error("No hay clases seleccionadas.");
+
 
     setReserving(true);
     const ordered = [...classes].sort((a, b) =>
