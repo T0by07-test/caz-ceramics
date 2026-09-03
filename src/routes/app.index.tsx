@@ -58,10 +58,10 @@ function CalendarioPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const view: CalendarView = search.view ?? "month";
-  // Students almost always book for the month ahead, so an unparameterised
-  // visit lands on next month; ?date= (and "Hoy") still win.
+  // An unparameterised visit lands on the current month (September at launch);
+  // ?date= (and "Hoy") still win.
   const reference = useMemo(
-    () => (search.date ? parseReference(search.date) : addMonths(new Date(), 1)),
+    () => (search.date ? parseReference(search.date) : new Date()),
     [search.date],
   );
   const range = useMemo(() => rangeForView(view, reference), [view, reference]);
