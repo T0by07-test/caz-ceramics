@@ -613,19 +613,52 @@ function DropInPaymentFlow({
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              ¿Cómo quieres pagar {count === 1 ? "la clase" : `las ${count} clases`}?
+              {usableMakeups >= count
+                ? count === 1
+                  ? "Esta clase ya está pagada"
+                  : "Estas clases ya están pagadas"
+                : `¿Cómo quieres pagar ${count === 1 ? "la clase" : `las ${count} clases`}?`}
             </DialogTitle>
             <DialogDescription>
-              {totalLabel} · Guardamos tu plaza 30 minutos mientras completas el pago.
+              {usableMakeups >= count
+                ? "Puedes recuperar la clase que cancelaste a tiempo sin pagar de nuevo."
+                : `${totalLabel} · Guardamos tu plaza 30 minutos mientras completas el pago.`}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
+            {usableMakeups > 0 ? (
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-auto items-start justify-start gap-3 whitespace-normal border-primary py-4 text-left"
+                disabled={cashLoading || reserving || planLoading || makeupLoading}
+                onClick={() => void handleMakeupBooking()}
+              >
+                <RotateCcw className="h-5 w-5 shrink-0 text-primary" />
+                <span className="flex flex-col">
+                  <span className="font-medium">
+                    {makeupLoading
+                      ? "Reservando…"
+                      : usableMakeups === 1
+                        ? "Recuperar clase ya pagada"
+                        : `Recuperar ${usableMakeups} clases ya pagadas`}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    Sin pagar de nuevo · tienes {makeupCount} clase{makeupCount === 1 ? "" : "s"} por
+                    recuperar
+                    {usableMakeups < count
+                      ? ` · pagarás solo las ${count - usableMakeups} restantes`
+                      : ""}
+                  </span>
+                </span>
+              </Button>
+            ) : null}
             {canUsePlan ? (
               <Button
                 variant="outline"
                 size="lg"
                 className="h-auto items-start justify-start gap-3 whitespace-normal border-primary py-4 text-left"
-                disabled={cashLoading || reserving || planLoading}
+                disabled={cashLoading || reserving || planLoading || makeupLoading}
                 onClick={() => void handlePlanBooking()}
               >
                 <BadgeCheck className="h-5 w-5 shrink-0 text-primary" />
@@ -644,7 +677,7 @@ function DropInPaymentFlow({
               variant="outline"
               size="lg"
               className="h-auto items-start justify-start gap-3 whitespace-normal py-4 text-left"
-              disabled={cashLoading || reserving || planLoading}
+              disabled={cashLoading || reserving || planLoading || makeupLoading}
               onClick={() => void handleDropInCash()}
             >
               <Banknote className="h-5 w-5 shrink-0" />
@@ -659,7 +692,7 @@ function DropInPaymentFlow({
               variant="outline"
               size="lg"
               className="h-auto items-start justify-start gap-3 whitespace-normal py-4 text-left"
-              disabled={cashLoading || reserving || planLoading}
+              disabled={cashLoading || reserving || planLoading || makeupLoading}
               onClick={() => {
                 setMethodOpen(false);
                 setCheckoutOpen(true);
