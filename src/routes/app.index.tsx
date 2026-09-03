@@ -30,8 +30,10 @@ import {
 import { useClassesInRange, type ClassWithCount } from "@/hooks/useClassesInRange";
 import { useMyBookedClassIds } from "@/hooks/useMyBookedClassIds";
 import { useMyPlan } from "@/hooks/useMyPlan";
-import { bookClass } from "@/lib/booking";
+import { useMyMakeups } from "@/hooks/useMyMakeups";
+import { bookClass, bookMakeup } from "@/lib/booking";
 import { formatEuros, selectionPriceCents } from "@/lib/pricing";
+
 import { studioClosureFor } from "@/lib/closures";
 import { joinWaitlist } from "@/lib/waitlist";
 import { createDropInCheckout } from "@/lib/checkout";
