@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { BadgeCheck, Banknote, CreditCard, X } from "lucide-react";
+import { BadgeCheck, Banknote, CreditCard, RotateCcw, X } from "lucide-react";
 import {
   
   capacityDotClass,
@@ -30,8 +30,10 @@ import {
 import { useClassesInRange, type ClassWithCount } from "@/hooks/useClassesInRange";
 import { useMyBookedClassIds } from "@/hooks/useMyBookedClassIds";
 import { useMyPlan } from "@/hooks/useMyPlan";
-import { bookClass } from "@/lib/booking";
+import { useMyMakeups } from "@/hooks/useMyMakeups";
+import { bookClass, bookMakeup } from "@/lib/booking";
 import { formatEuros, selectionPriceCents } from "@/lib/pricing";
+
 import { studioClosureFor } from "@/lib/closures";
 import { joinWaitlist } from "@/lib/waitlist";
 import { createDropInCheckout } from "@/lib/checkout";
@@ -377,16 +379,30 @@ function DropInPaymentFlow({
   const [cashDoneOpen, setCashDoneOpen] = useState(false);
   const [cashDoneTotal, setCashDoneTotal] = useState("");
   const [planLoading, setPlanLoading] = useState(false);
+  const [makeupLoading, setMakeupLoading] = useState(false);
+  // Classes already covered by a make-up (a class the student had paid and
+  // cancelled in time) — they drop out of the amount left to pay.
+  const [covered, setCovered] = useState<Set<string>>(new Set());
 
-  const count = classes.length;
-  const paidClasses = reservedClasses.length > 0 ? reservedClasses : classes;
+  const activeClasses = useMemo(
+    () => classes.filter((c) => !covered.has(c.id)),
+    [classes, covered],
+  );
+  const count = activeClasses.length;
+  const paidClasses = reservedClasses.length > 0 ? reservedClasses : activeClasses;
   const totalLabel = formatEuros(selectionPriceCents(paidClasses));
+
+  const { count: makeupCount, refresh: refreshMakeups } = useMyMakeups();
+  const usableMakeups = Math.min(makeupCount, count);
 
   // Plan credits only make sense when every selected class falls in the same
   // month (a plan is scoped to one month); mixed-month selections just fall
   // through to the regular cash/card flow below.
-  const monthKeys = useMemo(() => new Set(classes.map((c) => c.date.slice(0, 7))), [classes]);
-  const singleMonth = monthKeys.size === 1 ? classes[0]?.date : null;
+  const monthKeys = useMemo(
+    () => new Set(activeClasses.map((c) => c.date.slice(0, 7))),
+    [activeClasses],
+  );
+  const singleMonth = monthKeys.size === 1 ? activeClasses[0]?.date : null;
   const monthDate = useMemo(
     () => (singleMonth ? new Date(`${singleMonth}-01T00:00:00`) : undefined),
     [singleMonth],
@@ -399,20 +415,68 @@ function DropInPaymentFlow({
   }, [count]);
 
   useEffect(() => {
-    if (count === 0) {
+    if (classes.length === 0) {
       setBookingIds([]);
       setReservedClasses([]);
       setReserving(false);
       setCashLoading(false);
+      setCovered(new Set());
     }
-  }, [count]);
+  }, [classes.length]);
+
+  const handleMakeupBooking = async () => {
+    if (usableMakeups === 0) return;
+    setMakeupLoading(true);
+    const ordered = [...activeClasses].sort((a, b) =>
+      `${a.date}${a.start_time}`.localeCompare(`${b.date}${b.start_time}`),
+    );
+    const target = ordered.slice(0, usableMakeups);
+    const done: string[] = [];
+    const failed: string[] = [];
+    for (const c of target) {
+      try {
+        await bookMakeup(c.id);
+        done.push(c.id);
+      } catch (err) {
+        failed.push(
+          `${formatLongDate(c.date)} · ${formatTimeRange(c.start_time, c.end_time)}${
+            err instanceof Error ? ` — ${err.message}` : ""
+          }`,
+        );
+      }
+    }
+    setMakeupLoading(false);
+    void refreshMakeups();
+    if (failed.length > 0) {
+      toast.error(
+        done.length > 0 ? "Algunas clases no se pudieron recuperar" : "No se pudo recuperar",
+        { description: failed.join(" | ") },
+      );
+    }
+    if (done.length === 0) return;
+    toast.success(
+      done.length === 1
+        ? "Clase recuperada · ya estaba pagada"
+        : `${done.length} clases recuperadas · ya estaban pagadas`,
+    );
+    if (done.length === count) {
+      setMethodOpen(false);
+      onClose();
+      return;
+    }
+    setCovered((prev) => new Set([...prev, ...done]));
+    toast.info("Te quedan clases por pagar", {
+      description: "Elige cómo quieres pagar las clases restantes.",
+    });
+  };
 
   const reserveBookings = useCallback(async () => {
     if (bookingIds.length > 0) return bookingIds;
-    if (classes.length === 0) throw new Error("No hay clases seleccionadas.");
+    if (activeClasses.length === 0) throw new Error("No hay clases seleccionadas.");
+
 
     setReserving(true);
-    const ordered = [...classes].sort((a, b) =>
+    const ordered = [...activeClasses].sort((a, b) =>
       `${a.date}${a.start_time}`.localeCompare(`${b.date}${b.start_time}`),
     );
     const createdIds: string[] = [];
@@ -445,12 +509,12 @@ function DropInPaymentFlow({
     }
     if (createdIds.length === 0) throw new Error("No se pudo preparar ninguna reserva.");
     return createdIds;
-  }, [bookingIds, classes]);
+  }, [bookingIds, activeClasses]);
 
   const handlePlanBooking = async () => {
     if (count === 0) return;
     setPlanLoading(true);
-    const ordered = [...classes].sort((a, b) =>
+    const ordered = [...activeClasses].sort((a, b) =>
       `${a.date}${a.start_time}`.localeCompare(`${b.date}${b.start_time}`),
     );
     const createdIds: string[] = [];
@@ -549,19 +613,52 @@ function DropInPaymentFlow({
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              ¿Cómo quieres pagar {count === 1 ? "la clase" : `las ${count} clases`}?
+              {usableMakeups >= count
+                ? count === 1
+                  ? "Esta clase ya está pagada"
+                  : "Estas clases ya están pagadas"
+                : `¿Cómo quieres pagar ${count === 1 ? "la clase" : `las ${count} clases`}?`}
             </DialogTitle>
             <DialogDescription>
-              {totalLabel} · Guardamos tu plaza 30 minutos mientras completas el pago.
+              {usableMakeups >= count
+                ? "Puedes recuperar la clase que cancelaste a tiempo sin pagar de nuevo."
+                : `${totalLabel} · Guardamos tu plaza 30 minutos mientras completas el pago.`}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
+            {usableMakeups > 0 ? (
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-auto items-start justify-start gap-3 whitespace-normal border-primary py-4 text-left"
+                disabled={cashLoading || reserving || planLoading || makeupLoading}
+                onClick={() => void handleMakeupBooking()}
+              >
+                <RotateCcw className="h-5 w-5 shrink-0 text-primary" />
+                <span className="flex flex-col">
+                  <span className="font-medium">
+                    {makeupLoading
+                      ? "Reservando…"
+                      : usableMakeups === 1
+                        ? "Recuperar clase ya pagada"
+                        : `Recuperar ${usableMakeups} clases ya pagadas`}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    Sin pagar de nuevo · tienes {makeupCount} clase{makeupCount === 1 ? "" : "s"} por
+                    recuperar
+                    {usableMakeups < count
+                      ? ` · pagarás solo las ${count - usableMakeups} restantes`
+                      : ""}
+                  </span>
+                </span>
+              </Button>
+            ) : null}
             {canUsePlan ? (
               <Button
                 variant="outline"
                 size="lg"
                 className="h-auto items-start justify-start gap-3 whitespace-normal border-primary py-4 text-left"
-                disabled={cashLoading || reserving || planLoading}
+                disabled={cashLoading || reserving || planLoading || makeupLoading}
                 onClick={() => void handlePlanBooking()}
               >
                 <BadgeCheck className="h-5 w-5 shrink-0 text-primary" />
@@ -580,7 +677,7 @@ function DropInPaymentFlow({
               variant="outline"
               size="lg"
               className="h-auto items-start justify-start gap-3 whitespace-normal py-4 text-left"
-              disabled={cashLoading || reserving || planLoading}
+              disabled={cashLoading || reserving || planLoading || makeupLoading}
               onClick={() => void handleDropInCash()}
             >
               <Banknote className="h-5 w-5 shrink-0" />
@@ -595,7 +692,7 @@ function DropInPaymentFlow({
               variant="outline"
               size="lg"
               className="h-auto items-start justify-start gap-3 whitespace-normal py-4 text-left"
-              disabled={cashLoading || reserving || planLoading}
+              disabled={cashLoading || reserving || planLoading || makeupLoading}
               onClick={() => {
                 setMethodOpen(false);
                 setCheckoutOpen(true);
