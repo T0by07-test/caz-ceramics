@@ -476,7 +476,7 @@ function DropInPaymentFlow({
 
 
     setReserving(true);
-    const ordered = [...classes].sort((a, b) =>
+    const ordered = [...activeClasses].sort((a, b) =>
       `${a.date}${a.start_time}`.localeCompare(`${b.date}${b.start_time}`),
     );
     const createdIds: string[] = [];
@@ -509,12 +509,12 @@ function DropInPaymentFlow({
     }
     if (createdIds.length === 0) throw new Error("No se pudo preparar ninguna reserva.");
     return createdIds;
-  }, [bookingIds, classes]);
+  }, [bookingIds, activeClasses]);
 
   const handlePlanBooking = async () => {
     if (count === 0) return;
     setPlanLoading(true);
-    const ordered = [...classes].sort((a, b) =>
+    const ordered = [...activeClasses].sort((a, b) =>
       `${a.date}${a.start_time}`.localeCompare(`${b.date}${b.start_time}`),
     );
     const createdIds: string[] = [];
