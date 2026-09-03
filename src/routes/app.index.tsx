@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { BadgeCheck, Banknote, CreditCard, X } from "lucide-react";
+import { BadgeCheck, Banknote, CreditCard, RotateCcw, X } from "lucide-react";
 import {
   
   capacityDotClass,
