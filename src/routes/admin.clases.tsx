@@ -70,7 +70,7 @@ function AdminClassesPage() {
   const view: CalendarView = search.view ?? "month";
   const reference = useMemo(() => parseReference(search.date), [search.date]);
   const range = useMemo(() => rangeForView(view, reference), [view, reference]);
-  const [onlyMine, setOnlyMine] = useState(false);
+  const [onlyMine, setOnlyMine] = useState(role === "instructora");
 
   const setView = (v: CalendarView) =>
     navigate({ search: (prev: CalendarSearch) => ({ ...prev, view: v }) });
