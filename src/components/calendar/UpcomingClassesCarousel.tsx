@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Check, Clock, X } from "lucide-react";
 import { useUpcomingClasses } from "@/hooks/useUpcomingClasses";
 import { formatLongDate, formatTimeRange, teacherColorVar } from "@/lib/calendar";
+import { formatEuros } from "@/lib/pricing";
 
 export function UpcomingClassesCarousel({
   instructorId,
