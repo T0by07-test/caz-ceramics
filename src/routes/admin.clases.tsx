@@ -71,6 +71,7 @@ function AdminClassesPage() {
   const reference = useMemo(() => parseReference(search.date), [search.date]);
   const range = useMemo(() => rangeForView(view, reference), [view, reference]);
   const [onlyMine, setOnlyMine] = useState(role === "instructora");
+  const [onlyPending, setOnlyPending] = useState(false);
 
   const setView = (v: CalendarView) =>
     navigate({ search: (prev: CalendarSearch) => ({ ...prev, view: v }) });
