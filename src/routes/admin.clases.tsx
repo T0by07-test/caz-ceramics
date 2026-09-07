@@ -114,13 +114,16 @@ function AdminClassesPage() {
             Crea, edita o bloquea horarios. Los cambios se reflejan en tiempo real.
           </p>
         </div>
-        <Button
-          onClick={() => setCreateOpen(true)}
-          size="lg"
-          className="w-full gap-2 sm:w-auto sm:shrink-0"
-        >
-          <Plus className="h-4 w-4" /> Crear clase
-        </Button>
+        {role === "admin" ? (
+          <Button
+            onClick={() => setCreateOpen(true)}
+            size="lg"
+            className="w-full gap-2 sm:w-auto sm:shrink-0"
+          >
+            <Plus className="h-4 w-4" /> Crear clase
+          </Button>
+        ) : null}
+
       </div>
 
       <UpcomingClassesCarousel />
