@@ -12,7 +12,15 @@ export type UpcomingClassSlide = {
   startTime: string;
   endTime: string;
   teacher: string | null;
-  students: { bookingId: string; name: string; status: BookingPaymentStatus }[];
+  students: {
+    bookingId: string;
+    name: string;
+    status: BookingPaymentStatus;
+    /** Amount still owed for this booking, in cents (0 when nothing is due). */
+    dueCents: number;
+  }[];
+  /** Sum of everything still owed for this class, in cents. */
+  dueCents: number;
 };
 
 type BookingRow = {
