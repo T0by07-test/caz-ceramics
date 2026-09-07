@@ -139,13 +139,10 @@ for (const p of subPayments ?? []) {
       bookingsByClass.set(b.class_id, list);
     }
 
-    const result: UpcomingClassSlide[] = (classes ?? []).map((c) => ({
-      classId: c.id,
-      date: c.date,
-      startTime: c.start_time,
-      endTime: c.end_time,
-      teacher: c.teacher,
-      students: (bookingsByClass.get(c.id) ?? []).map((b) => {
+    const result: UpcomingClassSlide[] = (classes ?? []).map((c) => {
+      const fallbackDue =
+        c.audience === "kids" ? KIDS_CLASS_PRICE_CENTS : monthlyPriceCents(1);
+      const students = (bookingsByClass.get(c.id) ?? []).map((b) => {
         const name =
           [b.profiles?.name, b.profiles?.surname].filter(Boolean).join(" ").trim() ||
           b.profiles?.email ||
