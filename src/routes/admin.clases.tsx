@@ -71,6 +71,7 @@ function AdminClassesPage() {
   const reference = useMemo(() => parseReference(search.date), [search.date]);
   const range = useMemo(() => rangeForView(view, reference), [view, reference]);
   const [onlyMine, setOnlyMine] = useState(role === "instructora");
+  const [onlyPending, setOnlyPending] = useState(false);
 
   const setView = (v: CalendarView) =>
     navigate({ search: (prev: CalendarSearch) => ({ ...prev, view: v }) });
@@ -129,6 +130,7 @@ function AdminClassesPage() {
       <UpcomingClassesCarousel
         instructorId={role === "instructora" ? (user?.id ?? null) : null}
         hideCancelled={role === "instructora"}
+        onlyPending={onlyPending}
       />
 
       <CalendarHeader
@@ -140,19 +142,32 @@ function AdminClassesPage() {
         onViewChange={setView}
       />
 
-      {role === "instructora" ? (
+      <div className="flex flex-wrap items-center gap-4">
+        {role === "instructora" ? (
+          <div className="flex items-center gap-2">
+            <Switch
+              id="only-mine"
+              checked={onlyMine}
+              onCheckedChange={setOnlyMine}
+              aria-label="Mostrar solo mis clases"
+            />
+            <Label htmlFor="only-mine" className="cursor-pointer">
+              Mis clases
+            </Label>
+          </div>
+        ) : null}
         <div className="flex items-center gap-2">
           <Switch
-            id="only-mine"
-            checked={onlyMine}
-            onCheckedChange={setOnlyMine}
-            aria-label="Mostrar solo mis clases"
+            id="only-pending"
+            checked={onlyPending}
+            onCheckedChange={setOnlyPending}
+            aria-label="Mostrar solo alumnas con pago pendiente"
           />
-          <Label htmlFor="only-mine" className="cursor-pointer">
-            Mis clases
+          <Label htmlFor="only-pending" className="cursor-pointer">
+            Solo pendientes de pago
           </Label>
         </div>
-      ) : null}
+      </div>
 
       <CalendarBoard
         view={view}

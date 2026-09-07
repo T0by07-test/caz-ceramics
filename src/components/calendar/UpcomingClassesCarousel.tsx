@@ -14,18 +14,22 @@ import { formatEuros } from "@/lib/pricing";
 export function UpcomingClassesCarousel({
   instructorId,
   hideCancelled,
+  onlyPending,
 }: {
   instructorId?: string | null;
   hideCancelled?: boolean;
+  onlyPending?: boolean;
 } = {}) {
   const { slides, loading } = useUpcomingClasses(10, { instructorId, hideCancelled });
+  const visibleSlides = onlyPending ? slides.filter((s) => s.dueCents > 0) : slides;
 
-  if (loading || slides.length === 0) return null;
+  if (loading || visibleSlides.length === 0) return null;
+
 
   return (
     <Carousel opts={{ align: "start" }} className="w-full">
       <CarouselContent>
-        {slides.map((slide) => (
+        {visibleSlides.map((slide) => (
           <CarouselItem key={slide.classId} className="basis-full sm:basis-1/2 lg:basis-1/3">
             <div
               className="h-full rounded-md border border-border bg-card p-4"
