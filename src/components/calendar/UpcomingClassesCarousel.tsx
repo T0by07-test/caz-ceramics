@@ -60,7 +60,7 @@ export function UpcomingClassesCarousel({
                         </Badge>
                       ) : s.status === "pending" ? (
                         <Badge variant="secondary" className="shrink-0">
-                          Pago pendiente
+                          Debe {formatEuros(s.dueCents)}
                         </Badge>
                       ) : (
                         <Check className="h-4 w-4 shrink-0 text-success" />
@@ -69,6 +69,14 @@ export function UpcomingClassesCarousel({
                   ))
                 )}
               </ul>
+              {slide.dueCents > 0 ? (
+                <p className="text-body mt-3 border-t border-border pt-2 text-muted-foreground">
+                  Pendiente de cobro:{" "}
+                  <span className="text-foreground font-medium">
+                    {formatEuros(slide.dueCents)}
+                  </span>
+                </p>
+              ) : null}
             </div>
           </CarouselItem>
         ))}
