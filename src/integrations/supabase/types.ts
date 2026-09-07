@@ -714,6 +714,7 @@ export type Database = {
           notification_preference: string
           role: string
           surname: string | null
+          teacher_name: string | null
           whatsapp: string | null
         }
         Insert: {
@@ -728,6 +729,7 @@ export type Database = {
           notification_preference?: string
           role?: string
           surname?: string | null
+          teacher_name?: string | null
           whatsapp?: string | null
         }
         Update: {
@@ -742,6 +744,7 @@ export type Database = {
           notification_preference?: string
           role?: string
           surname?: string | null
+          teacher_name?: string | null
           whatsapp?: string | null
         }
         Relationships: []
@@ -1001,6 +1004,7 @@ export type Database = {
         Returns: undefined
       }
       is_admin: { Args: never; Returns: boolean }
+      is_instructora: { Args: never; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
       join_waitlist: {
         Args: { p_class_id: string }
@@ -1018,6 +1022,7 @@ export type Database = {
         Returns: undefined
       }
       mark_notification_sent: { Args: { p_id: string }; Returns: undefined }
+      my_teacher_name: { Args: never; Returns: string }
       pay_drop_in_cash: { Args: { p_booking_id: string }; Returns: undefined }
       pay_drop_in_cash_batch: {
         Args: { p_booking_ids: string[] }
