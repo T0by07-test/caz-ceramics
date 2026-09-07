@@ -65,7 +65,9 @@ export function useUpcomingClasses(limit: number, options: UpcomingClassesOption
       .in("class_id", classIds);
     const allBookings = (bookingsData ?? []) as unknown as BookingRow[];
     const bookings = hideCancelled
-      ? allBookings.filter((b) => b.status !== "cancelled")
+      ? allBookings.filter(
+          (b) => b.status !== "cancelled_recoverable" && b.status !== "cancelled_lost",
+        )
       : allBookings;
 
     const studentIds = [...new Set(bookings.map((b) => b.student_id))];
