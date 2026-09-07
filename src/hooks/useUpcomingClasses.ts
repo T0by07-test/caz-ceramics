@@ -163,9 +163,20 @@ for (const p of subPayments ?? []) {
             | null
             | undefined) ?? null,
         );
-        return { bookingId: b.id, name, status };
-      }),
-    }));
+        const dueCents =
+          status === "pending" ? (pendingCentsByBooking.get(b.id) ?? fallbackDue) : 0;
+        return { bookingId: b.id, name, status, dueCents };
+      });
+      return {
+        classId: c.id,
+        date: c.date,
+        startTime: c.start_time,
+        endTime: c.end_time,
+        teacher: c.teacher,
+        students,
+        dueCents: students.reduce((sum, s) => sum + s.dueCents, 0),
+      };
+    });
     setSlides(result);
     setLoading(false);
   }, [limit, instructorId, hideCancelled]);
