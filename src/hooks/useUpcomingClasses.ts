@@ -114,6 +114,16 @@ for (const p of bookingPayments ?? []) {
   const current = paymentByBooking.get(p.booking_id);
   if (!current || rank(p.status) > rank(current)) paymentByBooking.set(p.booking_id, p.status);
 }
+// Money still owed per booking: only pending rows with a real amount count
+// (the 0 € placeholder carries no value).
+const pendingCentsByBooking = new Map<string, number>();
+for (const p of bookingPayments ?? []) {
+  if (!p.booking_id || p.status !== "pending" || !p.amount_cents || p.amount_cents <= 0) continue;
+  pendingCentsByBooking.set(
+    p.booking_id,
+    (pendingCentsByBooking.get(p.booking_id) ?? 0) + p.amount_cents,
+  );
+}
 const paymentBySubscription = new Map<string | null, string>();
 for (const p of subPayments ?? []) {
   const current = paymentBySubscription.get(p.subscription_id);
