@@ -94,8 +94,13 @@ export function useUpcomingClasses(limit: number, options: UpcomingClassesOption
     const bookingIds = bookings.map((b) => b.id);
     const [{ data: bookingPayments }, { data: subPayments }] = await Promise.all([
       bookingIds.length > 0
-        ? supabase.from("payments").select("booking_id, status").in("booking_id", bookingIds)
-        : Promise.resolve({ data: [] as { booking_id: string | null; status: string }[] }),
+        ? supabase
+            .from("payments")
+            .select("booking_id, status, amount_cents")
+            .in("booking_id", bookingIds)
+        : Promise.resolve({
+            data: [] as { booking_id: string | null; status: string; amount_cents: number }[],
+          }),
       subIds.length > 0
         ? supabase.from("payments").select("subscription_id, status").in("subscription_id", subIds)
         : Promise.resolve({ data: [] as { subscription_id: string | null; status: string }[] }),
