@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toIsoDate } from "@/lib/calendar";
+import { KIDS_CLASS_PRICE_CENTS, monthlyPriceCents } from "@/lib/pricing";
 import {
   resolveBookingPaymentStatus,
   type BookingPaymentStatus,
@@ -12,7 +13,15 @@ export type UpcomingClassSlide = {
   startTime: string;
   endTime: string;
   teacher: string | null;
-  students: { bookingId: string; name: string; status: BookingPaymentStatus }[];
+  students: {
+    bookingId: string;
+    name: string;
+    status: BookingPaymentStatus;
+    /** Amount still owed for this booking, in cents (0 when nothing is due). */
+    dueCents: number;
+  }[];
+  /** Sum of everything still owed for this class, in cents. */
+  dueCents: number;
 };
 
 type BookingRow = {
@@ -42,7 +51,7 @@ export function useUpcomingClasses(limit: number, options: UpcomingClassesOption
     const todayIso = toIsoDate(new Date());
     let query = supabase
       .from("classes")
-      .select("id, date, start_time, end_time, teacher, status")
+      .select("id, date, start_time, end_time, teacher, status, audience")
       .gte("date", todayIso)
       .neq("status", "cancelled_by_admin");
     if (instructorId) query = query.eq("instructor_id", instructorId);
@@ -86,8 +95,13 @@ export function useUpcomingClasses(limit: number, options: UpcomingClassesOption
     const bookingIds = bookings.map((b) => b.id);
     const [{ data: bookingPayments }, { data: subPayments }] = await Promise.all([
       bookingIds.length > 0
-        ? supabase.from("payments").select("booking_id, status").in("booking_id", bookingIds)
-        : Promise.resolve({ data: [] as { booking_id: string | null; status: string }[] }),
+        ? supabase
+            .from("payments")
+            .select("booking_id, status, amount_cents")
+            .in("booking_id", bookingIds)
+        : Promise.resolve({
+            data: [] as { booking_id: string | null; status: string; amount_cents: number }[],
+          }),
       subIds.length > 0
         ? supabase.from("payments").select("subscription_id, status").in("subscription_id", subIds)
         : Promise.resolve({ data: [] as { subscription_id: string | null; status: string }[] }),
@@ -100,6 +114,16 @@ const paymentByBooking = new Map<string | null, string>();
 for (const p of bookingPayments ?? []) {
   const current = paymentByBooking.get(p.booking_id);
   if (!current || rank(p.status) > rank(current)) paymentByBooking.set(p.booking_id, p.status);
+}
+// Money still owed per booking: only pending rows with a real amount count
+// (the 0 € placeholder carries no value).
+const pendingCentsByBooking = new Map<string, number>();
+for (const p of bookingPayments ?? []) {
+  if (!p.booking_id || p.status !== "pending" || !p.amount_cents || p.amount_cents <= 0) continue;
+  pendingCentsByBooking.set(
+    p.booking_id,
+    (pendingCentsByBooking.get(p.booking_id) ?? 0) + p.amount_cents,
+  );
 }
 const paymentBySubscription = new Map<string | null, string>();
 for (const p of subPayments ?? []) {
@@ -116,13 +140,10 @@ for (const p of subPayments ?? []) {
       bookingsByClass.set(b.class_id, list);
     }
 
-    const result: UpcomingClassSlide[] = (classes ?? []).map((c) => ({
-      classId: c.id,
-      date: c.date,
-      startTime: c.start_time,
-      endTime: c.end_time,
-      teacher: c.teacher,
-      students: (bookingsByClass.get(c.id) ?? []).map((b) => {
+    const result: UpcomingClassSlide[] = (classes ?? []).map((c) => {
+      const fallbackDue =
+        c.audience === "kids" ? KIDS_CLASS_PRICE_CENTS : monthlyPriceCents(1);
+      const students = (bookingsByClass.get(c.id) ?? []).map((b) => {
         const name =
           [b.profiles?.name, b.profiles?.surname].filter(Boolean).join(" ").trim() ||
           b.profiles?.email ||
@@ -143,9 +164,20 @@ for (const p of subPayments ?? []) {
             | null
             | undefined) ?? null,
         );
-        return { bookingId: b.id, name, status };
-      }),
-    }));
+        const dueCents =
+          status === "pending" ? (pendingCentsByBooking.get(b.id) ?? fallbackDue) : 0;
+        return { bookingId: b.id, name, status, dueCents };
+      });
+      return {
+        classId: c.id,
+        date: c.date,
+        startTime: c.start_time,
+        endTime: c.end_time,
+        teacher: c.teacher,
+        students,
+        dueCents: students.reduce((sum, s) => sum + s.dueCents, 0),
+      };
+    });
     setSlides(result);
     setLoading(false);
   }, [limit, instructorId, hideCancelled]);
