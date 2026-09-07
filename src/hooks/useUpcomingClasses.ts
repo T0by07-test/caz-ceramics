@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toIsoDate } from "@/lib/calendar";
+import { KIDS_CLASS_PRICE_CENTS, monthlyPriceCents } from "@/lib/pricing";
 import {
   resolveBookingPaymentStatus,
   type BookingPaymentStatus,
