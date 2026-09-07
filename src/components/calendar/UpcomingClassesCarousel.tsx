@@ -10,8 +10,14 @@ import { Check, Clock, X } from "lucide-react";
 import { useUpcomingClasses } from "@/hooks/useUpcomingClasses";
 import { formatLongDate, formatTimeRange, teacherColorVar } from "@/lib/calendar";
 
-export function UpcomingClassesCarousel() {
-  const { slides, loading } = useUpcomingClasses(10);
+export function UpcomingClassesCarousel({
+  instructorId,
+  hideCancelled,
+}: {
+  instructorId?: string | null;
+  hideCancelled?: boolean;
+} = {}) {
+  const { slides, loading } = useUpcomingClasses(10, { instructorId, hideCancelled });
 
   if (loading || slides.length === 0) return null;
 

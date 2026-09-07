@@ -126,7 +126,10 @@ function AdminClassesPage() {
 
       </div>
 
-      <UpcomingClassesCarousel />
+      <UpcomingClassesCarousel
+        instructorId={role === "instructora" ? (user?.id ?? null) : null}
+        hideCancelled={role === "instructora"}
+      />
 
       <CalendarHeader
         view={view}
