@@ -63,7 +63,10 @@ export function useUpcomingClasses(limit: number, options: UpcomingClassesOption
       .from("bookings")
       .select("id, class_id, status, source, student_id, profiles:student_id(name, surname, email)")
       .in("class_id", classIds);
-    const bookings = (bookingsData ?? []) as unknown as BookingRow[];
+    const allBookings = (bookingsData ?? []) as unknown as BookingRow[];
+    const bookings = hideCancelled
+      ? allBookings.filter((b) => b.status !== "cancelled")
+      : allBookings;
 
     const studentIds = [...new Set(bookings.map((b) => b.student_id))];
     const monthStart = toIsoDate(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
@@ -143,7 +146,7 @@ for (const p of subPayments ?? []) {
     }));
     setSlides(result);
     setLoading(false);
-  }, [limit]);
+  }, [limit, instructorId, hideCancelled]);
 
   useEffect(() => {
     void fetchData();
