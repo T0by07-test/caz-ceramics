@@ -130,6 +130,7 @@ function AdminClassesPage() {
       <UpcomingClassesCarousel
         instructorId={role === "instructora" ? (user?.id ?? null) : null}
         hideCancelled={role === "instructora"}
+        onlyPending={onlyPending}
       />
 
       <CalendarHeader
