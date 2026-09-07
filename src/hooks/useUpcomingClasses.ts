@@ -24,22 +24,33 @@ type BookingRow = {
   profiles: { name: string | null; surname: string | null; email: string | null } | null;
 };
 
+export type UpcomingClassesOptions = {
+  /** Only classes taught by this instructor (used for the teacher view). */
+  instructorId?: string | null;
+  /** Leave cancelled bookings out of the roster. */
+  hideCancelled?: boolean;
+};
+
 /** The next `limit` scheduled classes from today, each with its roster and payment/cancellation status. */
-export function useUpcomingClasses(limit: number) {
+export function useUpcomingClasses(limit: number, options: UpcomingClassesOptions = {}) {
+  const { instructorId = null, hideCancelled = false } = options;
   const [slides, setSlides] = useState<UpcomingClassSlide[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     const todayIso = toIsoDate(new Date());
-    const { data: classes } = await supabase
+    let query = supabase
       .from("classes")
       .select("id, date, start_time, end_time, teacher, status")
       .gte("date", todayIso)
-      .neq("status", "cancelled_by_admin")
+      .neq("status", "cancelled_by_admin");
+    if (instructorId) query = query.eq("instructor_id", instructorId);
+    const { data: classes } = await query
       .order("date", { ascending: true })
       .order("start_time", { ascending: true })
       .limit(limit);
+
 
     const classIds = (classes ?? []).map((c) => c.id);
     if (classIds.length === 0) {
@@ -52,7 +63,12 @@ export function useUpcomingClasses(limit: number) {
       .from("bookings")
       .select("id, class_id, status, source, student_id, profiles:student_id(name, surname, email)")
       .in("class_id", classIds);
-    const bookings = (bookingsData ?? []) as unknown as BookingRow[];
+    const allBookings = (bookingsData ?? []) as unknown as BookingRow[];
+    const bookings = hideCancelled
+      ? allBookings.filter(
+          (b) => b.status !== "cancelled_recoverable" && b.status !== "cancelled_lost",
+        )
+      : allBookings;
 
     const studentIds = [...new Set(bookings.map((b) => b.student_id))];
     const monthStart = toIsoDate(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
@@ -132,7 +148,7 @@ for (const p of subPayments ?? []) {
     }));
     setSlides(result);
     setLoading(false);
-  }, [limit]);
+  }, [limit, instructorId, hideCancelled]);
 
   useEffect(() => {
     void fetchData();
