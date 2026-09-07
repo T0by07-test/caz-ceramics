@@ -50,7 +50,7 @@ export function useUpcomingClasses(limit: number, options: UpcomingClassesOption
     const todayIso = toIsoDate(new Date());
     let query = supabase
       .from("classes")
-      .select("id, date, start_time, end_time, teacher, status")
+      .select("id, date, start_time, end_time, teacher, status, audience")
       .gte("date", todayIso)
       .neq("status", "cancelled_by_admin");
     if (instructorId) query = query.eq("instructor_id", instructorId);
