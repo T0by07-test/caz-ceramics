@@ -57,12 +57,14 @@ export function MonthGrid({
           byDay={byDay}
           onSelectClass={onSelectClass}
           selectedIds={selectedIds}
+          disablePast={disablePast}
         />
         <DesktopCells
           cells={cells}
           byDay={byDay}
           onSelectClass={onSelectClass}
           selectedIds={selectedIds}
+          disablePast={disablePast}
         />
       </div>
     </div>
