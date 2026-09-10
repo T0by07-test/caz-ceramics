@@ -4,6 +4,7 @@ import {
   capacityLevel,
   ES_WEEKDAYS_SHORT,
   formatTime,
+  isPastClass,
   teacherColorVar,
 } from "@/lib/calendar";
 import type { ClassWithCount } from "@/hooks/useMonthClasses";
@@ -13,9 +14,16 @@ type Props = {
   classes: ClassWithCount[];
   onSelectClass: (c: ClassWithCount) => void;
   selectedIds?: Set<string>;
+  disablePast?: boolean;
 };
 
-export function MonthGrid({ reference, classes, onSelectClass, selectedIds }: Props) {
+export function MonthGrid({
+  reference,
+  classes,
+  onSelectClass,
+  selectedIds,
+  disablePast,
+}: Props) {
   const cells = buildMonthGrid(reference);
   const weekdayCells = cells.filter((cell) => {
     const day = cell.date.getDay();
