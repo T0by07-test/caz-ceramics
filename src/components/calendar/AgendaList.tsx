@@ -4,6 +4,7 @@ import {
   capacityLevel,
   formatLongDate,
   formatTimeRange,
+  isPastClass,
   teacherColorVar,
 } from "@/lib/calendar";
 
@@ -14,6 +15,7 @@ type Props = {
   onSelectClass: (c: ClassWithCount) => void;
   emptyLabel?: string;
   selectedIds?: Set<string>;
+  disablePast?: boolean;
 };
 
 export function AgendaList({
@@ -21,6 +23,7 @@ export function AgendaList({
   onSelectClass,
   emptyLabel = "No hay clases programadas.",
   selectedIds,
+  disablePast,
 }: Props) {
   const grouped = new Map<string, ClassWithCount[]>();
   for (const c of classes) {
@@ -48,11 +51,13 @@ export function AgendaList({
               const level = capacityLevel(c.booked_count, c.capacity_max);
               const cancelled = c.status !== "scheduled";
               const picked = selectedIds?.has(c.id) ?? false;
+              const past = (disablePast ?? false) && isPastClass(c.date, c.start_time);
               return (
                 <li key={c.id}>
                   <button
                     type="button"
                     onClick={() => onSelectClass(c)}
+                    disabled={past}
                     style={
                       cancelled
                         ? undefined
@@ -60,15 +65,17 @@ export function AgendaList({
                     }
                     className={[
                       "flex w-full items-center gap-3 rounded-none border p-3 text-left transition-colors",
-                      picked
-                        ? "border-primary bg-primary/10"
-                        : "border-border bg-surface hover:bg-accent",
+                      past
+                        ? "cursor-not-allowed border-border bg-muted/60 text-muted-foreground opacity-60"
+                        : picked
+                          ? "border-primary bg-primary/10"
+                          : "border-border bg-surface hover:bg-accent",
                     ].join(" ")}
                   >
                     <span
                       className={[
                         "h-2.5 w-2.5 shrink-0 rounded-full",
-                        cancelled ? "bg-muted-foreground" : capacityDotClass(level),
+                        cancelled || past ? "bg-muted-foreground" : capacityDotClass(level),
                       ].join(" ")}
                       aria-hidden
                     />
@@ -77,7 +84,7 @@ export function AgendaList({
                         {formatTimeRange(c.start_time, c.end_time)}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {cancelled ? "Cancelada" : capacityLabel(level)}
+                        {cancelled ? "Cancelada" : past ? "Ya pasó" : capacityLabel(level)}
                         {c.audience === "kids" ? " · Clase infantil" : ""}
                       </div>
                     </div>
