@@ -5,6 +5,7 @@ import {
   dayHourBounds,
   ES_WEEKDAYS_SHORT,
   formatTime,
+  isPastClass,
   teacherColorVar,
 } from "@/lib/calendar";
 
@@ -15,9 +16,16 @@ type Props = {
   classes: ClassWithCount[];
   onSelectClass: (c: ClassWithCount) => void;
   selectedIds?: Set<string>;
+  disablePast?: boolean;
 };
 
-export function WeekGrid({ reference, classes, onSelectClass, selectedIds }: Props) {
+export function WeekGrid({
+  reference,
+  classes,
+  onSelectClass,
+  selectedIds,
+  disablePast,
+}: Props) {
   const days = buildWeekDays(reference);
   const [minH, maxH] = dayHourBounds(classes.map((c) => c.start_time));
   const hours: number[] = [];
@@ -70,11 +78,13 @@ export function WeekGrid({ reference, classes, onSelectClass, selectedIds }: Pro
                     const level = capacityLevel(c.booked_count, c.capacity_max);
                     const cancelled = c.status !== "scheduled";
                     const picked = selectedIds?.has(c.id) ?? false;
+                    const past = (disablePast ?? false) && isPastClass(c.date, c.start_time);
                     return (
                       <button
                         key={c.id}
                         type="button"
                         onClick={() => onSelectClass(c)}
+                        disabled={past}
                         style={
                           cancelled
                             ? undefined
@@ -84,16 +94,18 @@ export function WeekGrid({ reference, classes, onSelectClass, selectedIds }: Pro
                           "flex w-full flex-col gap-0.5 rounded-md border border-border px-1.5 py-1 text-left text-xs transition-colors",
                           cancelled
                             ? "bg-muted text-muted-foreground line-through"
-                            : picked
-                              ? "border-primary bg-primary/10 text-foreground"
-                              : "bg-background hover:bg-accent hover:text-foreground",
+                            : past
+                              ? "cursor-not-allowed bg-muted/60 text-muted-foreground opacity-60"
+                              : picked
+                                ? "border-primary bg-primary/10 text-foreground"
+                                : "bg-background hover:bg-accent hover:text-foreground",
                         ].join(" ")}
                       >
                         <span className="flex w-full items-center gap-1.5">
                           <span
                             className={[
                               "h-2 w-2 shrink-0 rounded-full",
-                              cancelled ? "bg-muted-foreground" : capacityDotClass(level),
+                              cancelled || past ? "bg-muted-foreground" : capacityDotClass(level),
                             ].join(" ")}
                             aria-hidden
                           />

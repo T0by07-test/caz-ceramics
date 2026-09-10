@@ -25,6 +25,7 @@ import {
   capacityLevel,
   formatLongDate,
   formatTimeRange,
+  isPastClass,
   toIsoDate,
 } from "@/lib/calendar";
 import { useClassesInRange, type ClassWithCount } from "@/hooks/useClassesInRange";
@@ -94,6 +95,12 @@ function CalendarioPage() {
 
   const handleSelectClass = (c: ClassWithCount) => {
     if (c.status !== "scheduled") return;
+    if (isPastClass(c.date, c.start_time)) {
+      toast.error("Esa clase ya ha pasado", {
+        description: "Solo puedes reservar clases que aún no han empezado.",
+      });
+      return;
+    }
     const closure = studioClosureFor(c.date);
     if (closure) {
       toast.error("Esa semana el estudio está cerrado", { description: closure.label });
@@ -159,6 +166,7 @@ function CalendarioPage() {
         loading={loading}
         onSelectClass={handleSelectClass}
         selectedIds={selectedIds}
+        disablePast
       />
 
       <div className="flex items-center gap-3 text-xs text-muted-foreground sm:hidden">
