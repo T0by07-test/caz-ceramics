@@ -242,3 +242,14 @@ export function dayHourBounds(times: string[]): [number, number] {
   }
   return [Math.max(0, min), Math.min(23, max)];
 }
+
+/**
+ * True when a class has already started (Europe/Madrid wall-clock, same
+ * approximation as the cancellation window helper). Students must not be able
+ * to pick classes from past days or weeks.
+ */
+export function isPastClass(dateIso: string, startTime: string): boolean {
+  const [y, m, d] = dateIso.split("-").map(Number);
+  const [hh, mm] = startTime.split(":").map(Number);
+  return new Date(y, m - 1, d, hh, mm, 0).getTime() < Date.now();
+}
