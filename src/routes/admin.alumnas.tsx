@@ -215,7 +215,7 @@ function AdminStudentsPage() {
     setLoading(true);
     const now = new Date();
     const monthStart = toIsoDate(startOfMonth(now));
-    const monthEndIso = toIsoDate(endOfMonth(now));
+    
     // A fin de mes las reservas ya son del mes siguiente: miramos también ese
     // mes para no mostrar "Sin reservas" cuando en realidad ya han reservado.
     const nextMonthRef = new Date(now.getFullYear(), now.getMonth() + 1, 1);
