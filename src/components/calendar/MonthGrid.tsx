@@ -76,9 +76,10 @@ type CellsProps = {
   byDay: Map<string, ClassWithCount[]>;
   onSelectClass: (c: ClassWithCount) => void;
   selectedIds?: Set<string>;
+  disablePast?: boolean;
 };
 
-function MobileCells({ cells, byDay, onSelectClass, selectedIds }: CellsProps) {
+function MobileCells({ cells, byDay, onSelectClass, selectedIds, disablePast }: CellsProps) {
   return (
     <>
       {cells.map((cell, idx) => {
