@@ -215,7 +215,7 @@ function AdminStudentsPage() {
     setLoading(true);
     const now = new Date();
     const monthStart = toIsoDate(startOfMonth(now));
-    const monthEndIso = toIsoDate(endOfMonth(now));
+    
     // A fin de mes las reservas ya son del mes siguiente: miramos también ese
     // mes para no mostrar "Sin reservas" cuando en realidad ya han reservado.
     const nextMonthRef = new Date(now.getFullYear(), now.getMonth() + 1, 1);
@@ -277,11 +277,9 @@ function AdminStudentsPage() {
     for (const m of makeups ?? [])
       makeupCount.set(m.student_id, (makeupCount.get(m.student_id) ?? 0) + 1);
     type BookingRow = { student_id: string; classes: { date: string } };
-    const allBookings = (monthBookings ?? []) as BookingRow[];
-    // Si el mes en curso aún no tiene reservas, mostramos las del mes siguiente.
-    const currentMonthBookings = allBookings.filter((b) => b.classes.date <= monthEndIso);
-    const activeBookings =
-      currentMonthBookings.length > 0 ? currentMonthBookings : allBookings;
+    // Mostramos todas las reservas de este mes y del mes siguiente por alumna:
+    // quien solo ha reservado el mes que viene también aparece con sus clases.
+    const activeBookings = (monthBookings ?? []) as BookingRow[];
     const bookedThisMonth = new Set(activeBookings.map((b) => b.student_id));
     type PaymentRow = {
       student_id: string;
