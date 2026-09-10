@@ -7,9 +7,10 @@ type Props = {
   classes: ClassWithCount[];
   onSelectClass: (c: ClassWithCount) => void;
   selectedIds?: Set<string>;
+  disablePast?: boolean;
 };
 
-export function DayView({ reference, classes, onSelectClass, selectedIds }: Props) {
+export function DayView({ reference, classes, onSelectClass, selectedIds, disablePast }: Props) {
   return (
     <div className="flex flex-col gap-3">
       <h2 className="text-h2 capitalize">{formatDayTitle(reference)}</h2>
@@ -18,6 +19,7 @@ export function DayView({ reference, classes, onSelectClass, selectedIds }: Prop
         onSelectClass={onSelectClass}
         emptyLabel="No hay clases este día."
         selectedIds={selectedIds}
+        disablePast={disablePast}
       />
     </div>
   );

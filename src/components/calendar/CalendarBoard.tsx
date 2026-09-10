@@ -12,6 +12,8 @@ type Props = {
   loading: boolean;
   onSelectClass: (c: ClassWithCount) => void;
   selectedIds?: Set<string>;
+  /** Student booking: classes that already started are shown but not clickable. */
+  disablePast?: boolean;
 };
 
 export function CalendarBoard({
@@ -21,6 +23,7 @@ export function CalendarBoard({
   loading,
   onSelectClass,
   selectedIds,
+  disablePast,
 }: Props) {
   const isMobile = useIsMobile();
 
@@ -33,6 +36,7 @@ export function CalendarBoard({
         classes={classes}
         onSelectClass={onSelectClass}
         selectedIds={selectedIds}
+        disablePast={disablePast}
       />
     );
   }
@@ -46,6 +50,7 @@ export function CalendarBoard({
         classes={classes}
         onSelectClass={onSelectClass}
         selectedIds={selectedIds}
+        disablePast={disablePast}
       />
     );
   }
@@ -56,6 +61,7 @@ export function CalendarBoard({
       classes={classes}
       onSelectClass={onSelectClass}
       selectedIds={selectedIds}
+      disablePast={disablePast}
     />
   );
 }
