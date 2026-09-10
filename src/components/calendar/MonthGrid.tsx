@@ -99,22 +99,25 @@ function MobileCells({ cells, byDay, onSelectClass, selectedIds, disablePast }: 
                 const level = capacityLevel(c.booked_count, c.capacity_max);
                 const cancelled = c.status !== "scheduled";
                 const picked = selectedIds?.has(c.id) ?? false;
-                
+                const past = (disablePast ?? false) && isPastClass(c.date, c.start_time);
                 return (
                   <li key={c.id} className="min-w-0">
                     <button
                       type="button"
                       onClick={() => onSelectClass(c)}
+                      disabled={past}
                       style={cancelled ? undefined : { borderLeft: `3px solid ${teacherColorVar(c.teacher)}` }}
                       className={[
                         "flex w-full min-w-0 flex-col rounded-sm border border-border px-1 py-1 text-left leading-tight transition-colors",
                         cancelled
                           ? "bg-muted text-muted-foreground line-through"
-                          : picked
-                            ? "border-primary bg-primary/10 text-foreground"
-                            : level === "full"
-                              ? "border-destructive/40 bg-destructive/10 text-foreground"
-                              : "bg-background text-foreground",
+                          : past
+                            ? "cursor-not-allowed bg-muted/60 text-muted-foreground opacity-60"
+                            : picked
+                              ? "border-primary bg-primary/10 text-foreground"
+                              : level === "full"
+                                ? "border-destructive/40 bg-destructive/10 text-foreground"
+                                : "bg-background text-foreground",
                       ].join(" ")}
                     >
                       <span className="truncate text-[10px] font-semibold tabular-nums">
