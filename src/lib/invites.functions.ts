@@ -66,10 +66,11 @@ export const sendEnrollmentInvite = createServerFn({ method: "POST" })
       .select("class:classes(date, start_time, end_time, teacher)")
       .eq("invite_id", invite.id);
 
-    const classes = (rows ?? [])
-      .map((r) => (r as { class: typeof describeClass extends never ? never : any }).class)
-      .filter(Boolean)
-      .sort((a: { date: string }, b: { date: string }) => a.date.localeCompare(b.date))
+    type ClassRow = { date: string; start_time: string; end_time: string; teacher: string | null };
+    const classes = ((rows ?? []) as unknown as { class: ClassRow | null }[])
+      .map((r) => r.class)
+      .filter((c): c is ClassRow => c !== null)
+      .sort((a, b) => a.date.localeCompare(b.date))
       .map(describeClass);
 
     const inviteUrl = `${APP_BASE_URL}/unirse/${invite.token}`;
