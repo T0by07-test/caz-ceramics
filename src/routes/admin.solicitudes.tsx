@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { RouteGuard } from "@/components/RouteGuard";
-import { Check, Copy, Inbox, X } from "lucide-react";
+import { Check, Copy, Inbox, Mail, X } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +35,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { formatLongDate, formatTimeRange } from "@/lib/calendar";
 import { acceptRequest, copyToClipboard, rejectRequest } from "@/lib/admin-tools";
+import { sendEnrollmentInvite } from "@/lib/invites.functions";
 
 export const Route = createFileRoute("/admin/solicitudes")({
   head: () => ({ meta: [{ title: "Solicitudes — Admin" }] }),
@@ -266,6 +267,7 @@ function RequestDetailSheet({
   const [submitting, setSubmitting] = useState(false);
   const [rejecting, setRejecting] = useState(false);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
 
   // Pre-select all requested classes when the request changes.
   useEffect(() => {
@@ -293,7 +295,17 @@ function RequestDetailSheet({
     try {
       const { invite_url } = await acceptRequest(request.id, Array.from(granted));
       setInviteUrl(invite_url);
-      toast.success("Solicitud aceptada. Invitación enviada por email.");
+      try {
+        await sendEnrollmentInvite({ data: { requestId: request.id } });
+        toast.success("Solicitud aceptada. Invitación enviada por email.");
+      } catch (mailError) {
+        toast.warning("Solicitud aceptada, pero el email no salió", {
+          description:
+            mailError instanceof Error
+              ? mailError.message
+              : "Puedes copiar el enlace y enviarlo por WhatsApp.",
+        });
+      }
       onChanged();
     } catch (e) {
       toast.error("No se pudo aceptar la solicitud", {
@@ -318,6 +330,24 @@ function RequestDetailSheet({
       });
     } finally {
       setRejecting(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!request) return;
+    setResending(true);
+    try {
+      const res = await sendEnrollmentInvite({ data: { requestId: request.id } });
+      setInviteUrl(res.inviteUrl);
+      toast.success(
+        res.sent ? `Invitación reenviada a ${res.email}` : "No se pudo entregar el email",
+      );
+    } catch (e) {
+      toast.error("No se pudo reenviar la invitación", {
+        description: e instanceof Error ? e.message : undefined,
+      });
+    } finally {
+      setResending(false);
     }
   };
 
@@ -433,6 +463,15 @@ function RequestDetailSheet({
                 </section>
               ) : null}
             </div>
+
+            {request.status === "accepted" ? (
+              <SheetFooter className="mt-6 flex-col gap-2 sm:flex-row">
+                <Button variant="secondary" onClick={handleResend} disabled={resending}>
+                  <Mail className="mr-1 h-4 w-4" />
+                  {resending ? "Enviando…" : "Reenviar invitación por email"}
+                </Button>
+              </SheetFooter>
+            ) : null}
 
             {isPending ? (
               <SheetFooter className="mt-6 flex-col gap-2 sm:flex-row">
