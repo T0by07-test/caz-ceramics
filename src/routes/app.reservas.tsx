@@ -347,7 +347,17 @@ function BookingList({
             <div className="text-xs text-muted-foreground">
               {r.classes ? formatTimeRange(r.classes.start_time, r.classes.end_time) : ""}
             </div>
-            <div className="mt-2">{statusBadge(r.status)}</div>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              {statusBadge(r.status)}
+              {payments?.[r.id] && !payments[r.id].paid && payments[r.id].pendingCents > 0 ? (
+                <Badge variant="outline">
+                  Pendiente de pago · {formatEuros(payments[r.id].pendingCents)}
+                </Badge>
+              ) : payments?.[r.id]?.paid ? (
+                <Badge variant="outline">Pagada</Badge>
+              ) : null}
+            </div>
+
           </div>
           {onCancel && r.classes ? (
             <Button variant="outline" onClick={() => onCancel(r)}>
