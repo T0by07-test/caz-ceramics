@@ -168,6 +168,8 @@ function AdminPaymentsPage() {
         </p>
       </div>
 
+      <ReleasedHoldsPanel />
+
       <Card className="">
         <CardContent className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="flex flex-col gap-2">
