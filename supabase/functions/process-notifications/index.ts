@@ -231,10 +231,36 @@ function render(type: string, payload: Record<string, unknown>, profile: Profile
         `. Puedes completarlo de forma segura desde este enlace: ${paymentUrl}`;
       return wrapWithCta("Recordatorio de pago", body, "Pagar ahora", paymentUrl);
     }
+    case "payment_hold_warning": {
+      const classesList = fmtClassesList(payload);
+      const amount = fmtAmount(payload.amount_cents);
+      const body =
+        `Hola ${name}, tu reserva todavía está sin pagar y en menos de una hora liberaremos la plaza.` +
+        (classesList.count > 0 ? `\n\n${classesList.text}` : "") +
+        (amount ? `\n\nImporte pendiente: ${amount}.` : "") +
+        `\n\nPuedes completar el pago con tarjeta desde la app, o escribirnos por WhatsApp al 627 093 463 si prefieres pagar en efectivo o por Bizum.`;
+      return wrap("Tu reserva está a punto de liberarse", body);
+    }
+    case "booking_released_unpaid": {
+      const amount = fmtAmount(payload.amount_cents);
+      const body =
+        `Hola ${name}, hemos liberado tu plaza${date ? ` del ${date}` : ""}${start ? ` de ${start} a ${end}` : ""} porque el pago${amount ? ` de ${amount}` : ""} no se completó.` +
+        `\n\nSi todavía quieres venir, vuelve a reservar desde la app o escríbenos por WhatsApp al 627 093 463 y te guardamos la plaza.`;
+      return wrap("Hemos liberado tu plaza", body);
+    }
+    case "admin_booking_released_unpaid": {
+      const student = (payload.student_name as string | undefined)?.trim() || "Una alumna";
+      const amount = fmtAmount(payload.amount_cents);
+      const kids = payload.audience === "kids" ? " (Niños)" : "";
+      const body =
+        `${student} reservó${date ? ` el ${date}` : ""}${start ? ` de ${start} a ${end}` : ""}${payload.teacher ? ` con ${payload.teacher}` : ""}${kids} y el pago${amount ? ` de ${amount}` : ""} no se completó, así que la plaza se ha liberado.` +
+        `\n\nPuedes devolverle la plaza desde Admin → Pagos, en "Reservas caídas sin pagar".`;
+      return wrap("Reserva liberada sin pagar", body);
+    }
     default:
       return wrap("Aviso de Cerámica Studio", `Hola ${name}, tienes una novedad en tu cuenta.`);
+    }
   }
-}
 
 function wrap(subject: string, body: string, htmlBody?: string): Rendered {
   const bodyHtml =

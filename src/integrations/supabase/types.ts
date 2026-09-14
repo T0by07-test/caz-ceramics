@@ -923,6 +923,10 @@ export type Database = {
         Args: { p_booking_id: string; p_reason?: string }
         Returns: undefined
       }
+      admin_restore_released_booking: {
+        Args: { p_booking_id: string }
+        Returns: undefined
+      }
       auto_cancel_low_attendance: {
         Args: never
         Returns: {
@@ -1044,6 +1048,7 @@ export type Database = {
       redeem_invite: { Args: { p_token: string }; Returns: Json }
       resolve_plan_month: { Args: { p_month: string }; Returns: string }
       unaccent: { Args: { "": string }; Returns: string }
+      warn_expiring_drop_in_holds: { Args: never; Returns: number }
     }
     Enums: {
       [_ in never]: never

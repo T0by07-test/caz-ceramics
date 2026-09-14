@@ -25,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ReleasedHoldsPanel } from "@/components/admin/ReleasedHoldsPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { isTestMode } from "@/lib/stripe";
 
@@ -167,6 +168,8 @@ function AdminPaymentsPage() {
           y la reserva de la alumna quedará confirmada.
         </p>
       </div>
+
+      <ReleasedHoldsPanel />
 
       <Card className="">
         <CardContent className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
