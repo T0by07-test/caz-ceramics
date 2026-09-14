@@ -25,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ReleasedHoldsPanel } from "@/components/admin/ReleasedHoldsPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { isTestMode } from "@/lib/stripe";
 
