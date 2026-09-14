@@ -19,6 +19,10 @@ import { useAuth } from "@/lib/auth";
 import { cancelBooking, isRecoverableNow } from "@/lib/booking";
 import { leaveWaitlist } from "@/lib/waitlist";
 import { formatLongDate, formatTimeRange } from "@/lib/calendar";
+import { formatEuros } from "@/lib/pricing";
+import { createDropInCheckout } from "@/lib/checkout";
+import { StripeCheckoutDialog } from "@/components/StripeCheckoutDialog";
+
 
 export const Route = createFileRoute("/app/reservas")({
   component: MisReservasPage,
@@ -50,17 +54,21 @@ type WaitRow = {
   } | null;
 };
 
+type PayInfo = { pendingCents: number; paid: boolean };
+
 function MisReservasPage() {
   const { user } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [waitlist, setWaitlist] = useState<WaitRow[]>([]);
+  const [payments, setPayments] = useState<Record<string, PayInfo>>({});
   const [loading, setLoading] = useState(true);
   const [toCancel, setToCancel] = useState<Row | null>(null);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const fetchRows = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const [bookingsRes, waitlistRes] = await Promise.all([
+    const [bookingsRes, waitlistRes, paymentsRes] = await Promise.all([
       supabase
         .from("bookings")
         .select(
@@ -73,6 +81,11 @@ function MisReservasPage() {
         .select("id, position, classes ( id, date, start_time, end_time )")
         .eq("student_id", user.id)
         .order("position", { ascending: true }),
+      supabase
+        .from("payments")
+        .select("booking_id, amount_cents, status")
+        .eq("student_id", user.id)
+        .gt("amount_cents", 0),
     ]);
     if (bookingsRes.error) {
       toast.error("No se pudieron cargar tus reservas", {
@@ -87,8 +100,18 @@ function MisReservasPage() {
     } else {
       setWaitlist((waitlistRes.data ?? []) as unknown as WaitRow[]);
     }
+    const map: Record<string, PayInfo> = {};
+    for (const p of paymentsRes.data ?? []) {
+      if (!p.booking_id) continue;
+      const entry = (map[p.booking_id] ??= { pendingCents: 0, paid: false });
+      if (p.status === "confirmed") entry.paid = true;
+      else if (p.status === "pending")
+        entry.pendingCents = Math.max(entry.pendingCents, p.amount_cents ?? 0);
+    }
+    setPayments(map);
     setLoading(false);
   }, [user]);
+
 
   useEffect(() => {
     void fetchRows();
@@ -130,6 +153,35 @@ function MisReservasPage() {
     ["cancelled_recoverable", "cancelled_lost"].includes(r.status),
   );
 
+  // Reservations still awaiting money: the student may have chosen cash and
+  // now prefers to pay by card, so we always offer a card link here.
+  const unpaid = upcoming.filter((r) => {
+    if (r.source !== "drop_in") return false;
+    const info = payments[r.id];
+    return Boolean(info) && !info.paid && info.pendingCents > 0;
+  });
+  const unpaidTotal = unpaid.reduce((sum, r) => sum + (payments[r.id]?.pendingCents ?? 0), 0);
+  const unpaidIds = unpaid.map((r) => r.id);
+
+  const fetchClientSecret = useCallback(async () => {
+    const { clientSecret } = await createDropInCheckout({
+      bookingIds: unpaidIds,
+      returnUrl: `${window.location.origin}/app/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`,
+      paymentMethod: "card",
+    });
+    return clientSecret;
+  }, [unpaidIds.join(",")]);
+
+  const fetchHostedUrl = useCallback(async () => {
+    const { url } = await createDropInCheckout({
+      bookingIds: unpaidIds,
+      returnUrl: `${window.location.origin}/app/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`,
+      paymentMethod: "card",
+      hosted: true,
+    });
+    return url;
+  }, [unpaidIds.join(",")]);
+
   return (
     <div className="flex flex-col gap-6">
       <div className="min-w-0">
@@ -139,6 +191,25 @@ function MisReservasPage() {
           Consulta tus próximas clases y gestiona cancelaciones.
         </p>
       </div>
+
+      {unpaid.length > 0 ? (
+        <div className="flex flex-col gap-3 rounded-none border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-sm font-normal">
+              {unpaid.length === 1
+                ? "Tienes 1 clase pendiente de pago"
+                : `Tienes ${unpaid.length} clases pendientes de pago`}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Total pendiente: {formatEuros(unpaidTotal)}. Puedes pagarlo ahora con tarjeta o en
+              efectivo en el estudio.
+            </p>
+          </div>
+          <Button className="shrink-0" onClick={() => setCheckoutOpen(true)}>
+            Pagar con tarjeta
+          </Button>
+        </div>
+      ) : null}
 
       <Tabs defaultValue="upcoming">
         <TabsList className="grid w-full grid-cols-2 gap-1 sm:inline-flex sm:w-auto sm:gap-0">
@@ -153,8 +224,10 @@ function MisReservasPage() {
             loading={loading}
             empty="No tienes próximas reservas."
             onCancel={(r) => setToCancel(r)}
+            payments={payments}
           />
         </TabsContent>
+
         <TabsContent value="past" className="mt-4">
           <BookingList rows={past} loading={loading} empty="Aún no hay clases pasadas." />
         </TabsContent>
@@ -188,6 +261,20 @@ function MisReservasPage() {
           void fetchRows();
         }}
       />
+
+      {unpaidIds.length > 0 ? (
+        <StripeCheckoutDialog
+          open={checkoutOpen}
+          onOpenChange={(o) => {
+            setCheckoutOpen(o);
+            if (!o) void fetchRows();
+          }}
+          title={unpaidIds.length === 1 ? "Pagar clase" : `Pagar ${unpaidIds.length} clases`}
+          fetchClientSecret={fetchClientSecret}
+          fetchHostedUrl={fetchHostedUrl}
+        />
+      ) : null}
+
     </div>
   );
 }
@@ -218,12 +305,15 @@ function BookingList({
   loading,
   empty,
   onCancel,
+  payments,
 }: {
   rows: Row[];
   loading: boolean;
   empty: string;
   onCancel?: (r: Row) => void;
+  payments?: Record<string, PayInfo>;
 }) {
+
   if (loading) {
     return (
       <div className="flex flex-col gap-2">
@@ -257,7 +347,17 @@ function BookingList({
             <div className="text-xs text-muted-foreground">
               {r.classes ? formatTimeRange(r.classes.start_time, r.classes.end_time) : ""}
             </div>
-            <div className="mt-2">{statusBadge(r.status)}</div>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              {statusBadge(r.status)}
+              {payments?.[r.id] && !payments[r.id].paid && payments[r.id].pendingCents > 0 ? (
+                <Badge variant="outline">
+                  Pendiente de pago · {formatEuros(payments[r.id].pendingCents)}
+                </Badge>
+              ) : payments?.[r.id]?.paid ? (
+                <Badge variant="outline">Pagada</Badge>
+              ) : null}
+            </div>
+
           </div>
           {onCancel && r.classes ? (
             <Button variant="outline" onClick={() => onCancel(r)}>
