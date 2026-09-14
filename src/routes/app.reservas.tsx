@@ -19,6 +19,10 @@ import { useAuth } from "@/lib/auth";
 import { cancelBooking, isRecoverableNow } from "@/lib/booking";
 import { leaveWaitlist } from "@/lib/waitlist";
 import { formatLongDate, formatTimeRange } from "@/lib/calendar";
+import { formatEuros } from "@/lib/pricing";
+import { createDropInCheckout } from "@/lib/checkout";
+import { StripeCheckoutDialog } from "@/components/StripeCheckoutDialog";
+
 
 export const Route = createFileRoute("/app/reservas")({
   component: MisReservasPage,
