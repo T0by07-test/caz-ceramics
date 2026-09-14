@@ -153,6 +153,35 @@ function MisReservasPage() {
     ["cancelled_recoverable", "cancelled_lost"].includes(r.status),
   );
 
+  // Reservations still awaiting money: the student may have chosen cash and
+  // now prefers to pay by card, so we always offer a card link here.
+  const unpaid = upcoming.filter((r) => {
+    if (r.source !== "drop_in") return false;
+    const info = payments[r.id];
+    return Boolean(info) && !info.paid && info.pendingCents > 0;
+  });
+  const unpaidTotal = unpaid.reduce((sum, r) => sum + (payments[r.id]?.pendingCents ?? 0), 0);
+  const unpaidIds = unpaid.map((r) => r.id);
+
+  const fetchClientSecret = useCallback(async () => {
+    const { clientSecret } = await createDropInCheckout({
+      bookingIds: unpaidIds,
+      returnUrl: `${window.location.origin}/app/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`,
+      paymentMethod: "card",
+    });
+    return clientSecret;
+  }, [unpaidIds.join(",")]);
+
+  const fetchHostedUrl = useCallback(async () => {
+    const { url } = await createDropInCheckout({
+      bookingIds: unpaidIds,
+      returnUrl: `${window.location.origin}/app/pago-exitoso?session_id={CHECKOUT_SESSION_ID}`,
+      paymentMethod: "card",
+      hosted: true,
+    });
+    return url;
+  }, [unpaidIds.join(",")]);
+
   return (
     <div className="flex flex-col gap-6">
       <div className="min-w-0">
@@ -162,6 +191,25 @@ function MisReservasPage() {
           Consulta tus próximas clases y gestiona cancelaciones.
         </p>
       </div>
+
+      {unpaid.length > 0 ? (
+        <div className="flex flex-col gap-3 rounded-none border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-sm font-normal">
+              {unpaid.length === 1
+                ? "Tienes 1 clase pendiente de pago"
+                : `Tienes ${unpaid.length} clases pendientes de pago`}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Total pendiente: {formatEuros(unpaidTotal)}. Puedes pagarlo ahora con tarjeta o en
+              efectivo en el estudio.
+            </p>
+          </div>
+          <Button className="shrink-0" onClick={() => setCheckoutOpen(true)}>
+            Pagar con tarjeta
+          </Button>
+        </div>
+      ) : null}
 
       <Tabs defaultValue="upcoming">
         <TabsList className="grid w-full grid-cols-2 gap-1 sm:inline-flex sm:w-auto sm:gap-0">
@@ -176,8 +224,10 @@ function MisReservasPage() {
             loading={loading}
             empty="No tienes próximas reservas."
             onCancel={(r) => setToCancel(r)}
+            payments={payments}
           />
         </TabsContent>
+
         <TabsContent value="past" className="mt-4">
           <BookingList rows={past} loading={loading} empty="Aún no hay clases pasadas." />
         </TabsContent>
