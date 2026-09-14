@@ -305,12 +305,15 @@ function BookingList({
   loading,
   empty,
   onCancel,
+  payments,
 }: {
   rows: Row[];
   loading: boolean;
   empty: string;
   onCancel?: (r: Row) => void;
+  payments?: Record<string, PayInfo>;
 }) {
+
   if (loading) {
     return (
       <div className="flex flex-col gap-2">
