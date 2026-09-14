@@ -159,12 +159,27 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: "Booking not found" }, 404);
       }
       bookings = fetchedBookings;
+      // Already-paid bookings must never be charged again. A booking reserved with
+      // "efectivo" is 'confirmed' with a pending cash payment row — the student can
+      // still switch to card from "Mis reservas", so we allow it here.
+      const { data: paidPayments } = await admin
+        .from("payments")
+        .select("booking_id")
+        .in("booking_id", bookingIds)
+        .eq("status", "confirmed")
+        .gt("amount_cents", 0);
+      const paidBookingIds = new Set((paidPayments ?? []).map((p) => p.booking_id));
       for (const booking of bookings) {
         if (booking.student_id !== user.id) return jsonResponse({ error: "Not your booking" }, 403);
-        if (booking.source !== "drop_in" || booking.status !== "reserved") {
+        if (
+          booking.source !== "drop_in" ||
+          !["reserved", "confirmed"].includes(booking.status) ||
+          paidBookingIds.has(booking.id)
+        ) {
           return jsonResponse({ error: "Booking is not pending payment" }, 400);
         }
       }
+
       // Fetch each class's audience so kids classes are priced individually.
       const classIds = Array.from(new Set(bookings.map((b) => b.class_id)));
       const { data: classes } = await admin
