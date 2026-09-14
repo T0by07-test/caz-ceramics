@@ -54,17 +54,21 @@ type WaitRow = {
   } | null;
 };
 
+type PayInfo = { pendingCents: number; paid: boolean };
+
 function MisReservasPage() {
   const { user } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [waitlist, setWaitlist] = useState<WaitRow[]>([]);
+  const [payments, setPayments] = useState<Record<string, PayInfo>>({});
   const [loading, setLoading] = useState(true);
   const [toCancel, setToCancel] = useState<Row | null>(null);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const fetchRows = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const [bookingsRes, waitlistRes] = await Promise.all([
+    const [bookingsRes, waitlistRes, paymentsRes] = await Promise.all([
       supabase
         .from("bookings")
         .select(
@@ -77,6 +81,11 @@ function MisReservasPage() {
         .select("id, position, classes ( id, date, start_time, end_time )")
         .eq("student_id", user.id)
         .order("position", { ascending: true }),
+      supabase
+        .from("payments")
+        .select("booking_id, amount_cents, status")
+        .eq("student_id", user.id)
+        .gt("amount_cents", 0),
     ]);
     if (bookingsRes.error) {
       toast.error("No se pudieron cargar tus reservas", {
@@ -91,8 +100,18 @@ function MisReservasPage() {
     } else {
       setWaitlist((waitlistRes.data ?? []) as unknown as WaitRow[]);
     }
+    const map: Record<string, PayInfo> = {};
+    for (const p of paymentsRes.data ?? []) {
+      if (!p.booking_id) continue;
+      const entry = (map[p.booking_id] ??= { pendingCents: 0, paid: false });
+      if (p.status === "confirmed") entry.paid = true;
+      else if (p.status === "pending")
+        entry.pendingCents = Math.max(entry.pendingCents, p.amount_cents ?? 0);
+    }
+    setPayments(map);
     setLoading(false);
   }, [user]);
+
 
   useEffect(() => {
     void fetchRows();
