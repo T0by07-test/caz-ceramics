@@ -261,6 +261,20 @@ function MisReservasPage() {
           void fetchRows();
         }}
       />
+
+      {unpaidIds.length > 0 ? (
+        <StripeCheckoutDialog
+          open={checkoutOpen}
+          onOpenChange={(o) => {
+            setCheckoutOpen(o);
+            if (!o) void fetchRows();
+          }}
+          title={unpaidIds.length === 1 ? "Pagar clase" : `Pagar ${unpaidIds.length} clases`}
+          fetchClientSecret={fetchClientSecret}
+          fetchHostedUrl={fetchHostedUrl}
+        />
+      ) : null}
+
     </div>
   );
 }
