@@ -62,8 +62,9 @@ export function useClassesInRange(
       return;
     }
 
-    // Students never see classes on studio closure dates.
-    const classRows = mode === "student" ? withoutClosedDates(allRows ?? []) : (allRows ?? []);
+    // Nobody (students or admin) sees classes on studio closure dates.
+    const classRows = withoutClosedDates(allRows ?? []);
+
 
     const ids = (classRows ?? []).map((c) => c.id);
 
