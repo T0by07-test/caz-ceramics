@@ -585,7 +585,7 @@ function AdminLedgerPage() {
       totalGross: Math.round(grossWithTeachers),
       candeShare: Math.round(grossWithTeachers - totalCommission),
     };
-  }, [filtered, rates]);
+  }, [monthRows, rates]);
 
   const col = (key: ColumnKey) => visibleCols.has(key);
 
