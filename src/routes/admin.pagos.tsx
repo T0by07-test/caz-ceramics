@@ -239,16 +239,25 @@ function AdminPaymentsPage() {
                     </div>
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       {statusBadge(r.status)}
-                      {r.status === "pending" ? (
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          disabled={confirming === r.id}
-                          onClick={() => void confirmPayment(r.id)}
-                        >
-                          <Check className="mr-1 h-3.5 w-3.5" /> Marcar como pagado
-                        </Button>
-                      ) : null}
+                       {r.status === "pending" ? (
+                         <Button
+                           size="sm"
+                           variant="secondary"
+                           disabled={confirming === r.id}
+                           onClick={() => void confirmPayment(r.id)}
+                         >
+                           <Check className="mr-1 h-3.5 w-3.5" /> Marcar como pagado
+                         </Button>
+                       ) : r.status === "confirmed" && isCashPayment(r) ? (
+                         <Button
+                           size="sm"
+                           variant="ghost"
+                           disabled={confirming === r.id}
+                           onClick={() => void undoPayment(r.id)}
+                         >
+                           <Undo2 className="mr-1 h-3.5 w-3.5" /> Deshacer
+                         </Button>
+                       ) : null}
                       {stripeDashboardUrl(r.stripe_session_id) ? (
                         <a
                           href={stripeDashboardUrl(r.stripe_session_id)!}
