@@ -533,18 +533,28 @@ function AdminLedgerPage() {
       .map(({ r }) => r);
   }, [rows, search, statusFilter, methodFilter, categoryFilter, monthFilter, teacherFilter, sort]);
 
+  // Las cifras de arriba y el reparto miran el mes completo: el resto de filtros
+  // (estado, método, categoría, profesora, búsqueda) sólo afecta a la tabla.
+  const monthRows = useMemo(
+    () =>
+      monthFilter === ALL
+        ? rows
+        : rows.filter((r) => canonicalMonth(r.month) === canonicalMonth(monthFilter)),
+    [rows, monthFilter],
+  );
+
   const totals = useMemo(() => {
     let cobrado = 0;
     let pendiente = 0;
-    for (const r of filtered) {
+    for (const r of monthRows) {
       const cents = r.amount_cents ?? 0;
       if (r.status === "Pagado") cobrado += cents;
       else if (r.status === "Pendiente") pendiente += cents;
     }
-    return { cobrado, pendiente, count: filtered.length };
-  }, [filtered]);
+    return { cobrado, pendiente, count: monthRows.length };
+  }, [monthRows]);
 
-  // Per-teacher commission on filtered PAID rows (owner "Cande" excluded).
+  // Per-teacher commission on the month's PAID rows (owner "Cande" excluded).
   // Matches computeMonth() logic: split amount equally across collectors,
   // then apply per-entry override or teacher default rate.
   const teacherPayouts = useMemo(() => {
@@ -552,8 +562,9 @@ function AdminLedgerPage() {
     const acc: Record<string, number> = {};
     let grossWithTeachers = 0;
     let totalCommission = 0;
-    for (const r of filtered) {
+    for (const r of monthRows) {
       if (r.status !== "Pagado") continue;
+
       const teachers = (r.collector ?? []).filter((t) => t && t !== "Cande");
       if (teachers.length === 0) continue;
       const amount = r.amount_cents ?? 0;
