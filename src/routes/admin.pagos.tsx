@@ -319,6 +319,15 @@ function AdminPaymentsPage() {
                             >
                               <Check className="mr-1 h-3.5 w-3.5" /> Marcar como pagado
                             </Button>
+                          ) : r.status === "confirmed" && isCashPayment(r) ? (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={confirming === r.id}
+                              onClick={() => void undoPayment(r.id)}
+                            >
+                              <Undo2 className="mr-1 h-3.5 w-3.5" /> Deshacer
+                            </Button>
                           ) : (
                             <span className="text-xs text-muted-foreground">—</span>
                           )}
