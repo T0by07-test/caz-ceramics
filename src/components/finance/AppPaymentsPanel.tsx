@@ -73,6 +73,11 @@ function monthKey(date: string) {
   return date.slice(0, 7);
 }
 
+/** Solo los cobros en efectivo (marcados a mano) se pueden deshacer. */
+function isCashGroup(g: Group) {
+  return g.method === "cash" || g.key.startsWith("cash|");
+}
+
 /** Cuentas de prueba: no deben aparecer en el cuaderno de ingresos. */
 const TEST_STUDENT_IDS = new Set([
   "be13cdc7-b2e0-4d4a-a547-7d7bce40bc82", // Cande Test fianl
