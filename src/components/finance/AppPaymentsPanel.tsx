@@ -457,7 +457,18 @@ export function AppPaymentsPanel() {
                       </TableCell>
                       <TableCell className="text-right">
                         {g.collected ? (
-                          <span className="text-xs text-muted-foreground">—</span>
+                          isCashGroup(g) ? (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={confirming === g.key}
+                              onClick={() => void undoCollected(g)}
+                            >
+                              <Undo2 className="mr-1 h-3.5 w-3.5" /> Deshacer cobro
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )
                         ) : (
                           <Button
                             size="sm"
