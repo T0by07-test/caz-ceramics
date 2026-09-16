@@ -136,6 +136,18 @@ function AdminPaymentsPage() {
 
   const [confirming, setConfirming] = useState<string | null>(null);
 
+  const undoPayment = async (id: string) => {
+    setConfirming(id);
+    const { error } = await supabase.rpc("admin_unconfirm_payment", { p_payment_id: id });
+    setConfirming(null);
+    if (error) {
+      toast.error("No se pudo deshacer el cobro", { description: error.message });
+      return;
+    }
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, status: "pending" } : r)));
+    toast.success("Cobro deshecho", { description: "El pago vuelve a estar pendiente." });
+  };
+
   const confirmPayment = async (id: string) => {
     setConfirming(id);
     const { error } = await supabase.rpc("admin_confirm_payment", { p_payment_id: id });
