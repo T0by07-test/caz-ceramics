@@ -281,6 +281,23 @@ export function AppPaymentsPanel() {
     return { collected, pending };
   }, [visible]);
 
+  const undoCollected = async (g: Group) => {
+    setConfirming(g.key);
+    for (const id of g.paymentIds) {
+      const { error } = await supabase.rpc("admin_unconfirm_payment", { p_payment_id: id });
+      if (error) {
+        setConfirming(null);
+        toast.error("No se pudo deshacer el cobro", { description: error.message });
+        return;
+      }
+    }
+    setConfirming(null);
+    toast.success("Cobro deshecho", {
+      description: `${g.studentName} · vuelve a pendiente`,
+    });
+    await load();
+  };
+
   const markCollected = async (g: Group) => {
     setConfirming(g.key);
     for (const id of g.paymentIds) {
