@@ -394,7 +394,7 @@ export function AppPaymentsPanel() {
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <StatusBadge collected={g.collected} method={g.method} />
-                    {!g.collected && (
+                    {!g.collected ? (
                       <Button
                         size="sm"
                         variant="secondary"
@@ -403,7 +403,16 @@ export function AppPaymentsPanel() {
                       >
                         <Check className="mr-1 h-3.5 w-3.5" /> Marcar cobrado
                       </Button>
-                    )}
+                    ) : isCashGroup(g) ? (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={confirming === g.key}
+                        onClick={() => void undoCollected(g)}
+                      >
+                        <Undo2 className="mr-1 h-3.5 w-3.5" /> Deshacer cobro
+                      </Button>
+                    ) : null}
                   </div>
                 </li>
               ))}
