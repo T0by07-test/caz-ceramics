@@ -188,8 +188,26 @@ const METHOD_LABELS: Record<string, string> = {
   R: "Revolut",
 };
 
+/** Índice de mes (0-11) de una etiqueta libre ("SEPTIEMBRE") o ISO ("2026-09"). */
+function monthIndexOf(month: string | null | undefined): number | null {
+  if (!month) return null;
+  const iso = /^\d{4}-(\d{2})$/.exec(month.trim());
+  if (iso) {
+    const i = Number(iso[1]) - 1;
+    return i >= 0 && i <= 11 ? i : null;
+  }
+  return monthLabelToIndex(month);
+}
+
+/** Etiqueta única por mes natural: junta "SEPTIEMBRE" y "2026-09" en una sola. */
+function canonicalMonth(month: string | null | undefined): string | null {
+  const i = monthIndexOf(month);
+  if (i === null) return month?.trim() ? month.trim().toUpperCase() : null;
+  return MONTH_NAMES_ES[i].toUpperCase();
+}
+
 function currentMonthLabel() {
-  return new Date().toLocaleDateString("es-ES", { month: "long" }).toUpperCase();
+  return MONTH_NAMES_ES[new Date().getMonth()].toUpperCase();
 }
 
 function formatDateOrMonth(entryDate: string | null, month: string | null): string {
@@ -197,9 +215,11 @@ function formatDateOrMonth(entryDate: string | null, month: string | null): stri
     const d = new Date(entryDate + "T00:00:00");
     return d.toLocaleDateString("es-ES", { day: "numeric", month: "short" });
   }
-  if (month) return month.slice(0, 3).toLowerCase();
+  const canon = canonicalMonth(month);
+  if (canon) return canon.slice(0, 3).toLowerCase();
   return "—";
 }
+
 
 function rowBg(status: string | null, collector: string[] | null): string {
   const isSofi = (collector ?? []).some((c) => c?.toLowerCase() === "sofi");
