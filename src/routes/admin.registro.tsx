@@ -645,13 +645,12 @@ function AdminLedgerPage() {
             <div className="flex items-baseline justify-between gap-3">
               <p className="text-label text-muted-foreground">
                 Reparto de ingresos
-                {monthFilter !== ALL && (
-                  <span className="ml-1 normal-case text-muted-foreground/70">
-                    · {monthFilter.toLowerCase()}
-                  </span>
+                {monthSuffix && (
+                  <span className="ml-1 normal-case text-muted-foreground/70">{monthSuffix}</span>
                 )}
               </p>
-              <span className="text-xs text-muted-foreground">según filtros · sólo Pagado</span>
+              <span className="text-xs text-muted-foreground">todo el mes · sólo Pagado</span>
+
             </div>
             <ul className="mt-2 divide-y divide-border">
               <li className="flex items-center justify-between py-1.5 text-sm">
