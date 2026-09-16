@@ -201,24 +201,28 @@ export function AppPaymentsPanel() {
 
     const byKey = new Map<string, Group>();
     for (const p of rows) {
-      // Older per-booking cash payments carry no session key: fold rows made by
-      // the same alumna in the same minute into one ledger line.
-      const key =
-        p.stripe_session_id ??
-        `${p.student_id}|${p.method ?? "-"}|${p.created_at.slice(0, 10)}`;
       const classDate = p.booking_id ? bookingClassDate.get(p.booking_id) ?? null : null;
       const fallbackMonth =
         (p.subscription_id ? subscriptionMonth.get(p.subscription_id) : null) ??
         studentClassMonth.get(p.student_id) ??
         monthKey(p.created_at);
+      const classMonth = classDate ? monthKey(classDate) : fallbackMonth;
+      // Cash payments are booked one class at a time (each with its own
+      // "cash:…" session id), so they'd otherwise appear as one 30 € line per
+      // class. Group them per alumna and class month with the total instead;
+      // card/Bizum keep their real Stripe session as the key.
+      const isCash = p.method === "cash" || (p.stripe_session_id?.startsWith("cash:") ?? false);
+      const key = isCash
+        ? `cash|${p.student_id}|${classMonth}`
+        : p.stripe_session_id ?? `${p.student_id}|${p.method ?? "-"}|${p.created_at.slice(0, 10)}`;
       const existing = byKey.get(key);
       if (existing) {
         existing.amountCents += p.amount_cents;
         existing.classCount += p.booking_id ? 1 : 0;
         existing.paymentIds.push(p.id);
         existing.collected = existing.collected && p.status === "confirmed";
-        if (classDate && monthKey(classDate) < existing.classMonth) {
-          existing.classMonth = monthKey(classDate);
+        if (classMonth < existing.classMonth) {
+          existing.classMonth = classMonth;
         }
       } else {
         byKey.set(key, {
@@ -227,7 +231,7 @@ export function AppPaymentsPanel() {
           studentName: nameById.get(p.student_id) ?? "—",
           paidAt: p.created_at,
           classCount: p.booking_id ? 1 : 0,
-          classMonth: classDate ? monthKey(classDate) : fallbackMonth,
+          classMonth,
           amountCents: p.amount_cents,
           method: p.method,
           collected: p.status === "confirmed",
