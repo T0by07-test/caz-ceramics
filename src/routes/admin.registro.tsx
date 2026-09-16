@@ -453,7 +453,9 @@ function AdminLedgerPage() {
       if (statusFilter !== ALL && r.status !== statusFilter) return false;
       if (methodFilter !== ALL && r.method !== methodFilter) return false;
       if (categoryFilter !== ALL && r.category !== categoryFilter) return false;
-      if (monthFilter !== ALL && r.month !== monthFilter) return false;
+      if (monthFilter !== ALL && canonicalMonth(r.month) !== canonicalMonth(monthFilter))
+        return false;
+
       if (teacherFilter !== ALL && !(r.collector ?? []).includes(teacherFilter)) return false;
       if (q) {
         const hay = [r.student_name, r.notes].some((v) => (v ?? "").toLowerCase().includes(q));
