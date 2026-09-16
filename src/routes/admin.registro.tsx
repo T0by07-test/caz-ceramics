@@ -587,7 +587,10 @@ function AdminLedgerPage() {
     };
   }, [monthRows, rates]);
 
+  const monthSuffix = monthFilter === ALL ? "" : ` · ${monthFilter.toLowerCase()}`;
+
   const col = (key: ColumnKey) => visibleCols.has(key);
+
 
   return (
     <div className="flex flex-col gap-6">
