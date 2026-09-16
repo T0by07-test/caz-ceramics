@@ -617,23 +617,24 @@ function AdminLedgerPage() {
       <div className="grid gap-3 sm:grid-cols-3">
         <Card className="">
           <CardContent className="p-4">
-            <p className="text-label text-muted-foreground">Cobrado</p>
+            <p className="text-label text-muted-foreground">Cobrado{monthSuffix}</p>
             <p className="mt-1 text-2xl font-normal text-success">{formatEur(totals.cobrado)}</p>
           </CardContent>
         </Card>
         <Card className="">
           <CardContent className="p-4">
-            <p className="text-label text-muted-foreground">Pendiente</p>
+            <p className="text-label text-muted-foreground">Pendiente{monthSuffix}</p>
             <p className="mt-1 text-2xl font-normal text-warning">{formatEur(totals.pendiente)}</p>
           </CardContent>
         </Card>
         <Card className="">
           <CardContent className="p-4">
-            <p className="text-label text-muted-foreground">Entradas</p>
+            <p className="text-label text-muted-foreground">Entradas{monthSuffix}</p>
             <p className="mt-1 text-2xl font-normal">{totals.count}</p>
           </CardContent>
         </Card>
       </div>
+
 
       <AppPaymentsPanel />
 
