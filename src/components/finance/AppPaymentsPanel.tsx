@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check, CreditCard, Wallet, RefreshCw } from "lucide-react";
+import { Check, CreditCard, Wallet, RefreshCw, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -71,6 +71,11 @@ function monthLabel(month: string) {
 
 function monthKey(date: string) {
   return date.slice(0, 7);
+}
+
+/** Solo los cobros en efectivo (marcados a mano) se pueden deshacer. */
+function isCashGroup(g: Group) {
+  return g.method === "cash" || g.key.startsWith("cash|");
 }
 
 /** Cuentas de prueba: no deben aparecer en el cuaderno de ingresos. */
@@ -281,6 +286,23 @@ export function AppPaymentsPanel() {
     return { collected, pending };
   }, [visible]);
 
+  const undoCollected = async (g: Group) => {
+    setConfirming(g.key);
+    for (const id of g.paymentIds) {
+      const { error } = await supabase.rpc("admin_unconfirm_payment", { p_payment_id: id });
+      if (error) {
+        setConfirming(null);
+        toast.error("No se pudo deshacer el cobro", { description: error.message });
+        return;
+      }
+    }
+    setConfirming(null);
+    toast.success("Cobro deshecho", {
+      description: `${g.studentName} · vuelve a pendiente`,
+    });
+    await load();
+  };
+
   const markCollected = async (g: Group) => {
     setConfirming(g.key);
     for (const id of g.paymentIds) {
@@ -377,7 +399,7 @@ export function AppPaymentsPanel() {
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <StatusBadge collected={g.collected} method={g.method} />
-                    {!g.collected && (
+                    {!g.collected ? (
                       <Button
                         size="sm"
                         variant="secondary"
@@ -386,7 +408,16 @@ export function AppPaymentsPanel() {
                       >
                         <Check className="mr-1 h-3.5 w-3.5" /> Marcar cobrado
                       </Button>
-                    )}
+                    ) : isCashGroup(g) ? (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={confirming === g.key}
+                        onClick={() => void undoCollected(g)}
+                      >
+                        <Undo2 className="mr-1 h-3.5 w-3.5" /> Deshacer cobro
+                      </Button>
+                    ) : null}
                   </div>
                 </li>
               ))}
@@ -431,7 +462,18 @@ export function AppPaymentsPanel() {
                       </TableCell>
                       <TableCell className="text-right">
                         {g.collected ? (
-                          <span className="text-xs text-muted-foreground">—</span>
+                          isCashGroup(g) ? (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={confirming === g.key}
+                              onClick={() => void undoCollected(g)}
+                            >
+                              <Undo2 className="mr-1 h-3.5 w-3.5" /> Deshacer cobro
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )
                         ) : (
                           <Button
                             size="sm"

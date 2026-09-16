@@ -927,6 +927,10 @@ export type Database = {
         Args: { p_booking_id: string }
         Returns: undefined
       }
+      admin_unconfirm_payment: {
+        Args: { p_payment_id: string }
+        Returns: undefined
+      }
       auto_cancel_low_attendance: {
         Args: never
         Returns: {

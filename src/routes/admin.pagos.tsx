@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, ExternalLink } from "lucide-react";
+import { Check, ExternalLink, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { RouteGuard } from "@/components/RouteGuard";
 import { Card, CardContent } from "@/components/ui/card";
@@ -65,6 +65,11 @@ function methodLabel(method: string | null) {
   if (method === "card") return "Tarjeta";
   if (method === "cash") return "Efectivo";
   return "—";
+}
+
+/** Solo los cobros en efectivo (marcados a mano) se pueden deshacer. */
+function isCashPayment(r: { method: string | null; stripe_session_id: string | null }) {
+  return r.method === "cash" || (r.stripe_session_id?.startsWith("cash:") ?? false);
 }
 
 /** Only real Stripe checkout sessions (cs_...) have a dashboard page — cash/bizum
@@ -135,6 +140,18 @@ function AdminPaymentsPage() {
   }, [status, from, to]);
 
   const [confirming, setConfirming] = useState<string | null>(null);
+
+  const undoPayment = async (id: string) => {
+    setConfirming(id);
+    const { error } = await supabase.rpc("admin_unconfirm_payment", { p_payment_id: id });
+    setConfirming(null);
+    if (error) {
+      toast.error("No se pudo deshacer el cobro", { description: error.message });
+      return;
+    }
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, status: "pending" } : r)));
+    toast.success("Cobro deshecho", { description: "El pago vuelve a estar pendiente." });
+  };
 
   const confirmPayment = async (id: string) => {
     setConfirming(id);
@@ -239,16 +256,25 @@ function AdminPaymentsPage() {
                     </div>
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       {statusBadge(r.status)}
-                      {r.status === "pending" ? (
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          disabled={confirming === r.id}
-                          onClick={() => void confirmPayment(r.id)}
-                        >
-                          <Check className="mr-1 h-3.5 w-3.5" /> Marcar como pagado
-                        </Button>
-                      ) : null}
+                       {r.status === "pending" ? (
+                         <Button
+                           size="sm"
+                           variant="secondary"
+                           disabled={confirming === r.id}
+                           onClick={() => void confirmPayment(r.id)}
+                         >
+                           <Check className="mr-1 h-3.5 w-3.5" /> Marcar como pagado
+                         </Button>
+                       ) : r.status === "confirmed" && isCashPayment(r) ? (
+                         <Button
+                           size="sm"
+                           variant="ghost"
+                           disabled={confirming === r.id}
+                           onClick={() => void undoPayment(r.id)}
+                         >
+                           <Undo2 className="mr-1 h-3.5 w-3.5" /> Deshacer
+                         </Button>
+                       ) : null}
                       {stripeDashboardUrl(r.stripe_session_id) ? (
                         <a
                           href={stripeDashboardUrl(r.stripe_session_id)!}
@@ -318,6 +344,15 @@ function AdminPaymentsPage() {
                               onClick={() => void confirmPayment(r.id)}
                             >
                               <Check className="mr-1 h-3.5 w-3.5" /> Marcar como pagado
+                            </Button>
+                          ) : r.status === "confirmed" && isCashPayment(r) ? (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={confirming === r.id}
+                              onClick={() => void undoPayment(r.id)}
+                            >
+                              <Undo2 className="mr-1 h-3.5 w-3.5" /> Deshacer
                             </Button>
                           ) : (
                             <span className="text-xs text-muted-foreground">—</span>
