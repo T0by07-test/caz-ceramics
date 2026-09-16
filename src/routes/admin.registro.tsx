@@ -424,14 +424,17 @@ function AdminLedgerPage() {
   );
   const months = useMemo(
     () =>
-      Array.from(new Set(rows.map((r) => r.month).filter((m): m is string => !!m))).sort((a, b) => {
-        const oa = monthOrder(a);
-        const ob = monthOrder(b);
+      Array.from(
+        new Set(rows.map((r) => canonicalMonth(r.month)).filter((m): m is string => !!m)),
+      ).sort((a, b) => {
+        const oa = monthIndexOf(a) ?? 99;
+        const ob = monthIndexOf(b) ?? 99;
         if (oa !== ob) return oa - ob;
         return a.localeCompare(b);
       }),
     [rows],
   );
+
   const methods = useMemo(
     () => Array.from(new Set(rows.map((r) => r.method).filter((m): m is string => !!m))).sort(),
     [rows],
