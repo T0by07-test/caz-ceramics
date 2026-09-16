@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, ExternalLink } from "lucide-react";
+import { Check, ExternalLink, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { RouteGuard } from "@/components/RouteGuard";
 import { Card, CardContent } from "@/components/ui/card";
