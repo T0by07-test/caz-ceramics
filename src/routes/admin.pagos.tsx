@@ -67,6 +67,11 @@ function methodLabel(method: string | null) {
   return "—";
 }
 
+/** Solo los cobros en efectivo (marcados a mano) se pueden deshacer. */
+function isCashPayment(r: { method: string | null; stripe_session_id: string | null }) {
+  return r.method === "cash" || (r.stripe_session_id?.startsWith("cash:") ?? false);
+}
+
 /** Only real Stripe checkout sessions (cs_...) have a dashboard page — cash/bizum
  * batches store a synthetic "cash:..."/"bizum:..." key in the same column. */
 function stripeDashboardUrl(sessionId: string | null) {
