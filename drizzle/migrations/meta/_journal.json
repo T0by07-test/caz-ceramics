@@ -15,6 +15,13 @@
       "when": 1789404846623,
       "tag": "0001_void_cash_payment_on_card_success",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789545765226,
+      "tag": "0002_admin_unconfirm_cash_payment",
+      "breakpoints": true
     }
   ]
 }
