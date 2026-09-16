@@ -57,7 +57,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { MultiTeacherSelect } from "@/components/finance/MultiTeacherSelect";
 import { RouteGuard } from "@/components/RouteGuard";
-import { monthOrder } from "@/lib/finance/dates";
+import { MONTH_NAMES_ES, monthLabelToIndex } from "@/lib/finance/dates";
 import { ExportDialog } from "@/components/finance/ExportDialog";
 import { AppPaymentsPanel } from "@/components/finance/AppPaymentsPanel";
 import { tbl, type CommissionRateRow } from "@/lib/finance/db";
@@ -188,8 +188,26 @@ const METHOD_LABELS: Record<string, string> = {
   R: "Revolut",
 };
 
+/** Índice de mes (0-11) de una etiqueta libre ("SEPTIEMBRE") o ISO ("2026-09"). */
+function monthIndexOf(month: string | null | undefined): number | null {
+  if (!month) return null;
+  const iso = /^\d{4}-(\d{2})$/.exec(month.trim());
+  if (iso) {
+    const i = Number(iso[1]) - 1;
+    return i >= 0 && i <= 11 ? i : null;
+  }
+  return monthLabelToIndex(month);
+}
+
+/** Etiqueta única por mes natural: junta "SEPTIEMBRE" y "2026-09" en una sola. */
+function canonicalMonth(month: string | null | undefined): string | null {
+  const i = monthIndexOf(month);
+  if (i === null) return month?.trim() ? month.trim().toUpperCase() : null;
+  return MONTH_NAMES_ES[i].toUpperCase();
+}
+
 function currentMonthLabel() {
-  return new Date().toLocaleDateString("es-ES", { month: "long" }).toUpperCase();
+  return MONTH_NAMES_ES[new Date().getMonth()].toUpperCase();
 }
 
 function formatDateOrMonth(entryDate: string | null, month: string | null): string {
@@ -197,9 +215,11 @@ function formatDateOrMonth(entryDate: string | null, month: string | null): stri
     const d = new Date(entryDate + "T00:00:00");
     return d.toLocaleDateString("es-ES", { day: "numeric", month: "short" });
   }
-  if (month) return month.slice(0, 3).toLowerCase();
+  const canon = canonicalMonth(month);
+  if (canon) return canon.slice(0, 3).toLowerCase();
   return "—";
 }
+
 
 function rowBg(status: string | null, collector: string[] | null): string {
   const isSofi = (collector ?? []).some((c) => c?.toLowerCase() === "sofi");
@@ -404,14 +424,17 @@ function AdminLedgerPage() {
   );
   const months = useMemo(
     () =>
-      Array.from(new Set(rows.map((r) => r.month).filter((m): m is string => !!m))).sort((a, b) => {
-        const oa = monthOrder(a);
-        const ob = monthOrder(b);
+      Array.from(
+        new Set(rows.map((r) => canonicalMonth(r.month)).filter((m): m is string => !!m)),
+      ).sort((a, b) => {
+        const oa = monthIndexOf(a) ?? 99;
+        const ob = monthIndexOf(b) ?? 99;
         if (oa !== ob) return oa - ob;
         return a.localeCompare(b);
       }),
     [rows],
   );
+
   const methods = useMemo(
     () => Array.from(new Set(rows.map((r) => r.method).filter((m): m is string => !!m))).sort(),
     [rows],
@@ -430,7 +453,9 @@ function AdminLedgerPage() {
       if (statusFilter !== ALL && r.status !== statusFilter) return false;
       if (methodFilter !== ALL && r.method !== methodFilter) return false;
       if (categoryFilter !== ALL && r.category !== categoryFilter) return false;
-      if (monthFilter !== ALL && r.month !== monthFilter) return false;
+      if (monthFilter !== ALL && canonicalMonth(r.month) !== canonicalMonth(monthFilter))
+        return false;
+
       if (teacherFilter !== ALL && !(r.collector ?? []).includes(teacherFilter)) return false;
       if (q) {
         const hay = [r.student_name, r.notes].some((v) => (v ?? "").toLowerCase().includes(q));
@@ -508,18 +533,28 @@ function AdminLedgerPage() {
       .map(({ r }) => r);
   }, [rows, search, statusFilter, methodFilter, categoryFilter, monthFilter, teacherFilter, sort]);
 
+  // Las cifras de arriba y el reparto miran el mes completo: el resto de filtros
+  // (estado, método, categoría, profesora, búsqueda) sólo afecta a la tabla.
+  const monthRows = useMemo(
+    () =>
+      monthFilter === ALL
+        ? rows
+        : rows.filter((r) => canonicalMonth(r.month) === canonicalMonth(monthFilter)),
+    [rows, monthFilter],
+  );
+
   const totals = useMemo(() => {
     let cobrado = 0;
     let pendiente = 0;
-    for (const r of filtered) {
+    for (const r of monthRows) {
       const cents = r.amount_cents ?? 0;
       if (r.status === "Pagado") cobrado += cents;
       else if (r.status === "Pendiente") pendiente += cents;
     }
-    return { cobrado, pendiente, count: filtered.length };
-  }, [filtered]);
+    return { cobrado, pendiente, count: monthRows.length };
+  }, [monthRows]);
 
-  // Per-teacher commission on filtered PAID rows (owner "Cande" excluded).
+  // Per-teacher commission on the month's PAID rows (owner "Cande" excluded).
   // Matches computeMonth() logic: split amount equally across collectors,
   // then apply per-entry override or teacher default rate.
   const teacherPayouts = useMemo(() => {
@@ -527,8 +562,9 @@ function AdminLedgerPage() {
     const acc: Record<string, number> = {};
     let grossWithTeachers = 0;
     let totalCommission = 0;
-    for (const r of filtered) {
+    for (const r of monthRows) {
       if (r.status !== "Pagado") continue;
+
       const teachers = (r.collector ?? []).filter((t) => t && t !== "Cande");
       if (teachers.length === 0) continue;
       const amount = r.amount_cents ?? 0;
@@ -549,9 +585,12 @@ function AdminLedgerPage() {
       totalGross: Math.round(grossWithTeachers),
       candeShare: Math.round(grossWithTeachers - totalCommission),
     };
-  }, [filtered, rates]);
+  }, [monthRows, rates]);
+
+  const monthSuffix = monthFilter === ALL ? "" : ` · ${monthFilter.toLowerCase()}`;
 
   const col = (key: ColumnKey) => visibleCols.has(key);
+
 
   return (
     <div className="flex flex-col gap-6">
@@ -581,23 +620,24 @@ function AdminLedgerPage() {
       <div className="grid gap-3 sm:grid-cols-3">
         <Card className="">
           <CardContent className="p-4">
-            <p className="text-label text-muted-foreground">Cobrado</p>
+            <p className="text-label text-muted-foreground">Cobrado{monthSuffix}</p>
             <p className="mt-1 text-2xl font-normal text-success">{formatEur(totals.cobrado)}</p>
           </CardContent>
         </Card>
         <Card className="">
           <CardContent className="p-4">
-            <p className="text-label text-muted-foreground">Pendiente</p>
+            <p className="text-label text-muted-foreground">Pendiente{monthSuffix}</p>
             <p className="mt-1 text-2xl font-normal text-warning">{formatEur(totals.pendiente)}</p>
           </CardContent>
         </Card>
         <Card className="">
           <CardContent className="p-4">
-            <p className="text-label text-muted-foreground">Entradas</p>
+            <p className="text-label text-muted-foreground">Entradas{monthSuffix}</p>
             <p className="mt-1 text-2xl font-normal">{totals.count}</p>
           </CardContent>
         </Card>
       </div>
+
 
       <AppPaymentsPanel />
 
@@ -608,13 +648,12 @@ function AdminLedgerPage() {
             <div className="flex items-baseline justify-between gap-3">
               <p className="text-label text-muted-foreground">
                 Reparto de ingresos
-                {monthFilter !== ALL && (
-                  <span className="ml-1 normal-case text-muted-foreground/70">
-                    · {monthFilter.toLowerCase()}
-                  </span>
+                {monthSuffix && (
+                  <span className="ml-1 normal-case text-muted-foreground/70">{monthSuffix}</span>
                 )}
               </p>
-              <span className="text-xs text-muted-foreground">según filtros · sólo Pagado</span>
+              <span className="text-xs text-muted-foreground">todo el mes · sólo Pagado</span>
+
             </div>
             <ul className="mt-2 divide-y divide-border">
               <li className="flex items-center justify-between py-1.5 text-sm">
