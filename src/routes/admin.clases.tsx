@@ -648,6 +648,14 @@ function AdminClassDrawer({
                                 {formatSlot(firstSlot.weekday, firstSlot.start_time)}
                               </div>
                             ) : null}
+                            {(s.guests ?? 0) > 0 ? (
+                              <div className="text-xs text-foreground">
+                                +{s.guests} acompañante{(s.guests ?? 0) > 1 ? "s" : ""}
+                                {(s.guest_names ?? []).filter(Boolean).length > 0
+                                  ? `: ${(s.guest_names ?? []).filter(Boolean).join(", ")}`
+                                  : ""}
+                              </div>
+                            ) : null}
                             {tags.length > 0 ? (
                               <div className="mt-1 flex flex-wrap gap-1">
                                 {tags.map((t) => (
