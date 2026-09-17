@@ -49,6 +49,8 @@ export type Database = {
           cancelled_at: string | null
           class_id: string
           created_at: string
+          guest_names: string[]
+          guests: number
           id: string
           source: string
           status: string
@@ -58,6 +60,8 @@ export type Database = {
           cancelled_at?: string | null
           class_id: string
           created_at?: string
+          guest_names?: string[]
+          guests?: number
           id?: string
           source: string
           status?: string
@@ -67,6 +71,8 @@ export type Database = {
           cancelled_at?: string | null
           class_id?: string
           created_at?: string
+          guest_names?: string[]
+          guests?: number
           id?: string
           source?: string
           status?: string
@@ -939,7 +945,12 @@ export type Database = {
         }[]
       }
       book_class: {
-        Args: { p_class_id: string; p_source: string }
+        Args: {
+          p_class_id: string
+          p_guest_names?: string[]
+          p_guests?: number
+          p_source: string
+        }
         Returns: {
           booking_id: string
           status: string
@@ -972,6 +983,7 @@ export type Database = {
           type: string
         }[]
       }
+      class_seats_taken: { Args: { p_class_id: string }; Returns: number }
       confirm_drop_in_booking: {
         Args: { p_session_id: string }
         Returns: undefined
