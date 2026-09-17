@@ -93,7 +93,7 @@ export function useClassesInRange(
       } else {
         const { data: bookings, error: bErr } = await supabase
           .from("bookings")
-          .select("class_id, status")
+          .select("class_id, status, guests")
           .in("class_id", ids)
           .in("status", ACTIVE_BOOKING_STATUSES as unknown as string[]);
         if (bErr) {
@@ -101,8 +101,9 @@ export function useClassesInRange(
           setLoading(false);
           return;
         }
+        // A booking can bring +1/+2 companions: every guest occupies a seat.
         counts = (bookings ?? []).reduce((acc, b) => {
-          acc.set(b.class_id, (acc.get(b.class_id) ?? 0) + 1);
+          acc.set(b.class_id, (acc.get(b.class_id) ?? 0) + 1 + (b.guests ?? 0));
           return acc;
         }, new Map<string, number>());
       }

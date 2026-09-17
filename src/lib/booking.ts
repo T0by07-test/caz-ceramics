@@ -29,6 +29,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   NOT_OWNER: "No puedes cancelar una reserva que no es tuya.",
   ALREADY_BOOKED: "Ya tienes una reserva en esta clase.",
   NO_MAKEUPS_AVAILABLE: "No tienes recuperaciones disponibles.",
+  INVALID_GUESTS: "Puedes traer como máximo 2 acompañantes.",
 };
 
 export function friendlyError(raw: string | undefined | null): string {
@@ -39,10 +40,17 @@ export function friendlyError(raw: string | undefined | null): string {
   return ERROR_MESSAGES[code] ?? raw;
 }
 
-export async function bookClass(classId: string, source: BookSource): Promise<BookResult> {
+export async function bookClass(
+  classId: string,
+  source: BookSource,
+  guests = 0,
+  guestNames: string[] = [],
+): Promise<BookResult> {
   const { data, error } = await supabase.rpc("book_class", {
     p_class_id: classId,
     p_source: source,
+    p_guests: guests,
+    p_guest_names: guestNames,
   });
   if (error) throw new Error(friendlyError(error.message));
   const row = Array.isArray(data) ? data[0] : data;
