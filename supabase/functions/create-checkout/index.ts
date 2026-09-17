@@ -137,7 +137,7 @@ Deno.serve(async (req) => {
     };
 
     let bookingIds: string[] = [];
-    let bookings: Array<{ id: string; student_id: string; source: string; status: string; class_id: string }> = [];
+    let bookings: Array<{ id: string; student_id: string; source: string; status: string; class_id: string; guests?: number | null }> = [];
     let audienceByClass = new Map<string, string | null | undefined>();
     let adultCount = 0;
     let kidsCount = 0;
@@ -153,7 +153,7 @@ Deno.serve(async (req) => {
       // Verify every booking belongs to this user and is a reserved drop-in
       const { data: fetchedBookings, error: bErr } = await admin
         .from("bookings")
-        .select("id, student_id, source, status, class_id")
+        .select("id, student_id, source, status, class_id, guests")
         .in("id", bookingIds);
       if (bErr || !fetchedBookings || fetchedBookings.length !== bookingIds.length) {
         return jsonResponse({ error: "Booking not found" }, 404);
@@ -187,13 +187,18 @@ Deno.serve(async (req) => {
         .select("id, audience")
         .in("id", classIds);
       audienceByClass = new Map((classes ?? []).map((c) => [c.id, c.audience]));
-      kidsCount = bookings.filter((b) => audienceByClass.get(b.class_id) === "kids").length;
-      adultCount = bookings.length - kidsCount;
-      dropInCount = bookings.length;
+      // Each companion (+1 / +2) takes a seat and is charged like the student's own seat.
+      for (const b of bookings) {
+        const seats = 1 + (b.guests ?? 0);
+        if (audienceByClass.get(b.class_id) === "kids") kidsCount += seats;
+        else adultCount += seats;
+      }
+      dropInCount = adultCount + kidsCount;
       metadata.bookingIds = bookingIds.join(",");
       metadata.classCount = String(bookingIds.length);
       metadata.adultCount = String(adultCount);
       metadata.kidsCount = String(kidsCount);
+      metadata.guestSeats = String(dropInCount - bookings.length);
     } else {
       return jsonResponse({ error: "Invalid purpose" }, 400);
     }
