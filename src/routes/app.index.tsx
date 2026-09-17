@@ -33,7 +33,7 @@ import { useMyBookedClassIds } from "@/hooks/useMyBookedClassIds";
 import { useMyPlan } from "@/hooks/useMyPlan";
 import { useMyMakeups } from "@/hooks/useMyMakeups";
 import { bookClass, bookMakeup } from "@/lib/booking";
-import { formatEuros, selectionPriceCents } from "@/lib/pricing";
+import { formatEuros, selectionPriceCents, selectionPriceCentsWithGuests } from "@/lib/pricing";
 
 import { studioClosureFor } from "@/lib/closures";
 import { joinWaitlist } from "@/lib/waitlist";
@@ -112,7 +112,8 @@ function CalendarioPage() {
       });
       return;
     }
-    if (c.booked_count >= c.capacity_max) {
+    // Companions take up seats too, so a +1/+2 needs that many free places.
+    if (c.booked_count + 1 + guests > c.capacity_max) {
       setFull(c);
       return;
     }
@@ -125,6 +126,13 @@ function CalendarioPage() {
   };
 
   const handleConfirm = async () => {
+    const tooFull = selectedClasses.find((c) => c.booked_count + 1 + guests > c.capacity_max);
+    if (tooFull) {
+      toast.error("No hay plazas para tus acompañantes", {
+        description: `${formatLongDate(tooFull.date)} · ${formatTimeRange(tooFull.start_time, tooFull.end_time)}`,
+      });
+      return;
+    }
     if (selectedClasses.length === 0) return;
     setSubmitting(true);
     const ordered = [...selectedClasses].sort((a, b) =>
@@ -177,6 +185,12 @@ function CalendarioPage() {
         <SelectionBar
           classes={selectedClasses}
           submitting={submitting}
+          guests={guests}
+          guestNames={guestNames}
+          onGuestsChange={setGuests}
+          onGuestNameChange={(i, value) =>
+            setGuestNames((prev) => prev.map((n, idx) => (idx === i ? value : n)))
+          }
           onClear={() => setSelectedIds(new Set())}
           onConfirm={() => void handleConfirm()}
         />
@@ -186,8 +200,12 @@ function CalendarioPage() {
 
       <DropInPaymentFlow
         classes={pendingPaymentClasses}
+        guests={guests}
+        guestNames={guestNames.slice(0, guests).map((n) => n.trim())}
         onClose={() => {
           setPendingPaymentClasses([]);
+          setGuests(0);
+          setGuestNames(["", ""]);
           void refresh();
           void refreshMyBookings();
         }}
@@ -199,23 +217,32 @@ function CalendarioPage() {
 function SelectionBar({
   classes,
   submitting,
+  guests,
+  guestNames,
+  onGuestsChange,
+  onGuestNameChange,
   onClear,
   onConfirm,
 }: {
   classes: ClassWithCount[];
   submitting: boolean;
+  guests: number;
+  guestNames: string[];
+  onGuestsChange: (n: number) => void;
+  onGuestNameChange: (index: number, value: string) => void;
   onClear: () => void;
   onConfirm: () => void;
 }) {
   const count = classes.length;
-  const totalLabel = formatEuros(selectionPriceCents(classes));
+  const totalLabel = formatEuros(selectionPriceCentsWithGuests(classes, guests));
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur sm:px-8">
-      <div className="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
+      <div className="mx-auto flex max-w-5xl flex-col gap-3">
         <div className="flex min-w-0 flex-1 items-start gap-3">
           <div className="min-w-0 flex-1">
             <div className="text-[15px] text-foreground">
               {count === 1 ? "1 clase seleccionada" : `${count} clases seleccionadas`}
+              {guests > 0 ? ` · ${guests === 1 ? "+1 acompañante" : "+2 acompañantes"}` : ""}
               {` · ${totalLabel}`}
             </div>
             <div className="truncate text-sm text-muted-foreground">
@@ -236,13 +263,43 @@ function SelectionBar({
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <Button
-          onClick={onConfirm}
-          disabled={submitting}
-          className="w-full shrink-0 px-6 py-3 sm:w-auto sm:px-8 sm:py-4"
-        >
-          {submitting ? "Preparando…" : `Elegir pago · ${totalLabel}`}
-        </Button>
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">¿Vienes acompañada?</span>
+            {[0, 1, 2].map((n) => (
+              <Button
+                key={n}
+                type="button"
+                size="sm"
+                variant={guests === n ? "default" : "secondary"}
+                onClick={() => onGuestsChange(n)}
+              >
+                {n === 0 ? "Solo yo" : `+${n}`}
+              </Button>
+            ))}
+          </div>
+          {guests > 0 ? (
+            <div className="flex flex-1 flex-col gap-2 sm:flex-row">
+              {Array.from({ length: guests }).map((_, i) => (
+                <Input
+                  key={i}
+                  value={guestNames[i] ?? ""}
+                  onChange={(e) => onGuestNameChange(i, e.target.value)}
+                  placeholder={`Nombre acompañante ${i + 1} (opcional)`}
+                  className="sm:max-w-[220px]"
+                />
+              ))}
+            </div>
+          ) : null}
+          <Button
+            onClick={onConfirm}
+            disabled={submitting}
+            className="w-full shrink-0 px-6 py-3 sm:ml-auto sm:w-auto sm:px-8 sm:py-4"
+          >
+            {submitting ? "Preparando…" : `Elegir pago · ${totalLabel}`}
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -373,9 +430,13 @@ function WaitlistSheet({
 
 function DropInPaymentFlow({
   classes,
+  guests,
+  guestNames,
   onClose,
 }: {
   classes: ClassWithCount[];
+  guests: number;
+  guestNames: string[];
   onClose: () => void;
 }) {
   const [methodOpen, setMethodOpen] = useState(false);
@@ -398,7 +459,7 @@ function DropInPaymentFlow({
   );
   const count = activeClasses.length;
   const paidClasses = reservedClasses.length > 0 ? reservedClasses : activeClasses;
-  const totalLabel = formatEuros(selectionPriceCents(paidClasses));
+  const totalLabel = formatEuros(selectionPriceCentsWithGuests(paidClasses, guests));
 
   const { count: makeupCount, refresh: refreshMakeups } = useMyMakeups();
   const usableMakeups = Math.min(makeupCount, count);
@@ -493,7 +554,7 @@ function DropInPaymentFlow({
 
     for (const c of ordered) {
       try {
-        const res = await bookClass(c.id, "drop_in");
+        const res = await bookClass(c.id, "drop_in", guests, guestNames);
         createdIds.push(res.booking_id);
         createdClasses.push(c);
       } catch (err) {
