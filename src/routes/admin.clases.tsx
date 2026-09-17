@@ -443,6 +443,8 @@ type BookedStudent = {
   id: string;
   status: string;
   source: string;
+  guests: number | null;
+  guest_names: string[] | null;
   profiles: {
     name: string | null;
     surname: string | null;
@@ -482,7 +484,7 @@ function AdminClassDrawer({
     const { data, error } = await supabase
       .from("bookings")
       .select(
-        "id, status, source, profiles:student_id ( name, surname, email, profile_tags(tags(id,name)), recurring_slots(id,weekday,start_time) )",
+        "id, status, source, guests, guest_names, profiles:student_id ( name, surname, email, profile_tags(tags(id,name)), recurring_slots(id,weekday,start_time) )",
       )
       .eq("class_id", classId)
       .in("status", ["reserved", "confirmed", "attended"]);
@@ -644,6 +646,14 @@ function AdminClassDrawer({
                             {firstSlot ? (
                               <div className="text-xs text-muted-foreground">
                                 {formatSlot(firstSlot.weekday, firstSlot.start_time)}
+                              </div>
+                            ) : null}
+                            {(s.guests ?? 0) > 0 ? (
+                              <div className="text-xs text-foreground">
+                                +{s.guests} acompañante{(s.guests ?? 0) > 1 ? "s" : ""}
+                                {(s.guest_names ?? []).filter(Boolean).length > 0
+                                  ? `: ${(s.guest_names ?? []).filter(Boolean).join(", ")}`
+                                  : ""}
                               </div>
                             ) : null}
                             {tags.length > 0 ? (

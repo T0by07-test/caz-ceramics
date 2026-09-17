@@ -29,6 +29,13 @@
       "when": 1789545782779,
       "tag": "0003_admin_unconfirm_keep_booking",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789648710504,
+      "tag": "0004_booking_guests",
+      "breakpoints": true
     }
   ]
 }

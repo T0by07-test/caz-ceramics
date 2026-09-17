@@ -32,3 +32,15 @@ export function formatEuros(cents: number): string {
   const value = cents / 100;
   return `${Number.isInteger(value) ? value.toFixed(0) : value.toFixed(2).replace(".", ",")} €`;
 }
+
+/**
+ * Price a selection where the student brings companions (+1 / +2): each guest
+ * occupies a seat and is charged exactly like the student's own seat.
+ */
+export function selectionPriceCentsWithGuests(
+  items: { audience?: string | null }[],
+  guests: number,
+): number {
+  const per = 1 + Math.max(0, guests);
+  return selectionPriceCents(items.flatMap((i) => Array.from({ length: per }, () => i)));
+}
