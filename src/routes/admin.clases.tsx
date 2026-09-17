@@ -443,6 +443,8 @@ type BookedStudent = {
   id: string;
   status: string;
   source: string;
+  guests: number | null;
+  guest_names: string[] | null;
   profiles: {
     name: string | null;
     surname: string | null;
@@ -482,7 +484,7 @@ function AdminClassDrawer({
     const { data, error } = await supabase
       .from("bookings")
       .select(
-        "id, status, source, profiles:student_id ( name, surname, email, profile_tags(tags(id,name)), recurring_slots(id,weekday,start_time) )",
+        "id, status, source, guests, guest_names, profiles:student_id ( name, surname, email, profile_tags(tags(id,name)), recurring_slots(id,weekday,start_time) )",
       )
       .eq("class_id", classId)
       .in("status", ["reserved", "confirmed", "attended"]);
