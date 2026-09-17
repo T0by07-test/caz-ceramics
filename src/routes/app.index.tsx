@@ -33,7 +33,8 @@ import { useMyBookedClassIds } from "@/hooks/useMyBookedClassIds";
 import { useMyPlan } from "@/hooks/useMyPlan";
 import { useMyMakeups } from "@/hooks/useMyMakeups";
 import { bookClass, bookMakeup } from "@/lib/booking";
-import { formatEuros, selectionPriceCents, selectionPriceCentsWithGuests } from "@/lib/pricing";
+import { formatEuros, selectionPriceCentsWithGuests } from "@/lib/pricing";
+import { Input } from "@/components/ui/input";
 
 import { studioClosureFor } from "@/lib/closures";
 import { joinWaitlist } from "@/lib/waitlist";
@@ -71,6 +72,9 @@ function CalendarioPage() {
 
   const [full, setFull] = useState<ClassWithCount | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  // Companions (+1 / +2) applied to every selected class of this booking.
+  const [guests, setGuests] = useState(0);
+  const [guestNames, setGuestNames] = useState<string[]>(["", ""]);
   const [submitting, setSubmitting] = useState(false);
   const [pendingPaymentClasses, setPendingPaymentClasses] = useState<ClassWithCount[]>([]);
   const { classes, loading, refresh } = useClassesInRange(range, "student");
@@ -578,7 +582,7 @@ function DropInPaymentFlow({
     }
     if (createdIds.length === 0) throw new Error("No se pudo preparar ninguna reserva.");
     return createdIds;
-  }, [bookingIds, activeClasses]);
+  }, [bookingIds, activeClasses, guests, guestNames]);
 
   const handlePlanBooking = async () => {
     if (count === 0) return;
