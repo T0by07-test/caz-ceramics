@@ -84,6 +84,8 @@ export function AgendaList({
                         {formatTimeRange(c.start_time, c.end_time)}
                       </div>
                       <div className="text-xs text-muted-foreground">
+                        {c.teacher ?? "Sin profe"}
+                        {" · "}
                         {cancelled ? "Cancelada" : past ? "Ya pasó" : capacityLabel(level)}
                         {c.audience === "kids" ? " · Clase infantil" : ""}
                       </div>

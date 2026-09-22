@@ -115,9 +115,8 @@ function SignupPage() {
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="password">Contraseña</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 placeholder="Mínimo 6 caracteres"
                 required
                 value={password}

@@ -71,9 +71,8 @@ function ResetPasswordPage() {
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-2">
               <Label htmlFor="password">Nueva contraseña</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 placeholder="••••••••"
                 required
                 minLength={8}
@@ -84,9 +83,8 @@ function ResetPasswordPage() {
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="confirm">Repite la contraseña</Label>
-              <Input
+              <PasswordInput
                 id="confirm"
-                type="password"
                 placeholder="••••••••"
                 required
                 minLength={8}

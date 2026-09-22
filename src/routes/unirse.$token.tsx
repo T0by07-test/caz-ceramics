@@ -210,9 +210,8 @@ function UnirsePage() {
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="password">Contraseña</Label>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               required
               minLength={6}
               value={password}
