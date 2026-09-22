@@ -36,6 +36,13 @@
       "when": 1789648710504,
       "tag": "0004_booking_guests",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790064554479,
+      "tag": "0005_void_pending_payments_on_cancel",
+      "breakpoints": true
     }
   ]
 }
