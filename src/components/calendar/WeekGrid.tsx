@@ -114,6 +114,9 @@ export function WeekGrid({
                             {c.booked_count}/{c.capacity_max}
                           </span>
                         </span>
+                        <span className="block truncate pl-3.5 text-[11px] leading-tight text-muted-foreground">
+                          {c.teacher ?? "Sin profe"}
+                        </span>
                         {c.audience === "kids" ? (
                           <span className="block truncate pl-3.5 text-[11px] leading-tight text-muted-foreground">
                             niños

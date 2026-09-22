@@ -210,6 +210,9 @@ function DesktopCells({ cells, byDay, onSelectClass, selectedIds, disablePast }:
                           </span>
 
                         </span>
+                        <span className="block truncate pl-3 text-[11px] text-muted-foreground">
+                          {c.teacher ?? "Sin profe"}
+                        </span>
                         {!cancelled && level === "full" ? (
                            <span className="block pl-3 text-[11px] font-medium text-destructive">
                             completa
