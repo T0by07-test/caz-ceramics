@@ -184,6 +184,10 @@ function AdminStudentsPage() {
   const [roleFilter, setRoleFilter] = useState<"all" | Role>("all");
   const [tagFilter, setTagFilter] = useState<"all" | string>("all");
   const [estadoFilter, setEstadoFilter] = useState<"all" | Estado>("all");
+  // Month the bookings/estado columns refer to ("YYYY-MM"), defaulting to the current month.
+  const [selectedMonth, setSelectedMonth] = useState(() =>
+    toIsoDate(startOfMonth(new Date())).slice(0, 7),
+  );
   const [showArchived, setShowArchived] = useState(false);
   const [sortKey, setSortKey] = useState<MemberSortKey>("name");
   const [sortDir, setSortDir] = useState<MemberSortDir>("asc");
