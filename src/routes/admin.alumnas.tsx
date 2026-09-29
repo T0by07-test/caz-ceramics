@@ -262,7 +262,7 @@ function AdminStudentsPage() {
         .from("bookings")
         .select("student_id, classes!inner(date)")
         .gte("classes.date", monthStart)
-        .lte("classes.date", nextMonthEndIso)
+        .lte("classes.date", monthEndIso)
         .in("status", ["reserved", "confirmed", "attended"]),
       supabase
         .from("payments")
