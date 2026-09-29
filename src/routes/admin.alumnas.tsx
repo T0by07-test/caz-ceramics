@@ -184,6 +184,10 @@ function AdminStudentsPage() {
   const [roleFilter, setRoleFilter] = useState<"all" | Role>("all");
   const [tagFilter, setTagFilter] = useState<"all" | string>("all");
   const [estadoFilter, setEstadoFilter] = useState<"all" | Estado>("all");
+  // Month the bookings/estado columns refer to ("YYYY-MM"), defaulting to the current month.
+  const [selectedMonth, setSelectedMonth] = useState(() =>
+    toIsoDate(startOfMonth(new Date())).slice(0, 7),
+  );
   const [showArchived, setShowArchived] = useState(false);
   const [sortKey, setSortKey] = useState<MemberSortKey>("name");
   const [sortDir, setSortDir] = useState<MemberSortDir>("asc");
@@ -213,13 +217,11 @@ function AdminStudentsPage() {
 
   const load = async () => {
     setLoading(true);
-    const now = new Date();
-    const monthStart = toIsoDate(startOfMonth(now));
-    
-    // A fin de mes las reservas ya son del mes siguiente: miramos también ese
-    // mes para no mostrar "Sin reservas" cuando en realidad ya han reservado.
-    const nextMonthRef = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    const nextMonthEndIso = toIsoDate(endOfMonth(nextMonthRef));
+    // Bookings, plan and "actividad" columns all refer to the selected month.
+    const [selYear, selMonthIdx] = selectedMonth.split("-").map(Number);
+    const monthRef = new Date(selYear, selMonthIdx - 1, 1);
+    const monthStart = toIsoDate(startOfMonth(monthRef));
+    const monthEndIso = toIsoDate(endOfMonth(monthRef));
     type ProfileRow = {
       id: string;
       role: string | null;
@@ -260,7 +262,7 @@ function AdminStudentsPage() {
         .from("bookings")
         .select("student_id, classes!inner(date)")
         .gte("classes.date", monthStart)
-        .lte("classes.date", nextMonthEndIso)
+        .lte("classes.date", monthEndIso)
         .in("status", ["reserved", "confirmed", "attended"]),
       supabase
         .from("payments")
@@ -277,8 +279,7 @@ function AdminStudentsPage() {
     for (const m of makeups ?? [])
       makeupCount.set(m.student_id, (makeupCount.get(m.student_id) ?? 0) + 1);
     type BookingRow = { student_id: string; classes: { date: string } };
-    // Mostramos todas las reservas de este mes y del mes siguiente por alumna:
-    // quien solo ha reservado el mes que viene también aparece con sus clases.
+    // Reservas del mes seleccionado en el filtro (por defecto, el mes actual).
     const activeBookings = (monthBookings ?? []) as BookingRow[];
     const bookedThisMonth = new Set(activeBookings.map((b) => b.student_id));
     type PaymentRow = {
@@ -351,6 +352,20 @@ function AdminStudentsPage() {
 
   useEffect(() => {
     void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedMonth]);
+
+  // Month options: previous, current and the next two months, labelled in Spanish.
+  const monthOptions = useMemo(() => {
+    const now = new Date();
+    return [-1, 0, 1, 2].map((offset) => {
+      const ref = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+      const value = toIsoDate(startOfMonth(ref)).slice(0, 7);
+      const label = new Intl.DateTimeFormat("es-ES", { month: "long", year: "numeric" }).format(
+        ref,
+      );
+      return { value, label };
+    });
   }, []);
 
   const filtered = useMemo(() => {
@@ -438,6 +453,18 @@ function AdminStudentsPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-full sm:w-44 capitalize" aria-label="Filtrar por mes">
+              <SelectValue placeholder="Mes" />
+            </SelectTrigger>
+            <SelectContent>
+              {monthOptions.map((m) => (
+                <SelectItem key={m.value} value={m.value} className="capitalize">
+                  {m.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as "all" | Role)}>
             <SelectTrigger className="w-full sm:w-40" aria-label="Filtrar por rol">
               <SelectValue placeholder="Rol" />
