@@ -453,6 +453,18 @@ function AdminStudentsPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-full sm:w-44 capitalize" aria-label="Filtrar por mes">
+              <SelectValue placeholder="Mes" />
+            </SelectTrigger>
+            <SelectContent>
+              {monthOptions.map((m) => (
+                <SelectItem key={m.value} value={m.value} className="capitalize">
+                  {m.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as "all" | Role)}>
             <SelectTrigger className="w-full sm:w-40" aria-label="Filtrar por rol">
               <SelectValue placeholder="Rol" />
