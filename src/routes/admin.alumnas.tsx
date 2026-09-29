@@ -217,13 +217,11 @@ function AdminStudentsPage() {
 
   const load = async () => {
     setLoading(true);
-    const now = new Date();
-    const monthStart = toIsoDate(startOfMonth(now));
-    
-    // A fin de mes las reservas ya son del mes siguiente: miramos también ese
-    // mes para no mostrar "Sin reservas" cuando en realidad ya han reservado.
-    const nextMonthRef = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    const nextMonthEndIso = toIsoDate(endOfMonth(nextMonthRef));
+    // Bookings, plan and "actividad" columns all refer to the selected month.
+    const [selYear, selMonthIdx] = selectedMonth.split("-").map(Number);
+    const monthRef = new Date(selYear, selMonthIdx - 1, 1);
+    const monthStart = toIsoDate(startOfMonth(monthRef));
+    const monthEndIso = toIsoDate(endOfMonth(monthRef));
     type ProfileRow = {
       id: string;
       role: string | null;
