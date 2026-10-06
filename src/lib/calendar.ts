@@ -34,7 +34,12 @@ export function addMonths(d: Date, n: number): Date {
 }
 
 /** Default month shown in public and student calendars (September 2026). */
-export const DEFAULT_CALENDAR_MONTH = new Date(2026, 8, 1);
+/** Default calendar anchor: first day of the current month (local time). */
+export const DEFAULT_CALENDAR_MONTH = new Date(
+  new Date().getFullYear(),
+  new Date().getMonth(),
+  1,
+);
 
 export function toIsoDate(d: Date): string {
   const y = d.getFullYear();
