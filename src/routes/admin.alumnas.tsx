@@ -264,10 +264,14 @@ function AdminStudentsPage() {
         .gte("classes.date", monthStart)
         .lte("classes.date", monthEndIso)
         .in("status", ["reserved", "confirmed", "attended"]),
+      // Solo pagos de las reservas activas del mes seleccionado (no de otros meses).
       supabase
         .from("payments")
-        .select("student_id, status, method, created_at")
+        .select("student_id, status, method, created_at, bookings!inner(status, classes!inner(date))")
         .gt("amount_cents", 0)
+        .gte("bookings.classes.date", monthStart)
+        .lte("bookings.classes.date", monthEndIso)
+        .in("bookings.status", ["reserved", "confirmed", "attended"])
         .order("created_at", { ascending: true }),
 
     ]);
