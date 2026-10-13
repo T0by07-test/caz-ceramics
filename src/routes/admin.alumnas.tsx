@@ -304,10 +304,18 @@ function AdminStudentsPage() {
           label: `Pagado · ${paymentMethodLabel(p.method)}`,
         });
       } else if (p.status === "pending" && current?.tone !== "paid") {
-        paymentByStudent.set(p.student_id, {
-          tone: "pending",
-          label: `Pendiente · ${paymentMethodLabel(p.method)}`,
-        });
+        if (p.method === "cash") {
+          paymentByStudent.set(p.student_id, {
+            tone: "pending",
+            label: "Pendiente · Efectivo",
+          });
+        } else if (!current) {
+          // Tarjeta pendiente = el cobro nunca se completó; no es un pago real.
+          paymentByStudent.set(p.student_id, {
+            tone: "none",
+            label: "Pago no completado",
+          });
+        }
       } else if (!current) {
         paymentByStudent.set(p.student_id, { tone: "none", label: "Pago no completado" });
       }
