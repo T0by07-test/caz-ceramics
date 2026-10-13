@@ -589,6 +589,25 @@ function AdminLedgerPage() {
 
   const monthSuffix = monthFilter === ALL ? "" : ` · ${monthFilter.toLowerCase()}`;
 
+  /** Mes ISO (YYYY-MM) del filtro elegido: "OCTUBRE" y "2026-10" son el mismo mes,
+   * y el panel de pagos de la app tiene que seguir a este filtro. */
+  const selectedIsoMonth = useMemo(() => {
+    if (monthFilter === ALL) return null;
+    const idx = monthIndexOf(monthFilter);
+    if (idx === null) return null;
+    const mm = String(idx + 1).padStart(2, "0");
+    let year: string | null = null;
+    for (const r of rows) {
+      if (canonicalMonth(r.month) !== canonicalMonth(monthFilter)) continue;
+      const src = /^\d{4}-\d{2}$/.test((r.month ?? "").trim())
+        ? (r.month as string)
+        : (r.entry_date ?? "");
+      const y = src.slice(0, 4);
+      if (/^\d{4}$/.test(y) && (!year || y > year)) year = y;
+    }
+    return `${year ?? String(new Date().getFullYear())}-${mm}`;
+  }, [rows, monthFilter]);
+
   const col = (key: ColumnKey) => visibleCols.has(key);
 
 
@@ -639,7 +658,7 @@ function AdminLedgerPage() {
       </div>
 
 
-      <AppPaymentsPanel />
+      <AppPaymentsPanel monthOverride={selectedIsoMonth} />
 
 
       {teacherPayouts.perTeacher.length > 0 && (

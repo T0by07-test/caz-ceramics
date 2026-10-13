@@ -85,7 +85,12 @@ const TEST_STUDENT_IDS = new Set([
   "9a95373a-b8ee-44f6-8deb-d9ac705a11ba", // qwe werqw
 ]);
 
-export function AppPaymentsPanel() {
+export function AppPaymentsPanel({
+  monthOverride = null,
+}: {
+  /** Mes ISO (YYYY-MM) que obliga al panel a seguir el filtro de la página. */
+  monthOverride?: string | null;
+} = {}) {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState<string | null>(null);
@@ -265,15 +270,20 @@ export function AppPaymentsPanel() {
     void load();
   }, [load]);
 
+  // Cuando la página tiene un mes elegido, ese mes manda aquí también: así
+  // filtrar por "OCTUBRE" no deja abajo los pagos de la app de otro mes.
+  const override = monthOverride && /^\d{4}-\d{2}$/.test(monthOverride) ? monthOverride : null;
+  const effectiveMonth = override ?? month;
+
   const months = useMemo(() => {
     const set = new Set(groups.map((g) => g.classMonth));
-    set.add(month);
+    set.add(effectiveMonth);
     return Array.from(set).sort().reverse();
-  }, [groups, month]);
+  }, [groups, effectiveMonth]);
 
   const visible = useMemo(
-    () => groups.filter((g) => g.classMonth === month),
-    [groups, month],
+    () => groups.filter((g) => g.classMonth === effectiveMonth),
+    [groups, effectiveMonth],
   );
 
   const totals = useMemo(() => {
@@ -330,21 +340,32 @@ export function AppPaymentsPanel() {
             </p>
           </div>
           <div className="flex items-end gap-2">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="app-payments-month">Mes de las clases</Label>
-              <Select value={month} onValueChange={setMonth}>
-                <SelectTrigger id="app-payments-month" className="w-[180px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {months.map((m) => (
-                    <SelectItem key={m} value={m}>
-                      {monthLabel(m)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {override ? (
+              <div className="flex shrink-0 flex-col gap-1 pb-1.5">
+                <span className="text-label whitespace-nowrap text-muted-foreground">
+                  Mes de las clases
+                </span>
+                <span className="text-sm font-medium whitespace-nowrap capitalize">
+                  {monthLabel(override)}
+                </span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="app-payments-month">Mes de las clases</Label>
+                <Select value={month} onValueChange={setMonth}>
+                  <SelectTrigger id="app-payments-month" className="w-[180px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {months.map((m) => (
+                      <SelectItem key={m} value={m}>
+                        {monthLabel(m)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <Button variant="outline" size="icon" aria-label="Actualizar" onClick={() => void load()}>
               <RefreshCw className="h-4 w-4" />
             </Button>
