@@ -341,9 +341,13 @@ export function AppPaymentsPanel({
           </div>
           <div className="flex items-end gap-2">
             {override ? (
-              <div className="flex flex-col gap-1 pb-1.5">
-                <span className="text-label text-muted-foreground">Mes de las clases</span>
-                <span className="text-sm font-medium capitalize">{monthLabel(override)}</span>
+              <div className="flex shrink-0 flex-col gap-1 pb-1.5">
+                <span className="text-label whitespace-nowrap text-muted-foreground">
+                  Mes de las clases
+                </span>
+                <span className="text-sm font-medium whitespace-nowrap capitalize">
+                  {monthLabel(override)}
+                </span>
               </div>
             ) : (
               <div className="flex flex-col gap-2">
