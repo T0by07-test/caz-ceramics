@@ -33,7 +33,8 @@ import { useMyBookedClassIds } from "@/hooks/useMyBookedClassIds";
 import { useMyPlan } from "@/hooks/useMyPlan";
 import { useMyMakeups } from "@/hooks/useMyMakeups";
 import { bookClass, bookMakeup } from "@/lib/booking";
-import { formatEuros, selectionPriceCentsWithGuests } from "@/lib/pricing";
+import { formatEuros } from "@/lib/pricing";
+import { useSelectionQuote } from "@/hooks/useSelectionQuote";
 import { Input } from "@/components/ui/input";
 
 import { studioClosureFor } from "@/lib/closures";
@@ -238,7 +239,7 @@ function SelectionBar({
   onConfirm: () => void;
 }) {
   const count = classes.length;
-  const totalLabel = formatEuros(selectionPriceCentsWithGuests(classes, guests));
+  const totalLabel = formatEuros(useSelectionQuote(classes, guests));
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur sm:px-8">
       <div className="mx-auto flex max-w-5xl flex-col gap-3">
@@ -463,7 +464,7 @@ function DropInPaymentFlow({
   );
   const count = activeClasses.length;
   const paidClasses = reservedClasses.length > 0 ? reservedClasses : activeClasses;
-  const totalLabel = formatEuros(selectionPriceCentsWithGuests(paidClasses, guests));
+  const totalLabel = formatEuros(useSelectionQuote(paidClasses, guests));
 
   const { count: makeupCount, refresh: refreshMakeups } = useMyMakeups();
   const usableMakeups = Math.min(makeupCount, count);

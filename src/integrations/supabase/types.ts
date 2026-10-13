@@ -937,6 +937,7 @@ export type Database = {
         Args: { p_payment_id: string }
         Returns: undefined
       }
+      adult_tier_cents: { Args: { n: number }; Returns: number }
       auto_cancel_low_attendance: {
         Args: never
         Returns: {
@@ -999,6 +1000,13 @@ export type Database = {
         }
         Returns: string
       }
+      drop_in_amounts: {
+        Args: { p_booking_ids: string[]; p_student: string }
+        Returns: {
+          amount_cents: number
+          booking_id: string
+        }[]
+      }
       enqueue_24h_reminders: { Args: never; Returns: number }
       enqueue_monthly_summary: { Args: never; Returns: number }
       enqueue_notification: {
@@ -1048,6 +1056,10 @@ export type Database = {
         Args: { p_booking_ids: string[] }
         Returns: undefined
       }
+      prior_adult_seats: {
+        Args: { p_exclude: string[]; p_month: string; p_student: string }
+        Returns: number
+      }
       promote_waitlist: { Args: { p_class_id: string }; Returns: undefined }
       public_class_availability: {
         Args: never
@@ -1060,6 +1072,10 @@ export type Database = {
       purchase_plan_cash: {
         Args: { p_month?: string; p_plan_id: string }
         Returns: undefined
+      }
+      quote_my_selection: {
+        Args: { p_class_ids: string[]; p_guests: number }
+        Returns: number
       }
       redeem_invite: { Args: { p_token: string }; Returns: Json }
       resolve_plan_month: { Args: { p_month: string }; Returns: string }
