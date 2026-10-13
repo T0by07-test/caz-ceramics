@@ -43,6 +43,13 @@
       "when": 1790064554479,
       "tag": "0005_void_pending_payments_on_cancel",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791878617977,
+      "tag": "0006_incremental_monthly_pricing",
+      "breakpoints": true
     }
   ]
 }
