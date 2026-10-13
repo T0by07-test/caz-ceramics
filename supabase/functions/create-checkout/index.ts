@@ -203,34 +203,34 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Invalid purpose" }, 400);
     }
 
-    // Resolve a Stripe price from its human-readable lookup key.
-    const resolvePrice = async (lookupKey: string) => {
-      const prices = await stripe.prices.list({ lookup_keys: [lookupKey], limit: 1 });
-      if (!prices.data.length) throw new Error(`Price ${lookupKey} not found in Stripe`);
-      return prices.data[0];
-    };
-
-    // Mixed pricing: adult classes use the monthly tiers (1→30€, 2→55€, 3→70€, 4→85€, extras 20€),
-    // kids classes (lunes 17:00, 1h) are priced individually at 12€.
-    const lineItems: { price: string; quantity: number }[] = [];
-    let totalCents = 0;
-    const adultTier = Math.min(adultCount, 4);
-    if (adultTier > 0) {
-      const tierPrice = await resolvePrice(`plan_${adultTier}_class_month`);
-      lineItems.push({ price: tierPrice.id, quantity: 1 });
-      totalCents += tierPrice.unit_amount ?? 0;
-    }
-    const adultExtras = adultCount - adultTier;
-    if (adultExtras > 0) {
-      const extraPrice = await resolvePrice("drop_in_class_single");
-      lineItems.push({ price: extraPrice.id, quantity: adultExtras });
-      totalCents += (extraPrice.unit_amount ?? 0) * adultExtras;
-    }
-    if (kidsCount > 0) {
-      const kidsPrice = await resolvePrice("kids_class_single");
-      lineItems.push({ price: kidsPrice.id, quantity: kidsCount });
-      totalCents += (kidsPrice.unit_amount ?? 0) * kidsCount;
-    }
+    // Incremental monthly pricing: only the difference to the next monthly tier
+    // (1→30€, 2→55€, 3→70€, 4→85€, extras 20€) given what was already paid that
+    // month. Kids classes stay at 12€ each. Computed in the database.
+    const { data: amounts, error: amtErr } = await admin.rpc("drop_in_amounts", {
+      p_student: user.id,
+      p_booking_ids: bookingIds,
+    });
+    if (amtErr) throw amtErr;
+    const amountByBooking = new Map<string, number>(
+      ((amounts ?? []) as Array<{ booking_id: string; amount_cents: number }>).map((r) => [
+        r.booking_id,
+        r.amount_cents,
+      ]),
+    );
+    const totalCents = bookings.reduce((s, b) => s + (amountByBooking.get(b.id) ?? 0), 0);
+    if (totalCents <= 0) return jsonResponse({ error: "Nothing to pay" }, 400);
+    const lineItems = [
+      {
+        price_data: {
+          currency: "eur",
+          unit_amount: totalCents,
+          product_data: {
+            name: dropInCount === 1 ? "Clase de cerámica Cazú" : `${dropInCount} clases de cerámica Cazú`,
+          },
+        },
+        quantity: 1,
+      },
+    ];
 
     const sessionParams: Record<string, unknown> = {
       line_items: lineItems,
@@ -269,13 +269,9 @@ Deno.serve(async (req) => {
     }
 
 
-    // Insert pending payment row(s). Idempotency on (stripe_session_id, booking_id).
-    // Adults share the tiered total evenly; each kids class is 12 €.
-    const adultTotalCents = adultCount > 0 ? totalCents - (kidsCount * 1200) : 0;
-    const perAdultCents = adultCount > 0 ? Math.round(adultTotalCents / adultCount) : 0;
     const paymentRows = bookings.map((b) => ({
       student_id: user.id,
-      amount_cents: audienceByClass.get(b.class_id) === "kids" ? 1200 : perAdultCents,
+      amount_cents: amountByBooking.get(b.id) ?? 0,
       status: "pending",
       stripe_session_id: session.id,
       booking_id: b.id,
