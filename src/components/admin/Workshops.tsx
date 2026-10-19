@@ -29,10 +29,10 @@ export type Workshop = {
   notes: string | null;
 };
 
-export function useWorkshops(range: { start: string; end: string } | null, enabled: boolean) {
+export function useWorkshops(range: { startIso: string; endIso: string } | null, enabled: boolean) {
   const [workshops, setWorkshops] = useState<Workshop[]>([]);
-  const start = range?.start;
-  const end = range?.end;
+  const start = range?.startIso;
+  const end = range?.endIso;
   const refresh = useCallback(async () => {
     if (!enabled || !start || !end) return setWorkshops([]);
     const { data } = await supabase

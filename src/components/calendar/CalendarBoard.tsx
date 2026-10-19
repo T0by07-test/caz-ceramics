@@ -4,6 +4,7 @@ import { DayView } from "./DayView";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { CalendarView } from "@/lib/calendar-view";
 import type { ClassWithCount } from "@/hooks/useMonthClasses";
+import type { Workshop } from "@/components/admin/Workshops";
 
 type Props = {
   view: CalendarView;
@@ -14,6 +15,8 @@ type Props = {
   selectedIds?: Set<string>;
   /** Student booking: classes that already started are shown but not clickable. */
   disablePast?: boolean;
+  workshops?: Workshop[];
+  onSelectWorkshop?: (w: Workshop) => void;
 };
 
 export function CalendarBoard({
@@ -24,6 +27,8 @@ export function CalendarBoard({
   onSelectClass,
   selectedIds,
   disablePast,
+  workshops,
+  onSelectWorkshop,
 }: Props) {
   const isMobile = useIsMobile();
 
@@ -62,6 +67,8 @@ export function CalendarBoard({
       onSelectClass={onSelectClass}
       selectedIds={selectedIds}
       disablePast={disablePast}
+      workshops={workshops}
+      onSelectWorkshop={onSelectWorkshop}
     />
   );
 }
