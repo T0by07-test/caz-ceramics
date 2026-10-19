@@ -50,6 +50,13 @@
       "when": 1791878617977,
       "tag": "0006_incremental_monthly_pricing",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792395078356,
+      "tag": "0007_create_workshops",
+      "breakpoints": true
     }
   ]
 }

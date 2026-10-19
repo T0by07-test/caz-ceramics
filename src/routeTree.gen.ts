@@ -9,66 +9,41 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SolicitarRouteImport } from './routes/solicitar'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as AppRouteImport } from './routes/app'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AppRouteImport } from './routes/app'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SolicitarRouteImport } from './routes/solicitar'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as UnirseTokenRouteImport } from './routes/unirse.$token'
-import { Route as AppReservasRouteImport } from './routes/app.reservas'
-import { Route as AppRecuperacionesRouteImport } from './routes/app.recuperaciones'
-import { Route as AppPlanesRouteImport } from './routes/app.planes'
-import { Route as AppPlanExitosoRouteImport } from './routes/app.plan-exitoso'
-import { Route as AppPerfilRouteImport } from './routes/app.perfil'
-import { Route as AppPagoExitosoRouteImport } from './routes/app.pago-exitoso'
-import { Route as AdminSolicitudesRouteImport } from './routes/admin.solicitudes'
-import { Route as AdminRegistroRouteImport } from './routes/admin.registro'
-import { Route as AdminPagosRouteImport } from './routes/admin.pagos'
-import { Route as AdminNotificacionesRouteImport } from './routes/admin.notificaciones'
-import { Route as AdminMensajesRouteImport } from './routes/admin.mensajes'
-import { Route as AdminGastosRouteImport } from './routes/admin.gastos'
-import { Route as AdminFinanzasRouteImport } from './routes/admin.finanzas'
-import { Route as AdminClasesRouteImport } from './routes/admin.clases'
 import { Route as AdminAlumnasRouteImport } from './routes/admin.alumnas'
-import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
-import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
-import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
-import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as AdminClasesRouteImport } from './routes/admin.clases'
+import { Route as AdminFinanzasRouteImport } from './routes/admin.finanzas'
+import { Route as AdminGastosRouteImport } from './routes/admin.gastos'
+import { Route as AdminMensajesRouteImport } from './routes/admin.mensajes'
+import { Route as AdminNotificacionesRouteImport } from './routes/admin.notificaciones'
+import { Route as AdminPagosRouteImport } from './routes/admin.pagos'
+import { Route as AdminRegistroRouteImport } from './routes/admin.registro'
+import { Route as AdminSolicitudesRouteImport } from './routes/admin.solicitudes'
+import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppPagoExitosoRouteImport } from './routes/app.pago-exitoso'
+import { Route as AppPerfilRouteImport } from './routes/app.perfil'
+import { Route as AppPlanExitosoRouteImport } from './routes/app.plan-exitoso'
+import { Route as AppPlanesRouteImport } from './routes/app.planes'
+import { Route as AppRecuperacionesRouteImport } from './routes/app.recuperaciones'
+import { Route as AppReservasRouteImport } from './routes/app.reservas'
+import { Route as UnirseTokenRouteImport } from './routes/unirse.$token'
 import { Route as ApiPublicHooksAutoCancelClassesRouteImport } from './routes/api/public/hooks/auto-cancel-classes'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
-const SolicitarRoute = SolicitarRouteImport.update({
-  id: '/solicitar',
-  path: '/solicitar',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppRoute = AppRouteImport.update({
-  id: '/app',
-  path: '/app',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -76,94 +51,39 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppIndexRoute = AppIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppRoute,
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SolicitarRoute = SolicitarRouteImport.update({
+  id: '/solicitar',
+  path: '/solicitar',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AdminRoute,
-} as any)
-const UnirseTokenRoute = UnirseTokenRouteImport.update({
-  id: '/unirse/$token',
-  path: '/unirse/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppReservasRoute = AppReservasRouteImport.update({
-  id: '/reservas',
-  path: '/reservas',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppRecuperacionesRoute = AppRecuperacionesRouteImport.update({
-  id: '/recuperaciones',
-  path: '/recuperaciones',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppPlanesRoute = AppPlanesRouteImport.update({
-  id: '/planes',
-  path: '/planes',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppPlanExitosoRoute = AppPlanExitosoRouteImport.update({
-  id: '/plan-exitoso',
-  path: '/plan-exitoso',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppPerfilRoute = AppPerfilRouteImport.update({
-  id: '/perfil',
-  path: '/perfil',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppPagoExitosoRoute = AppPagoExitosoRouteImport.update({
-  id: '/pago-exitoso',
-  path: '/pago-exitoso',
-  getParentRoute: () => AppRoute,
-} as any)
-const AdminSolicitudesRoute = AdminSolicitudesRouteImport.update({
-  id: '/solicitudes',
-  path: '/solicitudes',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminRegistroRoute = AdminRegistroRouteImport.update({
-  id: '/registro',
-  path: '/registro',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPagosRoute = AdminPagosRouteImport.update({
-  id: '/pagos',
-  path: '/pagos',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminNotificacionesRoute = AdminNotificacionesRouteImport.update({
-  id: '/notificaciones',
-  path: '/notificaciones',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminMensajesRoute = AdminMensajesRouteImport.update({
-  id: '/mensajes',
-  path: '/mensajes',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminGastosRoute = AdminGastosRouteImport.update({
-  id: '/gastos',
-  path: '/gastos',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminFinanzasRoute = AdminFinanzasRouteImport.update({
-  id: '/finanzas',
-  path: '/finanzas',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminClasesRoute = AdminClasesRouteImport.update({
-  id: '/clases',
-  path: '/clases',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAlumnasRoute = AdminAlumnasRouteImport.update({
@@ -171,32 +91,112 @@ const AdminAlumnasRoute = AdminAlumnasRouteImport.update({
   path: '/alumnas',
   getParentRoute: () => AdminRoute,
 } as any)
-const LovableEmailTransactionalPreviewRoute =
-  LovableEmailTransactionalPreviewRouteImport.update({
-    id: '/lovable/email/transactional/preview',
-    path: '/lovable/email/transactional/preview',
+const AdminClasesRoute = AdminClasesRouteImport.update({
+  id: '/clases',
+  path: '/clases',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFinanzasRoute = AdminFinanzasRouteImport.update({
+  id: '/finanzas',
+  path: '/finanzas',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminGastosRoute = AdminGastosRouteImport.update({
+  id: '/gastos',
+  path: '/gastos',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMensajesRoute = AdminMensajesRouteImport.update({
+  id: '/mensajes',
+  path: '/mensajes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotificacionesRoute = AdminNotificacionesRouteImport.update({
+  id: '/notificaciones',
+  path: '/notificaciones',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPagosRoute = AdminPagosRouteImport.update({
+  id: '/pagos',
+  path: '/pagos',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRegistroRoute = AdminRegistroRouteImport.update({
+  id: '/registro',
+  path: '/registro',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSolicitudesRoute = AdminSolicitudesRouteImport.update({
+  id: '/solicitudes',
+  path: '/solicitudes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPagoExitosoRoute = AppPagoExitosoRouteImport.update({
+  id: '/pago-exitoso',
+  path: '/pago-exitoso',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPerfilRoute = AppPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPlanExitosoRoute = AppPlanExitosoRouteImport.update({
+  id: '/plan-exitoso',
+  path: '/plan-exitoso',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPlanesRoute = AppPlanesRouteImport.update({
+  id: '/planes',
+  path: '/planes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRecuperacionesRoute = AppRecuperacionesRouteImport.update({
+  id: '/recuperaciones',
+  path: '/recuperaciones',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReservasRoute = AppReservasRouteImport.update({
+  id: '/reservas',
+  path: '/reservas',
+  getParentRoute: () => AppRoute,
+} as any)
+const UnirseTokenRoute = UnirseTokenRouteImport.update({
+  id: '/unirse/$token',
+  path: '/unirse/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHooksAutoCancelClassesRoute =
+  ApiPublicHooksAutoCancelClassesRouteImport.update({
+    id: '/api/public/hooks/auto-cancel-classes',
+    path: '/api/public/hooks/auto-cancel-classes',
     getParentRoute: () => rootRouteImport,
   } as any)
-const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
-  id: '/lovable/email/auth/webhook',
-  path: '/lovable/email/auth/webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
-  id: '/lovable/email/auth/preview',
-  path: '/lovable/email/auth/preview',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksAutoCancelClassesRoute =
-  ApiPublicHooksAutoCancelClassesRouteImport.update({
-    id: '/api/public/hooks/auto-cancel-classes',
-    path: '/api/public/hooks/auto-cancel-classes',
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -417,46 +417,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/solicitar': {
-      id: '/solicitar'
-      path: '/solicitar'
-      fullPath: '/solicitar'
-      preLoaderRoute: typeof SolicitarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app': {
-      id: '/app'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof AppRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -466,130 +431,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/app/': {
-      id: '/app/'
-      path: '/'
-      fullPath: '/app/'
-      preLoaderRoute: typeof AppIndexRouteImport
-      parentRoute: typeof AppRoute
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/solicitar': {
+      id: '/solicitar'
+      path: '/solicitar'
+      fullPath: '/solicitar'
+      preLoaderRoute: typeof SolicitarRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/': {
       id: '/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/unirse/$token': {
-      id: '/unirse/$token'
-      path: '/unirse/$token'
-      fullPath: '/unirse/$token'
-      preLoaderRoute: typeof UnirseTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app/reservas': {
-      id: '/app/reservas'
-      path: '/reservas'
-      fullPath: '/app/reservas'
-      preLoaderRoute: typeof AppReservasRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/recuperaciones': {
-      id: '/app/recuperaciones'
-      path: '/recuperaciones'
-      fullPath: '/app/recuperaciones'
-      preLoaderRoute: typeof AppRecuperacionesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/planes': {
-      id: '/app/planes'
-      path: '/planes'
-      fullPath: '/app/planes'
-      preLoaderRoute: typeof AppPlanesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/plan-exitoso': {
-      id: '/app/plan-exitoso'
-      path: '/plan-exitoso'
-      fullPath: '/app/plan-exitoso'
-      preLoaderRoute: typeof AppPlanExitosoRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/perfil': {
-      id: '/app/perfil'
-      path: '/perfil'
-      fullPath: '/app/perfil'
-      preLoaderRoute: typeof AppPerfilRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/pago-exitoso': {
-      id: '/app/pago-exitoso'
-      path: '/pago-exitoso'
-      fullPath: '/app/pago-exitoso'
-      preLoaderRoute: typeof AppPagoExitosoRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/admin/solicitudes': {
-      id: '/admin/solicitudes'
-      path: '/solicitudes'
-      fullPath: '/admin/solicitudes'
-      preLoaderRoute: typeof AdminSolicitudesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/registro': {
-      id: '/admin/registro'
-      path: '/registro'
-      fullPath: '/admin/registro'
-      preLoaderRoute: typeof AdminRegistroRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/pagos': {
-      id: '/admin/pagos'
-      path: '/pagos'
-      fullPath: '/admin/pagos'
-      preLoaderRoute: typeof AdminPagosRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/notificaciones': {
-      id: '/admin/notificaciones'
-      path: '/notificaciones'
-      fullPath: '/admin/notificaciones'
-      preLoaderRoute: typeof AdminNotificacionesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/mensajes': {
-      id: '/admin/mensajes'
-      path: '/mensajes'
-      fullPath: '/admin/mensajes'
-      preLoaderRoute: typeof AdminMensajesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/gastos': {
-      id: '/admin/gastos'
-      path: '/gastos'
-      fullPath: '/admin/gastos'
-      preLoaderRoute: typeof AdminGastosRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/finanzas': {
-      id: '/admin/finanzas'
-      path: '/finanzas'
-      fullPath: '/admin/finanzas'
-      preLoaderRoute: typeof AdminFinanzasRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/clases': {
-      id: '/admin/clases'
-      path: '/clases'
-      fullPath: '/admin/clases'
-      preLoaderRoute: typeof AdminClasesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/alumnas': {
@@ -599,25 +487,123 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAlumnasRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/lovable/email/transactional/preview': {
-      id: '/lovable/email/transactional/preview'
-      path: '/lovable/email/transactional/preview'
-      fullPath: '/lovable/email/transactional/preview'
-      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+    '/admin/clases': {
+      id: '/admin/clases'
+      path: '/clases'
+      fullPath: '/admin/clases'
+      preLoaderRoute: typeof AdminClasesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/finanzas': {
+      id: '/admin/finanzas'
+      path: '/finanzas'
+      fullPath: '/admin/finanzas'
+      preLoaderRoute: typeof AdminFinanzasRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/gastos': {
+      id: '/admin/gastos'
+      path: '/gastos'
+      fullPath: '/admin/gastos'
+      preLoaderRoute: typeof AdminGastosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/mensajes': {
+      id: '/admin/mensajes'
+      path: '/mensajes'
+      fullPath: '/admin/mensajes'
+      preLoaderRoute: typeof AdminMensajesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notificaciones': {
+      id: '/admin/notificaciones'
+      path: '/notificaciones'
+      fullPath: '/admin/notificaciones'
+      preLoaderRoute: typeof AdminNotificacionesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/pagos': {
+      id: '/admin/pagos'
+      path: '/pagos'
+      fullPath: '/admin/pagos'
+      preLoaderRoute: typeof AdminPagosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/registro': {
+      id: '/admin/registro'
+      path: '/registro'
+      fullPath: '/admin/registro'
+      preLoaderRoute: typeof AdminRegistroRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/solicitudes': {
+      id: '/admin/solicitudes'
+      path: '/solicitudes'
+      fullPath: '/admin/solicitudes'
+      preLoaderRoute: typeof AdminSolicitudesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/app/': {
+      id: '/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/pago-exitoso': {
+      id: '/app/pago-exitoso'
+      path: '/pago-exitoso'
+      fullPath: '/app/pago-exitoso'
+      preLoaderRoute: typeof AppPagoExitosoRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/perfil': {
+      id: '/app/perfil'
+      path: '/perfil'
+      fullPath: '/app/perfil'
+      preLoaderRoute: typeof AppPerfilRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/plan-exitoso': {
+      id: '/app/plan-exitoso'
+      path: '/plan-exitoso'
+      fullPath: '/app/plan-exitoso'
+      preLoaderRoute: typeof AppPlanExitosoRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/planes': {
+      id: '/app/planes'
+      path: '/planes'
+      fullPath: '/app/planes'
+      preLoaderRoute: typeof AppPlanesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/recuperaciones': {
+      id: '/app/recuperaciones'
+      path: '/recuperaciones'
+      fullPath: '/app/recuperaciones'
+      preLoaderRoute: typeof AppRecuperacionesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/reservas': {
+      id: '/app/reservas'
+      path: '/reservas'
+      fullPath: '/app/reservas'
+      preLoaderRoute: typeof AppReservasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/unirse/$token': {
+      id: '/unirse/$token'
+      path: '/unirse/$token'
+      fullPath: '/unirse/$token'
+      preLoaderRoute: typeof UnirseTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/auth/webhook': {
-      id: '/lovable/email/auth/webhook'
-      path: '/lovable/email/auth/webhook'
-      fullPath: '/lovable/email/auth/webhook'
-      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/auth/preview': {
-      id: '/lovable/email/auth/preview'
-      path: '/lovable/email/auth/preview'
-      fullPath: '/lovable/email/auth/preview'
-      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+    '/api/public/hooks/auto-cancel-classes': {
+      id: '/api/public/hooks/auto-cancel-classes'
+      path: '/api/public/hooks/auto-cancel-classes'
+      fullPath: '/api/public/hooks/auto-cancel-classes'
+      preLoaderRoute: typeof ApiPublicHooksAutoCancelClassesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/payments/webhook': {
@@ -627,11 +613,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/auto-cancel-classes': {
-      id: '/api/public/hooks/auto-cancel-classes'
-      path: '/api/public/hooks/auto-cancel-classes'
-      fullPath: '/api/public/hooks/auto-cancel-classes'
-      preLoaderRoute: typeof ApiPublicHooksAutoCancelClassesRouteImport
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
   }

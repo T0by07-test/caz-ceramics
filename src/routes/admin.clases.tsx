@@ -54,6 +54,7 @@ import {
 } from "@/lib/calendar-view";
 import { CalendarHeader } from "@/components/calendar/CalendarHeader";
 import { CalendarBoard } from "@/components/calendar/CalendarBoard";
+import { useWorkshops, WorkshopDialog, WorkshopList, type Workshop } from "@/components/admin/Workshops";
 import { UpcomingClassesCarousel } from "@/components/calendar/UpcomingClassesCarousel";
 
 export const Route = createFileRoute("/admin/clases")({
@@ -89,6 +90,10 @@ function AdminClassesPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<ClassWithCount | null>(null);
   const { classes, loading, refresh } = useClassesInRange(range, "admin");
+  const isAdmin = role === "admin";
+  const { workshops, refresh: refreshWorkshops } = useWorkshops(range, isAdmin);
+  const [wsOpen, setWsOpen] = useState(false);
+  const [wsEditing, setWsEditing] = useState<Workshop | null>(null);
 
   const visibleClasses = useMemo(
     () =>
@@ -175,7 +180,38 @@ function AdminClassesPage() {
         classes={visibleClasses}
         loading={loading}
         onSelectClass={setSelected}
+        workshops={isAdmin ? workshops : undefined}
+        onSelectWorkshop={(w) => {
+          setWsEditing(w);
+          setWsOpen(true);
+        }}
       />
+
+      {isAdmin ? (
+        <>
+          <WorkshopList
+            workshops={workshops}
+            onSelect={(w) => {
+              setWsEditing(w);
+              setWsOpen(true);
+            }}
+            onCreate={() => {
+              setWsEditing(null);
+              setWsOpen(true);
+            }}
+          />
+          <WorkshopDialog
+            open={wsOpen}
+            workshop={wsEditing}
+            defaultDate={toIsoDate(reference)}
+            onOpenChange={setWsOpen}
+            onSaved={() => {
+              setWsOpen(false);
+              void refreshWorkshops();
+            }}
+          />
+        </>
+      ) : null}
 
       <ClassFormDialog
         open={createOpen}

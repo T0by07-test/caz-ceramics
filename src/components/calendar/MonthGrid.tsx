@@ -8,6 +8,7 @@ import {
   teacherColorVar,
 } from "@/lib/calendar";
 import type { ClassWithCount } from "@/hooks/useMonthClasses";
+import type { Workshop } from "@/components/admin/Workshops";
 
 type Props = {
   reference: Date;
@@ -15,6 +16,8 @@ type Props = {
   onSelectClass: (c: ClassWithCount) => void;
   selectedIds?: Set<string>;
   disablePast?: boolean;
+  workshops?: Workshop[];
+  onSelectWorkshop?: (w: Workshop) => void;
 };
 
 export function MonthGrid({
@@ -23,6 +26,8 @@ export function MonthGrid({
   onSelectClass,
   selectedIds,
   disablePast,
+  workshops,
+  onSelectWorkshop,
 }: Props) {
   const cells = buildMonthGrid(reference);
   const weekdayCells = cells.filter((cell) => {
@@ -34,6 +39,12 @@ export function MonthGrid({
     const arr = byDay.get(c.date) ?? [];
     arr.push(c);
     byDay.set(c.date, arr);
+  }
+  const wsByDay = new Map<string, Workshop[]>();
+  for (const w of workshops ?? []) {
+    const arr = wsByDay.get(w.date) ?? [];
+    arr.push(w);
+    wsByDay.set(w.date, arr);
   }
 
   return (
@@ -58,6 +69,8 @@ export function MonthGrid({
           onSelectClass={onSelectClass}
           selectedIds={selectedIds}
           disablePast={disablePast}
+          wsByDay={wsByDay}
+          onSelectWorkshop={onSelectWorkshop}
         />
         <DesktopCells
           cells={cells}
@@ -65,6 +78,8 @@ export function MonthGrid({
           onSelectClass={onSelectClass}
           selectedIds={selectedIds}
           disablePast={disablePast}
+          wsByDay={wsByDay}
+          onSelectWorkshop={onSelectWorkshop}
         />
       </div>
     </div>
@@ -77,9 +92,11 @@ type CellsProps = {
   onSelectClass: (c: ClassWithCount) => void;
   selectedIds?: Set<string>;
   disablePast?: boolean;
+  wsByDay: Map<string, Workshop[]>;
+  onSelectWorkshop?: (w: Workshop) => void;
 };
 
-function MobileCells({ cells, byDay, onSelectClass, selectedIds, disablePast }: CellsProps) {
+function MobileCells({ cells, byDay, onSelectClass, selectedIds, disablePast, wsByDay, onSelectWorkshop }: CellsProps) {
   return (
     <>
       {cells.map((cell, idx) => {
@@ -95,6 +112,18 @@ function MobileCells({ cells, byDay, onSelectClass, selectedIds, disablePast }: 
           >
             <DayNumber cell={cell} />
             <ul className="flex min-w-0 flex-col gap-0.5">
+              {(wsByDay.get(cell.iso) ?? []).map((w) => (
+                <li key={w.id} className="min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => onSelectWorkshop?.(w)}
+                    className="flex w-full min-w-0 flex-col rounded-sm border border-accent-foreground/40 bg-accent px-1 py-1 text-left leading-tight text-accent-foreground"
+                  >
+                    <span className="truncate text-[10px] font-semibold tabular-nums">{formatTime(w.start_time)} · Taller</span>
+                    <span className="truncate text-[10px]">{w.title}</span>
+                  </button>
+                </li>
+              ))}
               {dayClasses.map((c) => {
                 const level = capacityLevel(c.booked_count, c.capacity_max);
                 const cancelled = c.status !== "scheduled";
@@ -149,7 +178,7 @@ function MobileCells({ cells, byDay, onSelectClass, selectedIds, disablePast }: 
   );
 }
 
-function DesktopCells({ cells, byDay, onSelectClass, selectedIds, disablePast }: CellsProps) {
+function DesktopCells({ cells, byDay, onSelectClass, selectedIds, disablePast, wsByDay, onSelectWorkshop }: CellsProps) {
   return (
     <>
       {cells.map((cell, idx) => {
@@ -165,7 +194,19 @@ function DesktopCells({ cells, byDay, onSelectClass, selectedIds, disablePast }:
             >
               <DayNumber cell={cell} desktop />
               <ul className="flex flex-col gap-1.5">
-                {dayClasses.map((c) => {
+                {(wsByDay.get(cell.iso) ?? []).map((w) => (
+                <li key={w.id} className="min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => onSelectWorkshop?.(w)}
+                    className="flex w-full min-w-0 flex-col rounded-sm border border-accent-foreground/40 bg-accent px-1 py-1 text-left leading-tight text-accent-foreground"
+                  >
+                    <span className="truncate text-[10px] font-semibold tabular-nums">{formatTime(w.start_time)} · Taller</span>
+                    <span className="truncate text-[10px]">{w.title}</span>
+                  </button>
+                </li>
+              ))}
+              {dayClasses.map((c) => {
                   const level = capacityLevel(c.booked_count, c.capacity_max);
                   const cancelled = c.status !== "scheduled";
                   const picked = selectedIds?.has(c.id) ?? false;

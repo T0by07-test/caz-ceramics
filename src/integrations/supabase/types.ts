@@ -892,6 +892,48 @@ export type Database = {
           },
         ]
       }
+      workshops: {
+        Row: {
+          attendees: number | null
+          client_name: string | null
+          contact: string | null
+          created_at: string
+          date: string
+          end_time: string
+          id: string
+          notes: string | null
+          price_cents: number | null
+          start_time: string
+          title: string
+        }
+        Insert: {
+          attendees?: number | null
+          client_name?: string | null
+          contact?: string | null
+          created_at?: string
+          date: string
+          end_time: string
+          id?: string
+          notes?: string | null
+          price_cents?: number | null
+          start_time: string
+          title: string
+        }
+        Update: {
+          attendees?: number | null
+          client_name?: string | null
+          contact?: string | null
+          created_at?: string
+          date?: string
+          end_time?: string
+          id?: string
+          notes?: string | null
+          price_cents?: number | null
+          start_time?: string
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
