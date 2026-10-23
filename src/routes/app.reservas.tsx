@@ -22,9 +22,18 @@ import { formatLongDate, formatTimeRange } from "@/lib/calendar";
 import { formatEuros } from "@/lib/pricing";
 import { createDropInCheckout } from "@/lib/checkout";
 import { StripeCheckoutDialog } from "@/components/StripeCheckoutDialog";
+import { MonthlyPriceBreakdown } from "@/components/MonthlyPriceBreakdown";
 
 
 export const Route = createFileRoute("/app/reservas")({
+  head: () => ({ meta: [
+    { title: "Mis reservas | Cazú Ceramics" },
+    { name: "description", content: "Consulta tus reservas y los pagos pendientes de cada mes en Cazú Ceramics." },
+    { property: "og:title", content: "Mis reservas | Cazú Ceramics" },
+    { property: "og:description", content: "Tus próximas clases y pagos pendientes por mes." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: MisReservasPage,
 });
 
@@ -162,6 +171,15 @@ function MisReservasPage() {
   });
   const unpaidTotal = unpaid.reduce((sum, r) => sum + (payments[r.id]?.pendingCents ?? 0), 0);
   const unpaidIds = unpaid.map((r) => r.id);
+  const unpaidMonths = new Map<string, { month: string; count: number; cents: number }>();
+  for (const row of unpaid) {
+    if (!row.classes) continue;
+    const month = row.classes.date.slice(0, 7);
+    const entry = unpaidMonths.get(month) ?? { month, count: 0, cents: 0 };
+    entry.count += 1;
+    entry.cents += payments[row.id]?.pendingCents ?? 0;
+    unpaidMonths.set(month, entry);
+  }
 
   const fetchClientSecret = useCallback(async () => {
     const { clientSecret } = await createDropInCheckout({
@@ -204,6 +222,7 @@ function MisReservasPage() {
               Total pendiente: {formatEuros(unpaidTotal)}. Puedes pagarlo ahora con tarjeta o en
               efectivo en el estudio.
             </p>
+            <MonthlyPriceBreakdown rows={[...unpaidMonths.values()].sort((a, b) => a.month.localeCompare(b.month))} />
           </div>
           <Button className="shrink-0" onClick={() => setCheckoutOpen(true)}>
             Pagar con tarjeta
