@@ -1,6 +1,7 @@
 # Roadmap
 
-- [ ] Revisar octubre: Fernando, Pilar, Alejandra, Cristina y Belén; corregir importes pendientes y contrastar cobros reales, además de detectar otros casos inconsistentes.
+- [x] Revisar octubre y verificar correcciones de Fernando, Pilar, Alejandra, Cristina, Andrea Gómez, Johanna y Marta; contrastar los dos cobros reales de Belén en Stripe sin alterarlos.
+- [ ] Resolver diferencias restantes de octubre con cancelaciones, recuperaciones o cobros reales (requiere confirmar excepciones y posibles devoluciones; no reducir cobros de Stripe a la tarifa de reservas activas).
 
 - [x] Aclarar método y estado del pago de clases añadidas en Ingresos, separando cobrado de pendiente y conservando el mes correcto; pruebas y vista autenticada verificadas sin modificar pagos.
 
