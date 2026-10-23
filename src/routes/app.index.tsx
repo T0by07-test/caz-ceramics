@@ -34,7 +34,8 @@ import { useMyPlan } from "@/hooks/useMyPlan";
 import { useMyMakeups } from "@/hooks/useMyMakeups";
 import { bookClass, bookMakeup } from "@/lib/booking";
 import { formatEuros } from "@/lib/pricing";
-import { useSelectionQuote } from "@/hooks/useSelectionQuote";
+import { useSelectionQuoteBreakdown } from "@/hooks/useSelectionQuote";
+import { MonthlyPriceBreakdown } from "@/components/MonthlyPriceBreakdown";
 import { Input } from "@/components/ui/input";
 
 import { studioClosureFor } from "@/lib/closures";
@@ -55,6 +56,14 @@ import { CalendarHeader } from "@/components/calendar/CalendarHeader";
 import { CalendarBoard } from "@/components/calendar/CalendarBoard";
 
 export const Route = createFileRoute("/app/")({
+  head: () => ({ meta: [
+    { title: "Calendario de clases | Cazú Ceramics" },
+    { name: "description", content: "Reserva tus clases en Cazú Ceramics y consulta el importe de cada mes." },
+    { property: "og:title", content: "Calendario de clases | Cazú Ceramics" },
+    { property: "og:description", content: "Selecciona tus clases y consulta el importe por mes." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   validateSearch: (search) => calendarSearchSchema.parse(search),
   component: CalendarioPage,
 });
@@ -72,7 +81,8 @@ function CalendarioPage() {
   const range = useMemo(() => rangeForView(view, reference), [view, reference]);
 
   const [full, setFull] = useState<ClassWithCount | null>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selection, setSelection] = useState<Map<string, ClassWithCount>>(new Map());
+  const selectedIds = useMemo(() => new Set(selection.keys()), [selection]);
   // Companions (+1 / +2) applied to every selected class of this booking.
   const [guests, setGuests] = useState(0);
   const [guestNames, setGuestNames] = useState<string[]>(["", ""]);
@@ -82,8 +92,8 @@ function CalendarioPage() {
   const { bookedClassIds, refresh: refreshMyBookings } = useMyBookedClassIds();
 
   const selectedClasses = useMemo(
-    () => classes.filter((c) => selectedIds.has(c.id)),
-    [classes, selectedIds],
+    () => [...selection.values()].map((c) => classes.find((current) => current.id === c.id) ?? c),
+    [classes, selection],
   );
 
   const setView = (v: CalendarView) =>
@@ -122,10 +132,10 @@ function CalendarioPage() {
       setFull(c);
       return;
     }
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
+    setSelection((prev) => {
+      const next = new Map(prev);
       if (next.has(c.id)) next.delete(c.id);
-      else next.add(c.id);
+      else next.set(c.id, c);
       return next;
     });
   };
@@ -145,7 +155,7 @@ function CalendarioPage() {
     );
 
     setSubmitting(false);
-    setSelectedIds(new Set());
+    setSelection(new Map());
     setPendingPaymentClasses(ordered);
   };
 
@@ -196,7 +206,7 @@ function CalendarioPage() {
           onGuestNameChange={(i, value) =>
             setGuestNames((prev) => prev.map((n, idx) => (idx === i ? value : n)))
           }
-          onClear={() => setSelectedIds(new Set())}
+          onClear={() => setSelection(new Map())}
           onConfirm={() => void handleConfirm()}
         />
       ) : null}
@@ -239,7 +249,8 @@ function SelectionBar({
   onConfirm: () => void;
 }) {
   const count = classes.length;
-  const totalLabel = formatEuros(useSelectionQuote(classes, guests));
+  const priceRows = useSelectionQuoteBreakdown(classes, guests);
+  const totalLabel = formatEuros(priceRows.reduce((sum, row) => sum + row.cents, 0));
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur sm:px-8">
       <div className="mx-auto flex max-w-5xl flex-col gap-3">
@@ -269,6 +280,7 @@ function SelectionBar({
           </Button>
         </div>
 
+        <MonthlyPriceBreakdown rows={priceRows} />
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">¿Vienes acompañada?</span>
@@ -464,7 +476,8 @@ function DropInPaymentFlow({
   );
   const count = activeClasses.length;
   const paidClasses = reservedClasses.length > 0 ? reservedClasses : activeClasses;
-  const totalLabel = formatEuros(useSelectionQuote(paidClasses, guests));
+  const priceRows = useSelectionQuoteBreakdown(paidClasses, guests);
+  const totalLabel = formatEuros(priceRows.reduce((sum, row) => sum + row.cents, 0));
 
   const { count: makeupCount, refresh: refreshMakeups } = useMyMakeups();
   const usableMakeups = Math.min(makeupCount, count);
@@ -700,6 +713,7 @@ function DropInPaymentFlow({
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
+            <MonthlyPriceBreakdown rows={priceRows} />
             {usableMakeups > 0 ? (
               <Button
                 variant="outline"
@@ -798,6 +812,7 @@ function DropInPaymentFlow({
               el taller el primer día de clase del mes al que corresponden tus clases.
             </DialogDescription>
           </DialogHeader>
+          <MonthlyPriceBreakdown rows={priceRows} />
           <p className="text-sm text-muted-foreground">
             No necesitas realizar ningún pago por adelantado para reservar tu plaza. Te hemos
             enviado un correo con la confirmación de tus clases.
