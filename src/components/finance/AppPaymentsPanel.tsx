@@ -23,6 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
+import { appPaymentGroupKey } from "@/lib/finance/payment-group";
 
 /** Payments made through the app (card / Bizum / cash-at-studio), grouped per
  * checkout so each row reads like a ledger line: alumna, fecha, nº de clases,
@@ -50,6 +51,7 @@ type Group = {
   amountCents: number;
   method: string | null;
   collected: boolean;
+  classDates: string[];
 };
 
 function formatEur(cents: number) {
@@ -118,12 +120,12 @@ export function AppPaymentsPanel({
     // Un checkout abandonado deja una fila "pending" para la misma reserva que
     // ya tiene un pago confirmado: no debe contarse como una segunda línea.
     const confirmedBookings = new Set(
-      allRows.filter((r) => r.status === "confirmed" && r.booking_id).map((r) => r.booking_id!),
+      allRows.filter((r) => r.status === "confirmed").flatMap((r) => r.booking_id ? [r.booking_id] : []),
     );
     const confirmedSubs = new Set(
       allRows
         .filter((r) => r.status === "confirmed" && r.subscription_id)
-        .map((r) => r.subscription_id!),
+        .flatMap((r) => r.subscription_id ? [r.subscription_id] : []),
     );
     const rows = allRows.filter(
       (r) =>
@@ -222,14 +224,13 @@ export function AppPaymentsPanel({
       // class. Group them per alumna and class month with the total instead;
       // card/Bizum keep their real Stripe session as the key.
       const isCash = p.method === "cash" || (p.stripe_session_id?.startsWith("cash:") ?? false);
-      const key = isCash
-        ? `cash|${p.student_id}|${classMonth}`
-        : p.stripe_session_id ?? `${p.student_id}|${p.method ?? "-"}|${p.created_at.slice(0, 10)}`;
+      const key = appPaymentGroupKey(p, classMonth);
       const existing = byKey.get(key);
       if (existing) {
         existing.amountCents += p.amount_cents;
         existing.classCount += p.booking_id ? 1 : 0;
         existing.paymentIds.push(p.id);
+        if (classDate) existing.classDates.push(classDate);
         existing.collected = existing.collected && p.status === "confirmed";
         if (classMonth < existing.classMonth) {
           existing.classMonth = classMonth;
@@ -243,8 +244,9 @@ export function AppPaymentsPanel({
           classCount: p.booking_id ? 1 : 0,
           classMonth,
           amountCents: p.amount_cents,
-          method: p.method,
+          method: isCash ? "cash" : p.method,
           collected: p.status === "confirmed",
+          classDates: classDate ? [classDate] : [],
         });
       }
     }
@@ -335,8 +337,7 @@ export function AppPaymentsPanel({
           <div className="min-w-0">
             <p className="text-label text-muted-foreground">Pagos de la app</p>
             <p className="text-body mt-1 text-muted-foreground">
-              Reservas hechas desde la web: quién ya pagó con tarjeta o Bizum (cobrado) y quién paga
-              en efectivo en el taller (pendiente).
+              Cobros y pagos pendientes de las clases del mes
             </p>
           </div>
           <div className="flex items-end gap-2">
@@ -374,15 +375,15 @@ export function AppPaymentsPanel({
 
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-md border border-border p-3">
-            <p className="text-label text-muted-foreground">Cobrado (tarjeta/Bizum)</p>
+            <p className="text-label text-muted-foreground">Cobrado</p>
             <p className="mt-1 text-xl font-normal text-success">{formatEur(totals.collected)}</p>
           </div>
           <div className="rounded-md border border-border p-3">
-            <p className="text-label text-muted-foreground">Pendiente (efectivo)</p>
+            <p className="text-label text-muted-foreground">Pendiente de cobro</p>
             <p className="mt-1 text-xl font-normal text-warning">{formatEur(totals.pending)}</p>
           </div>
           <div className="rounded-md border border-border p-3">
-            <p className="text-label text-muted-foreground">Alumnas</p>
+            <p className="text-label text-muted-foreground">Pagos</p>
             <p className="mt-1 text-xl font-normal">{visible.length}</p>
           </div>
         </div>
@@ -413,6 +414,7 @@ export function AppPaymentsPanel({
                           : "Plan"}{" "}
                         · {methodLabel(g.method)}
                       </p>
+                      <ClassDates dates={g.classDates} />
                     </div>
                     <span className="shrink-0 font-normal tabular-nums">
                       {formatEur(g.amountCents)}
@@ -420,7 +422,7 @@ export function AppPaymentsPanel({
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <StatusBadge collected={g.collected} method={g.method} />
-                    {!g.collected ? (
+                    {!g.collected && isCashGroup(g) ? (
                       <Button
                         size="sm"
                         variant="secondary"
@@ -464,7 +466,7 @@ export function AppPaymentsPanel({
                         {new Date(g.paidAt).toLocaleDateString("es-ES")}
                       </TableCell>
                       <TableCell className="font-medium">{g.studentName}</TableCell>
-                      <TableCell>{g.classCount > 0 ? g.classCount : "Plan"}</TableCell>
+                      <TableCell>{g.classCount > 0 ? g.classCount : "Plan"}<ClassDates dates={g.classDates} /></TableCell>
                       <TableCell className="text-muted-foreground">
                         <span className="inline-flex items-center gap-1.5">
                           {g.method === "cash" ? (
@@ -495,7 +497,7 @@ export function AppPaymentsPanel({
                           ) : (
                             <span className="text-xs text-muted-foreground">—</span>
                           )
-                        ) : (
+                        ) : isCashGroup(g) ? (
                           <Button
                             size="sm"
                             variant="secondary"
@@ -504,7 +506,7 @@ export function AppPaymentsPanel({
                           >
                             <Check className="mr-1 h-3.5 w-3.5" /> Marcar cobrado
                           </Button>
-                        )}
+                        ) : <span className="text-xs text-muted-foreground">Sin completar</span>}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -522,7 +524,12 @@ function StatusBadge({ collected, method }: { collected: boolean; method: string
   if (collected) return <Badge className="bg-success text-success-foreground">Cobrado</Badge>;
   return (
     <Badge className="bg-warning text-warning-foreground">
-      {method === "cash" ? "Pendiente · efectivo" : "Pendiente · sin pagar"}
+      {method === "cash" ? "Pendiente · efectivo" : method === "card" ? "Pendiente · tarjeta" : "Pendiente · sin pagar"}
     </Badge>
   );
+}
+
+function ClassDates({ dates }: { dates: string[] }) {
+  if (dates.length === 0) return null;
+  return <p className="mt-1 text-xs text-muted-foreground">{[...new Set(dates)].sort().map((date) => new Date(`${date}T12:00:00`).toLocaleDateString("es-ES", { day: "numeric", month: "short" })).join(" · ")}</p>;
 }
