@@ -1,7 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { monthlySelectionBreakdown } from "./pricing";
+import { monthlyPriceCents, monthlySelectionBreakdown } from "./pricing";
 
 describe("monthly selection pricing", () => {
+  it("charges only 20 euros for the fifth class after paying 85 euros for four", () => {
+    expect(monthlyPriceCents(4)).toBe(8500);
+    expect(monthlyPriceCents(5) - monthlyPriceCents(4)).toBe(2000);
+  });
+  it("charges only 15 euros for the third class after paying 55 euros for two", () => {
+    expect(monthlyPriceCents(2)).toBe(5500);
+    expect(monthlyPriceCents(3) - monthlyPriceCents(2)).toBe(1500);
+  });
+  it("charges only 15 euros for the fourth class after paying 70 euros for three", () => {
+    expect(monthlyPriceCents(3)).toBe(7000);
+    expect(monthlyPriceCents(4) - monthlyPriceCents(3)).toBe(1500);
+  });
   it("charges two November classes at 55 euros and three December classes at 70 euros", () => {
     const rows = monthlySelectionBreakdown([
       { date: "2026-11-02" }, { date: "2026-12-02" }, { date: "2026-11-09" },
