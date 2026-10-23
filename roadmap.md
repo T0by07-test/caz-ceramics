@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Aclarar método y estado del pago de clases añadidas en Ingresos, separando cobrado de pendiente y conservando el mes correcto.
+
 - [x] Separar precios y mostrar desglose por mes en selección y pago: noviembre 2 clases = 55 €, diciembre 3 clases = 70 €; pruebas y cálculo autenticado verificados (125 € juntos).
 - [ ] Verificar visualmente la selección y pago entre meses desde una cuenta de alumna (la sesión disponible es administradora y redirige fuera del calendario de alumnas).
 
