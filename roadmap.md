@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Revisar octubre: Fernando, Pilar, Alejandra, Cristina y Belén; corregir importes pendientes y contrastar cobros reales, además de detectar otros casos inconsistentes.
+
 - [x] Aclarar método y estado del pago de clases añadidas en Ingresos, separando cobrado de pendiente y conservando el mes correcto; pruebas y vista autenticada verificadas sin modificar pagos.
 
 - [x] Separar precios y mostrar desglose por mes en selección y pago: noviembre 2 clases = 55 €, diciembre 3 clases = 70 €; pruebas y cálculo autenticado verificados (125 € juntos).
