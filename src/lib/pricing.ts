@@ -44,3 +44,25 @@ export function selectionPriceCentsWithGuests(
   const per = 1 + Math.max(0, guests);
   return selectionPriceCents(items.flatMap((i) => Array.from({ length: per }, () => i)));
 }
+
+export function groupSelectionByMonth<T extends { date: string }>(items: T[]): { month: string; classes: T[] }[] {
+  const groups = new Map<string, T[]>();
+  for (const item of items) {
+    const month = item.date.slice(0, 7);
+    groups.set(month, [...(groups.get(month) ?? []), item]);
+  }
+  return [...groups].sort(([a], [b]) => a.localeCompare(b)).map(([month, classes]) => ({ month, classes }));
+}
+
+export function monthlySelectionBreakdown<T extends { date: string; audience?: string | null }>(items: T[], guests: number) {
+  return groupSelectionByMonth(items).map(({ month, classes }) => ({
+    month,
+    count: classes.length,
+    cents: selectionPriceCentsWithGuests(classes, guests),
+  }));
+}
+
+export function formatPriceMonth(month: string): string {
+  return new Intl.DateTimeFormat("es-ES", { month: "long", year: "numeric", timeZone: "Europe/Madrid" })
+    .format(new Date(`${month}-01T12:00:00Z`));
+}
