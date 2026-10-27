@@ -853,6 +853,51 @@ export type Database = {
         }
         Relationships: []
       }
+      vouchers: {
+        Row: {
+          buyer_contact: string | null
+          buyer_name: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_paid: boolean
+          is_redeemed: boolean
+          notes: string | null
+          payment_method: string | null
+          price_cents: number | null
+          purchase_date: string
+          recipients: string
+        }
+        Insert: {
+          buyer_contact?: string | null
+          buyer_name?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_paid?: boolean
+          is_redeemed?: boolean
+          notes?: string | null
+          payment_method?: string | null
+          price_cents?: number | null
+          purchase_date?: string
+          recipients: string
+        }
+        Update: {
+          buyer_contact?: string | null
+          buyer_name?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_paid?: boolean
+          is_redeemed?: boolean
+          notes?: string | null
+          payment_method?: string | null
+          price_cents?: number | null
+          purchase_date?: string
+          recipients?: string
+        }
+        Relationships: []
+      }
       waitlist: {
         Row: {
           class_id: string

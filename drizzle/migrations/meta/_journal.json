@@ -57,6 +57,13 @@
       "when": 1792395078356,
       "tag": "0007_create_workshops",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793093684128,
+      "tag": "0008_create_vouchers",
+      "breakpoints": true
     }
   ]
 }
