@@ -60,6 +60,7 @@ import { RouteGuard } from "@/components/RouteGuard";
 import { MONTH_NAMES_ES, monthLabelToIndex } from "@/lib/finance/dates";
 import { ExportDialog } from "@/components/finance/ExportDialog";
 import { AppPaymentsPanel } from "@/components/finance/AppPaymentsPanel";
+import { VoucherIncomePanel, useVoucherIncome } from "@/components/finance/VoucherIncomePanel";
 import { tbl, type CommissionRateRow } from "@/lib/finance/db";
 
 export const Route = createFileRoute("/admin/registro")({
@@ -609,6 +610,7 @@ function AdminLedgerPage() {
   }, [rows, monthFilter]);
 
   const col = (key: ColumnKey) => visibleCols.has(key);
+  const voucherIncome = useVoucherIncome(monthFilter === ALL ? null : selectedIsoMonth);
 
 
   return (
@@ -640,25 +642,32 @@ function AdminLedgerPage() {
         <Card className="">
           <CardContent className="p-4">
             <p className="text-label text-muted-foreground">Cobrado{monthSuffix}</p>
-            <p className="mt-1 text-2xl font-normal text-success">{formatEur(totals.cobrado)}</p>
+            <p className="mt-1 text-2xl font-normal text-success">{formatEur(totals.cobrado + voucherIncome.paid)}</p>
+            {voucherIncome.paid > 0 && (
+              <p className="text-xs text-muted-foreground">Incluye vouchers {formatEur(voucherIncome.paid)}</p>
+            )}
           </CardContent>
         </Card>
         <Card className="">
           <CardContent className="p-4">
             <p className="text-label text-muted-foreground">Pendiente{monthSuffix}</p>
-            <p className="mt-1 text-2xl font-normal text-warning">{formatEur(totals.pendiente)}</p>
+            <p className="mt-1 text-2xl font-normal text-warning">{formatEur(totals.pendiente + voucherIncome.pending)}</p>
+            {voucherIncome.pending > 0 && (
+              <p className="text-xs text-muted-foreground">Incluye vouchers {formatEur(voucherIncome.pending)}</p>
+            )}
           </CardContent>
         </Card>
         <Card className="">
           <CardContent className="p-4">
             <p className="text-label text-muted-foreground">Entradas{monthSuffix}</p>
-            <p className="mt-1 text-2xl font-normal">{totals.count}</p>
+            <p className="mt-1 text-2xl font-normal">{totals.count + voucherIncome.vouchers.length}</p>
           </CardContent>
         </Card>
       </div>
 
 
       <AppPaymentsPanel monthOverride={selectedIsoMonth} />
+      <VoucherIncomePanel vouchers={voucherIncome.vouchers} />
 
 
       {teacherPayouts.perTeacher.length > 0 && (
