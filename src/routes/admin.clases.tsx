@@ -55,6 +55,7 @@ import {
 import { CalendarHeader } from "@/components/calendar/CalendarHeader";
 import { CalendarBoard } from "@/components/calendar/CalendarBoard";
 import { useWorkshops, WorkshopDialog, WorkshopList, type Workshop } from "@/components/admin/Workshops";
+import { VouchersSection } from "@/components/admin/Vouchers";
 import { UpcomingClassesCarousel } from "@/components/calendar/UpcomingClassesCarousel";
 
 export const Route = createFileRoute("/admin/clases")({
@@ -210,6 +211,7 @@ function AdminClassesPage() {
               void refreshWorkshops();
             }}
           />
+          <VouchersSection />
         </>
       ) : null}
 
