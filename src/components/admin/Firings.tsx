@@ -103,7 +103,7 @@ export function FiringsSection() {
         <ul className="divide-y divide-border">
           {orders.filter((order) => filter === "all" || !order.is_paid).map((order) => (
             <li key={order.id} className="flex items-start justify-between gap-3 py-3">
-              <div className="min-w-0"><p className="break-words font-medium">{order.customer_name} · {euro(order.total_cents ?? 0)}</p>
+              <div className="min-w-0"><p className="break-words font-medium">{order.customer_name} · {euro(orderTotal(order))}{order.custom_total_cents != null ? " (precio ajustado)" : ""}</p>
                 <p className="text-sm text-muted-foreground">{new Date(order.received_date + "T12:00:00").toLocaleDateString("es-ES")} · {firingTotals(order).pieces} piezas · {order.is_paid ? "Cobrado" : "Pendiente"}</p>
                 <p className="text-xs text-muted-foreground">{FIRING_SIZES.filter((size) => order[size.key] > 0).map((size) => `${size.label}: ${order[size.key]}`).join(" · ")}</p>
                 {order.notes ? <p className="mt-1 break-words text-sm text-muted-foreground">{order.notes}</p> : null}
@@ -127,7 +127,8 @@ export function FiringsSection() {
                 <span className="text-right text-sm tabular-nums">{euro(quantities[size.key] * size.cents)}</span>
               </div>)}
             </div>
-            <div className="flex justify-between border-t border-border pt-3 font-medium" aria-live="polite"><span>{totals.pieces} piezas · Total</span><span>{euro(totals.cents)}</span></div>
+            <div className="flex justify-between border-t border-border pt-3 font-medium" aria-live="polite"><span>{totals.pieces} piezas · Total orientativo</span><span>{euro(totals.cents)}</span></div>
+            <div className="grid gap-1.5"><Label htmlFor="firing-custom-price">Precio final (opcional)</Label><Input id="firing-custom-price" type="number" min={0} step="0.01" inputMode="decimal" placeholder={euro(totals.cents)} value={customPrice} onChange={(event) => setCustomPrice(event.target.value)} /><p className="text-xs text-muted-foreground">Si lo rellenas, sustituye al total orientativo. Déjalo vacío para usar las tarifas estándar.</p></div>
             <div className="flex items-center gap-2"><Checkbox id="firing-paid" checked={paid} onCheckedChange={(value) => setPaid(value === true)} /><Label htmlFor="firing-paid">Está pagado</Label></div>
             <div className="grid gap-1.5"><Label htmlFor="firing-notes">Notas / medidas aproximadas</Label><Textarea id="firing-notes" value={notes} onChange={(event) => setNotes(event.target.value)} rows={2} /></div>
             <DialogFooter className="gap-2">{editing ? <Button type="button" variant="destructive" disabled={saving} onClick={() => void remove()} className="gap-2"><Trash2 className="h-4 w-4" /> Eliminar</Button> : null}<Button type="button" variant="ghost" disabled={saving} onClick={() => setOpen(false)}>Cancelar</Button><Button type="submit" disabled={saving || totals.pieces === 0}>{saving ? "Guardando…" : "Guardar"}</Button></DialogFooter>
