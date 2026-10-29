@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, Flame } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,18 +14,22 @@ import type { Database } from "@/integrations/supabase/types";
 
 type FiringOrder = Database["public"]["Tables"]["firing_orders"]["Row"];
 const euro = (cents: number) => (cents / 100).toLocaleString("es-ES", { style: "currency", currency: "EUR" });
-const queryKey = ["admin-firing-orders"];
 
 export function FiringsSection() {
-  const queryClient = useQueryClient();
-  const { data: orders = [], isPending, isError, refetch } = useQuery({
-    queryKey,
-    queryFn: async () => {
+  const [orders, setOrders] = useState<FiringOrder[]>([]);
+  const [isPending, setIsPending] = useState(true);
+  const [isError, setIsError] = useState(false);
+  const refetch = useCallback(async () => {
+    setIsPending(true);
+    setIsError(false);
+    try {
       const { data, error } = await supabase.from("firing_orders").select("*").order("received_date", { ascending: false }).order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
-    },
-  });
+      setOrders(data);
+    } catch { setIsError(true); }
+    finally { setIsPending(false); }
+  }, []);
+  useEffect(() => { void refetch(); }, [refetch]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<FiringOrder | null>(null);
   const [name, setName] = useState("");
@@ -50,7 +53,7 @@ export function FiringsSection() {
   };
   const saved = async () => {
     setOpen(false);
-    await queryClient.invalidateQueries({ queryKey });
+    await refetch();
   };
   const save = async (event: React.FormEvent) => {
     event.preventDefault();
