@@ -56,9 +56,18 @@ import { CalendarHeader } from "@/components/calendar/CalendarHeader";
 import { CalendarBoard } from "@/components/calendar/CalendarBoard";
 import { useWorkshops, WorkshopDialog, WorkshopList, type Workshop } from "@/components/admin/Workshops";
 import { VouchersSection } from "@/components/admin/Vouchers";
+import { FiringsSection } from "@/components/admin/Firings";
 import { UpcomingClassesCarousel } from "@/components/calendar/UpcomingClassesCarousel";
 
 export const Route = createFileRoute("/admin/clases")({
+  head: () => ({ meta: [
+    { title: "Clases, talleres y cocciones | Cazú Ceramics" },
+    { name: "description", content: "Calendario y gestión privada de clases, talleres, vouchers y cocciones de Cazú Ceramics." },
+    { property: "og:title", content: "Clases, talleres y cocciones | Cazú Ceramics" },
+    { property: "og:description", content: "Gestión del estudio Cazú Ceramics: clases, talleres y registro de cocciones." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   validateSearch: (search) => calendarSearchSchema.parse(search),
   component: AdminClassesPage,
 });
@@ -212,6 +221,7 @@ function AdminClassesPage() {
             }}
           />
           <VouchersSection />
+          <FiringsSection />
         </>
       ) : null}
 
