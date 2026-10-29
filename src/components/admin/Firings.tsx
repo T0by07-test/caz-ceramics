@@ -14,6 +14,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 type FiringOrder = Database["public"]["Tables"]["firing_orders"]["Row"];
 const euro = (cents: number) => (cents / 100).toLocaleString("es-ES", { style: "currency", currency: "EUR" });
+const orderTotal = (order: FiringOrder) => order.custom_total_cents ?? order.total_cents ?? 0;
 
 export function FiringsSection() {
   const [orders, setOrders] = useState<FiringOrder[]>([]);
@@ -36,12 +37,13 @@ export function FiringsSection() {
   const [date, setDate] = useState(toIsoDate(new Date()));
   const [quantities, setQuantities] = useState<FiringQuantities>(emptyFiringQuantities);
   const [paid, setPaid] = useState(false);
+  const [customPrice, setCustomPrice] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [filter, setFilter] = useState<"all" | "unpaid">("all");
   const totals = firingTotals(quantities);
-  const paidTotal = orders.filter((order) => order.is_paid).reduce((sum, order) => sum + (order.total_cents ?? 0), 0);
-  const pendingTotal = orders.filter((order) => !order.is_paid).reduce((sum, order) => sum + (order.total_cents ?? 0), 0);
+  const paidTotal = orders.filter((order) => order.is_paid).reduce((sum, order) => sum + orderTotal(order), 0);
+  const pendingTotal = orders.filter((order) => !order.is_paid).reduce((sum, order) => sum + orderTotal(order), 0);
   const openOrder = (order: FiringOrder | null) => {
     setEditing(order);
     setName(order?.customer_name ?? "");
