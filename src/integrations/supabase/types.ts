@@ -330,6 +330,7 @@ export type Database = {
       firing_orders: {
         Row: {
           created_at: string
+          custom_total_cents: number | null
           customer_name: string
           extra_large: number
           extra_small: number
@@ -344,6 +345,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          custom_total_cents?: number | null
           customer_name: string
           extra_large?: number
           extra_small?: number
@@ -358,6 +360,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          custom_total_cents?: number | null
           customer_name?: string
           extra_large?: number
           extra_small?: number

@@ -1,0 +1,2 @@
+ALTER TABLE public.firing_orders ADD COLUMN custom_total_cents integer CHECK (custom_total_cents >= 0);
+COMMENT ON COLUMN public.firing_orders.custom_total_cents IS 'Optional admin-set final price in cents; when set, it replaces the generated total_cents (standard per-piece tariffs are orientative).';
