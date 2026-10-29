@@ -327,6 +327,51 @@ export type Database = {
         }
         Relationships: []
       }
+      firing_orders: {
+        Row: {
+          created_at: string
+          customer_name: string
+          extra_large: number
+          extra_small: number
+          id: string
+          is_paid: boolean
+          large: number
+          medium: number
+          notes: string
+          received_date: string
+          small: number
+          total_cents: number | null
+        }
+        Insert: {
+          created_at?: string
+          customer_name: string
+          extra_large?: number
+          extra_small?: number
+          id?: string
+          is_paid?: boolean
+          large?: number
+          medium?: number
+          notes?: string
+          received_date?: string
+          small?: number
+          total_cents?: number | null
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string
+          extra_large?: number
+          extra_small?: number
+          id?: string
+          is_paid?: boolean
+          large?: number
+          medium?: number
+          notes?: string
+          received_date?: string
+          small?: number
+          total_cents?: number | null
+        }
+        Relationships: []
+      }
       invite_classes: {
         Row: {
           class_id: string
