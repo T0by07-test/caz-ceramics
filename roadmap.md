@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Añadir registro privado de cocciones con cantidades por tamaño, tarifas acordadas y total automático; verificar guardado y cálculo.
 
 - [x] Revisar octubre y verificar correcciones de Fernando, Pilar, Alejandra, Cristina, Andrea Gómez, Johanna y Marta; contrastar los dos cobros reales de Belén en Stripe sin alterarlos.
 - [ ] Resolver diferencias restantes de octubre con cancelaciones, recuperaciones o cobros reales (requiere confirmar excepciones y posibles devoluciones; no reducir cobros de Stripe a la tarifa de reservas activas).
