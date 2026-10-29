@@ -50,6 +50,7 @@ export function FiringsSection() {
     setDate(order?.received_date ?? toIsoDate(new Date()));
     setQuantities(order ? { extra_small: order.extra_small, small: order.small, medium: order.medium, large: order.large, extra_large: order.extra_large } : emptyFiringQuantities());
     setPaid(order?.is_paid ?? false);
+    setCustomPrice(order?.custom_total_cents != null ? String(order.custom_total_cents / 100) : "");
     setNotes(order?.notes ?? "");
     setOpen(true);
   };
@@ -60,9 +61,12 @@ export function FiringsSection() {
   const save = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!name.trim() || !date || totals.pieces === 0) return toast.error("Indica la persona, la fecha y al menos una pieza.");
+    const trimmedPrice = customPrice.trim().replace(",", ".");
+    const parsedPrice = trimmedPrice === "" ? null : Number(trimmedPrice);
+    if (parsedPrice !== null && (!Number.isFinite(parsedPrice) || parsedPrice < 0)) return toast.error("El precio final no es válido.");
     setSaving(true);
     try {
-      const row = { customer_name: name.trim(), received_date: date, ...quantities, is_paid: paid, notes: notes.trim() };
+      const row = { customer_name: name.trim(), received_date: date, ...quantities, is_paid: paid, notes: notes.trim(), custom_total_cents: parsedPrice === null ? null : Math.round(parsedPrice * 100) };
       const { error } = editing ? await supabase.from("firing_orders").update(row).eq("id", editing.id) : await supabase.from("firing_orders").insert(row);
       if (error) throw error;
       toast.success("Cocción guardada.");
