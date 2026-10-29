@@ -64,6 +64,13 @@
       "when": 1793093684128,
       "tag": "0008_create_vouchers",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793266971151,
+      "tag": "0009_create_firing_orders",
+      "breakpoints": true
     }
   ]
 }
