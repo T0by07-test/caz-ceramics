@@ -302,6 +302,16 @@ Deno.serve(async (req) => {
       booking_id: b.id,
       ...(paymentMethod ? { method: paymentMethod } : {}),
     }));
+    // An earlier, abandoned card/Bizum checkout for these same bookings would
+    // otherwise linger as a duplicate pending row next to the cash one. Retire
+    // it (cash rows are kept; confirm_drop_in_booking still confirms an old
+    // session if it is paid late, since it only skips confirmed rows).
+    await admin
+      .from("payments")
+      .update({ status: "failed" })
+      .in("booking_id", bookingIds)
+      .eq("status", "pending")
+      .like("stripe_session_id", "cs_%");
     const { error: paymentInsertError } = await admin.from("payments").insert(paymentRows);
     if (paymentInsertError) {
       // Never hand out a live Stripe checkout we have no bookkeeping record of —
