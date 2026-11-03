@@ -426,7 +426,10 @@ function AdminLedgerPage() {
   const months = useMemo(
     () =>
       Array.from(
-        new Set(rows.map((r) => canonicalMonth(r.month)).filter((m): m is string => !!m)),
+        new Set([
+          ...MONTH_NAMES_ES.map((m) => m.toUpperCase()),
+          ...rows.map((r) => canonicalMonth(r.month)).filter((m): m is string => !!m),
+        ]),
       ).sort((a, b) => {
         const oa = monthIndexOf(a) ?? 99;
         const ob = monthIndexOf(b) ?? 99;
@@ -624,6 +627,19 @@ function AdminLedgerPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2 sm:shrink-0">
+          <Select value={monthFilter} onValueChange={setMonthFilter}>
+            <SelectTrigger aria-label="Mes" className="h-11 w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>Todos los meses</SelectItem>
+              {months.map((m) => (
+                <SelectItem key={m} value={m}>
+                  {m}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button
             onClick={() => setExportOpen(true)}
             size="lg"
