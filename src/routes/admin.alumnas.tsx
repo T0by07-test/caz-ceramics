@@ -1,3 +1,4 @@
+import { friendlyError } from "@/lib/booking";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
@@ -1400,7 +1401,7 @@ function MoveBookingDialog({
     });
     setSubmitting(false);
     if (error) {
-      toast.error(`No se pudo mover: ${error.message}`);
+      toast.error(`No se pudo mover: ${friendlyError(error.message)}`);
       return;
     }
     toast.success("Reserva movida correctamente.");
