@@ -280,7 +280,7 @@ function SelectionBar({
           </Button>
         </div>
 
-        <MonthlyPriceBreakdown rows={priceRows} />
+        <MonthlyPriceBreakdown rows={priceRows} classes={classes} />
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">¿Vienes acompañada?</span>
@@ -713,7 +713,7 @@ function DropInPaymentFlow({
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
-            <MonthlyPriceBreakdown rows={priceRows} />
+            <MonthlyPriceBreakdown rows={priceRows} classes={paidClasses} />
             {usableMakeups > 0 ? (
               <Button
                 variant="outline"
@@ -812,7 +812,7 @@ function DropInPaymentFlow({
               el taller el primer día de clase del mes al que corresponden tus clases.
             </DialogDescription>
           </DialogHeader>
-          <MonthlyPriceBreakdown rows={priceRows} />
+          <MonthlyPriceBreakdown rows={priceRows} classes={paidClasses} />
           <p className="text-sm text-muted-foreground">
             No necesitas realizar ningún pago por adelantado para reservar tu plaza. Te hemos
             enviado un correo con la confirmación de tus clases.
