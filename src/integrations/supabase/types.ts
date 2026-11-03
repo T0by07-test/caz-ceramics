@@ -1176,6 +1176,7 @@ export type Database = {
           waitlist_id: string
         }[]
       }
+      makeup_month: { Args: { p_expires: string }; Returns: string }
       mark_attendance: {
         Args: { p_booking_id: string; p_status: string }
         Returns: undefined
@@ -1221,8 +1222,13 @@ export type Database = {
         Args: { p_class_ids: string[]; p_guests: number }
         Returns: number
       }
+      recalc_month_pending_cash: {
+        Args: { p_month: string; p_student: string }
+        Returns: undefined
+      }
       redeem_invite: { Args: { p_token: string }; Returns: Json }
       resolve_plan_month: { Args: { p_month: string }; Returns: string }
+      sync_cash_ledger: { Args: { p_session: string }; Returns: undefined }
       unaccent: { Args: { "": string }; Returns: string }
       warn_expiring_drop_in_holds: { Args: never; Returns: number }
     }
