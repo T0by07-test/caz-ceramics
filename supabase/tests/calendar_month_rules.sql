@@ -11,7 +11,7 @@ DECLARE
 BEGIN
   INSERT INTO auth.users (id, email, aud, role) VALUES (u, 'test-'||u||'@example.invalid', 'authenticated', 'authenticated'),
     (adm, 'test-'||adm||'@example.invalid', 'authenticated', 'authenticated');
-  INSERT INTO public.profiles (id, role, email) VALUES (u, 'student', 'x'), (adm, 'admin', 'y') ON CONFLICT (id) DO UPDATE SET role = excluded.role;
+  INSERT INTO public.profiles (id, role, email) VALUES (u, 'user', 'x'), (adm, 'admin', 'y') ON CONFLICT (id) DO UPDATE SET role = excluded.role;
 
   INSERT INTO classes (date,start_time,end_time,capacity_ideal,capacity_max,status,audience,teacher) VALUES
    ('2027-03-03','10:30','12:30',6,8,'scheduled','adults','Cande') RETURNING id INTO m1;
