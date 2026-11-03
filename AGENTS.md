@@ -3,4 +3,5 @@
 
 - Group selection quotes and displayed price breakdowns by class month; use the existing authenticated quote RPC for each month to preserve incremental pricing.
 - Keep selected class records across calendar navigation so payment includes precisely the visible selection summary, including selections in other months.
-- Group income app payments by class month and collection state, preserving cash monthly totals without hiding outstanding added classes inside collected amounts; only cash payments support manual collection actions.
+- Group income app payments by class month and collection state, preserving cash monthly totals without hiding outstanding added classes inside collected amounts; only cash payments support manual collection actions.- Make-up credits belong to the calendar month (Europe/Madrid) of the original cancelled class; enforce in SQL (`book_makeup`, `admin_move_booking`), and cancelling a make-up booking frees the original credit instead of creating a new one. Admin moves across months are blocked so tiers never carry between months.
+- After any cancellation/removal of an adult drop-in, `recalc_month_pending_cash` re-prices only that month's pending cash rows and syncs the mirrored ledger; confirmed payments are never modified. Regression SQL lives in `supabase/tests/` and must roll back.
