@@ -1400,7 +1400,7 @@ function MoveBookingDialog({
     });
     setSubmitting(false);
     if (error) {
-      toast.error(`No se pudo mover: ${error.message}`);
+      toast.error(`No se pudo mover: ${friendlyError(error.message)}`);
       return;
     }
     toast.success("Reserva movida correctamente.");

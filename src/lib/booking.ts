@@ -29,6 +29,14 @@ const ERROR_MESSAGES: Record<string, string> = {
   NOT_OWNER: "No puedes cancelar una reserva que no es tuya.",
   ALREADY_BOOKED: "Ya tienes una reserva en esta clase.",
   NO_MAKEUPS_AVAILABLE: "No tienes recuperaciones disponibles.",
+  MAKEUP_WRONG_MONTH:
+    "Tu recuperación solo se puede usar en el mismo mes de la clase que cancelaste. Elige una clase de ese mes.",
+  MAKEUP_MONTH_MISMATCH:
+    "Una recuperación solo puede moverse a una clase del mismo mes de la clase cancelada original.",
+  CROSS_MONTH_MOVE:
+    "No se puede mover una reserva a otro mes. Cancélala y crea una reserva nueva en ese mes para que se cobre con la tarifa de ese mes.",
+  TARGET_FULL: "La clase de destino está completa.",
+  ALREADY_BOOKED_TARGET: "La alumna ya tiene reserva en la clase de destino.",
   INVALID_GUESTS: "Puedes traer como máximo 2 acompañantes.",
 };
 
