@@ -817,8 +817,6 @@ function AdminClassDrawer({
                 «Bloquear horario» solo cierra nuevas reservas. «Cancelar clase» cancela las
                 reservas existentes y da recuperaciones.
               </p>
-              <div className="hidden">
-              </div>
             </div>
           ) : null}
         </SheetContent>
