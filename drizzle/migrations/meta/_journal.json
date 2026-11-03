@@ -78,6 +78,13 @@
       "when": 1793271530329,
       "tag": "0010_firing_orders_custom_total",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793702429952,
+      "tag": "0011_companion_own_tier",
+      "breakpoints": true
     }
   ]
 }

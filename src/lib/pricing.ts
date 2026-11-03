@@ -34,15 +34,15 @@ export function formatEuros(cents: number): string {
 }
 
 /**
- * Price a selection where the student brings companions (+1 / +2): each guest
- * occupies a seat and is charged exactly like the student's own seat.
+ * Price a selection where the student brings companions (+1 / +2): each
+ * companion is priced as their own person with their own monthly tier
+ * (1st class 30 €, 2nd +25 €, ...), never added to the student's count.
  */
 export function selectionPriceCentsWithGuests(
   items: { audience?: string | null }[],
   guests: number,
 ): number {
-  const per = 1 + Math.max(0, guests);
-  return selectionPriceCents(items.flatMap((i) => Array.from({ length: per }, () => i)));
+  return (1 + Math.max(0, guests)) * selectionPriceCents(items);
 }
 
 export function groupSelectionByMonth<T extends { date: string }>(items: T[]): { month: string; classes: T[] }[] {

@@ -1195,6 +1195,15 @@ export type Database = {
         Args: { p_exclude: string[]; p_month: string; p_student: string }
         Returns: number
       }
+      prior_adult_slot_seats: {
+        Args: {
+          p_exclude: string[]
+          p_month: string
+          p_slot: number
+          p_student: string
+        }
+        Returns: number
+      }
       promote_waitlist: { Args: { p_class_id: string }; Returns: undefined }
       public_class_availability: {
         Args: never
