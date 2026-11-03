@@ -124,7 +124,8 @@ BEGIN
     UPDATE makeups SET used_booking_id = NULL WHERE student_id = u AND id <> lmk AND used_booking_id IS NOT NULL AND id <> mk;
     UPDATE makeups SET used_booking_id = NULL WHERE id = mk; -- keep only the legacy credit usable
     UPDATE makeups SET expires_at = now() - interval '1 day', origin_month = '2027-03-01' WHERE id = mk;
-    SELECT booking_id INTO lmb FROM book_makeup(m2);
+    SELECT booking_id INTO lmb FROM book_makeup(m31);
+    SELECT count(*) INTO v FROM makeups WHERE student_id = u; lm := NULL; v_txt := v::text;
     SELECT count(*) INTO v FROM makeups WHERE id = lmk AND used_booking_id = lmb;
     rep := rep || format('legacy_used_in_march=%s(exp 1) ', v); ok := ok AND v = 1;
     PERFORM set_config('request.jwt.claims', json_build_object('sub', adm, 'role', 'authenticated')::text, true);
@@ -138,8 +139,10 @@ BEGIN
     PERFORM set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true);
     PERFORM set_config('request.jwt.claim.sub', u::text, true);
     PERFORM * FROM cancel_booking(lmb);
-    SELECT count(*) INTO v FROM makeups WHERE student_id = u AND source_booking_id = lmb;
-    rep := rep || format('chain_no_new_credit=%s(exp 0) ', v); ok := ok AND v = 0;
+    SELECT count(*) INTO v FROM makeups WHERE student_id = u;
+    rep := rep || format('chain_no_new_credit=%s(exp %s) ', v, v_txt); ok := ok AND v::text = v_txt;
+    SELECT count(*) INTO v FROM makeups WHERE id = lmk AND used_booking_id IS NULL AND origin_month IS NULL;
+    ok := ok AND v = 1; -- same legacy credit freed, origin still derived from March root
     BEGIN
       PERFORM * FROM book_makeup(a3);
       rep := rep || 'legacy_after_cancel_april=ALLOWED(bad) '; ok := false;
