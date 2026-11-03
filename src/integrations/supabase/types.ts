@@ -537,6 +537,7 @@ export type Database = {
           created_at: string
           expires_at: string
           id: string
+          origin_month: string | null
           source_booking_id: string
           student_id: string
           used_booking_id: string | null
@@ -545,6 +546,7 @@ export type Database = {
           created_at?: string
           expires_at: string
           id?: string
+          origin_month?: string | null
           source_booking_id: string
           student_id: string
           used_booking_id?: string | null
@@ -553,6 +555,7 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
+          origin_month?: string | null
           source_booking_id?: string
           student_id?: string
           used_booking_id?: string | null
@@ -1176,7 +1179,9 @@ export type Database = {
           waitlist_id: string
         }[]
       }
+      makeup_deadline: { Args: { p_makeup: string }; Returns: string }
       makeup_month: { Args: { p_expires: string }; Returns: string }
+      makeup_origin_month: { Args: { p_makeup: string }; Returns: string }
       mark_attendance: {
         Args: { p_booking_id: string; p_status: string }
         Returns: undefined
