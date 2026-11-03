@@ -99,6 +99,13 @@
       "when": 1793711821788,
       "tag": "0013_makeup_root_month",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1793712160694,
+      "tag": "0014_admin_cancel_class",
+      "breakpoints": true
     }
   ]
 }

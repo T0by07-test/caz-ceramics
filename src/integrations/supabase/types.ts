@@ -1043,6 +1043,7 @@ export type Database = {
         Args: { p_request_id: string }
         Returns: string
       }
+      admin_cancel_class: { Args: { p_class_id: string }; Returns: number }
       admin_confirm_payment: {
         Args: { p_payment_id: string }
         Returns: undefined
