@@ -139,6 +139,7 @@ Deno.serve(async (req) => {
     let bookingIds: string[] = [];
     let bookings: Array<{ id: string; student_id: string; source: string; status: string; class_id: string; guests?: number | null }> = [];
     let audienceByClass = new Map<string, string | null | undefined>();
+    let classInfo = new Map<string, { date: string; time: string }>();
     let adultCount = 0;
     let kidsCount = 0;
     if (purpose === "drop_in") {
@@ -184,8 +185,14 @@ Deno.serve(async (req) => {
       const classIds = Array.from(new Set(bookings.map((b) => b.class_id)));
       const { data: classes } = await admin
         .from("classes")
-        .select("id, audience")
+        .select("id, audience, date, start_time")
         .in("id", classIds);
+      classInfo = new Map(
+        (classes ?? []).map((c) => [
+          c.id,
+          { date: String(c.date), time: String(c.start_time).slice(0, 5) },
+        ]),
+      );
       audienceByClass = new Map((classes ?? []).map((c) => [c.id, c.audience]));
       // Each companion (+1 / +2) takes a seat and is charged like the student's own seat.
       for (const b of bookings) {
@@ -219,18 +226,36 @@ Deno.serve(async (req) => {
     );
     const totalCents = bookings.reduce((s, b) => s + (amountByBooking.get(b.id) ?? 0), 0);
     if (totalCents <= 0) return jsonResponse({ error: "Nothing to pay" }, 400);
-    const lineItems = [
-      {
-        price_data: {
-          currency: "eur",
-          unit_amount: totalCents,
-          product_data: {
-            name: dropInCount === 1 ? "Clase de cerámica Cazú" : `${dropInCount} clases de cerámica Cazú`,
+    // One Stripe line per class month; amounts come from drop_in_amounts, which
+    // prices each month independently. Never split totals evenly across months.
+    const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+    const byMonth = new Map<string, { cents: number; dates: string[] }>();
+    for (const b of bookings) {
+      const info = classInfo.get(b.class_id);
+      const key = info ? info.date.slice(0, 7) : "0000-00";
+      const g = byMonth.get(key) ?? { cents: 0, dates: [] };
+      g.cents += amountByBooking.get(b.id) ?? 0;
+      if (info) g.dates.push(`${info.date.slice(8, 10)}/${info.date.slice(5, 7)} ${info.time}`);
+      byMonth.set(key, g);
+    }
+    const lineItems = Array.from(byMonth.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .filter(([, g]) => g.cents > 0)
+      .map(([key, g]) => {
+        const label = `${MONTHS[Number(key.slice(5, 7)) - 1] ?? ""} ${key.slice(0, 4)}`;
+        const n = g.dates.length;
+        return {
+          price_data: {
+            currency: "eur",
+            unit_amount: g.cents,
+            product_data: {
+              name: `Clases Cazú · ${label} (${n} ${n === 1 ? "clase" : "clases"})`.slice(0, 250),
+              ...(g.dates.length ? { description: g.dates.sort().join(", ").slice(0, 500) } : {}),
+            },
           },
-        },
-        quantity: 1,
-      },
-    ];
+          quantity: 1,
+        };
+      });
 
     const sessionParams: Record<string, unknown> = {
       line_items: lineItems,
