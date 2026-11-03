@@ -97,6 +97,60 @@ BEGIN
   SELECT count(*) INTO v FROM makeups WHERE id=mk AND used_booking_id IS NULL AND expires_at = mk_exp;
   ok := ok AND v = 1;
 
+  -- 7. Legacy credit: root class in March, expiry stored in APRIL (pre-fix data).
+  --    Still "valid" by expires_at, but booking/moving into April must fail.
+  DECLARE lb uuid; lm uuid; lmk uuid; lmb uuid; a3 uuid;
+  BEGIN
+    INSERT INTO classes (date,start_time,end_time,capacity_ideal,capacity_max,status,audience,teacher) VALUES
+     ('2027-04-21','10:30','12:30',6,8,'scheduled','adults','Cande') RETURNING id INTO a3;
+    INSERT INTO bookings (student_id,class_id,source,status) VALUES (u,m1,'drop_in','cancelled_recoverable') RETURNING id INTO lb;
+    -- first hop of the chain: credit from March used on a March make-up, then that make-up was cancelled
+    INSERT INTO bookings (student_id,class_id,source,status) VALUES (u,m3,'makeup','cancelled_recoverable') RETURNING id INTO lmb;
+    INSERT INTO makeups (student_id,source_booking_id,used_booking_id,expires_at) VALUES (u,lb,lmb,'2027-04-30 21:59+00');
+    -- legacy second credit minted from the make-up booking, expiring in April, no origin_month
+    INSERT INTO makeups (student_id,source_booking_id,expires_at) VALUES (u,lmb,'2027-04-30 21:59+00') RETURNING id INTO lmk;
+    SELECT makeup_origin_month(lmk) INTO v_txt;
+    rep := rep || format('legacy_root=%s(exp 2027-03-01) ', v_txt); ok := ok AND v_txt = '2027-03-01';
+    BEGIN
+      PERFORM * FROM book_makeup(a3);
+      rep := rep || 'legacy_april=ALLOWED(bad) '; ok := false;
+    EXCEPTION WHEN OTHERS THEN
+      rep := rep || 'legacy_april=' || SQLERRM || ' '; ok := ok AND SQLERRM = 'MAKEUP_WRONG_MONTH';
+    END;
+    -- deadline = first instant of April Madrid, not the stored April expiry
+    rep := rep || format('legacy_deadline=%s ', makeup_deadline(lmk) AT TIME ZONE 'Europe/Madrid');
+    ok := ok AND makeup_deadline(lmk) = '2027-04-01 00:00'::timestamp AT TIME ZONE 'Europe/Madrid';
+    -- use it legitimately in March, then admin-move to April -> blocked; cancel -> same credit, still March-only
+    UPDATE makeups SET used_booking_id = NULL WHERE student_id = u AND id <> lmk AND used_booking_id IS NOT NULL AND id <> mk;
+    UPDATE makeups SET used_booking_id = NULL WHERE id = mk; -- keep only the legacy credit usable
+    UPDATE makeups SET expires_at = now() - interval '1 day', origin_month = '2027-03-01' WHERE id = mk;
+    SELECT booking_id INTO lmb FROM book_makeup(m31);
+    SELECT count(*) INTO v FROM makeups WHERE student_id = u; lm := NULL; v_txt := v::text;
+    SELECT count(*) INTO v FROM makeups WHERE id = lmk AND used_booking_id = lmb;
+    rep := rep || format('legacy_used_in_march=%s(exp 1) ', v); ok := ok AND v = 1;
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', adm, 'role', 'authenticated')::text, true);
+    PERFORM set_config('request.jwt.claim.sub', adm::text, true);
+    BEGIN
+      PERFORM admin_move_booking(lmb, a3, 'test');
+      rep := rep || 'legacy_admin_move=ALLOWED(bad) '; ok := false;
+    EXCEPTION WHEN OTHERS THEN
+      rep := rep || 'legacy_admin_move=' || SQLERRM || ' '; ok := ok AND SQLERRM = 'MAKEUP_MONTH_MISMATCH';
+    END;
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true);
+    PERFORM set_config('request.jwt.claim.sub', u::text, true);
+    PERFORM * FROM cancel_booking(lmb);
+    SELECT count(*) INTO v FROM makeups WHERE student_id = u;
+    rep := rep || format('chain_no_new_credit=%s(exp %s) ', v, v_txt); ok := ok AND v::text = v_txt;
+    SELECT count(*) INTO v FROM makeups WHERE id = lmk AND used_booking_id IS NULL AND origin_month IS NULL;
+    ok := ok AND v = 1; -- same legacy credit freed, origin still derived from March root
+    BEGIN
+      PERFORM * FROM book_makeup(a3);
+      rep := rep || 'legacy_after_cancel_april=ALLOWED(bad) '; ok := false;
+    EXCEPTION WHEN OTHERS THEN
+      rep := rep || 'legacy_after_cancel_april=' || SQLERRM || ' '; ok := ok AND SQLERRM = 'MAKEUP_WRONG_MONTH';
+    END;
+  END;
+
   RAISE EXCEPTION 'TEST_RESULT ok=% | %', ok, rep;
 END
 $test$;
