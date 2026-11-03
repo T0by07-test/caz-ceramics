@@ -12,9 +12,11 @@ describe("calendar-month rules", () => {
       { date: "2027-03-10", audience: "adults" },
       { date: "2027-04-07", audience: "adults" },
     ];
-    const breakdown = monthlySelectionBreakdown(items, 0) as unknown as Array<Record<string, unknown>>;
-    const totals = breakdown.map((m) => Object.values(m).find((v) => typeof v === "number"));
-    expect(totals).toEqual([5500, 3000]);
+    const breakdown = monthlySelectionBreakdown(items, 0);
+    expect(breakdown.map((m) => [m.month, m.cents])).toEqual([
+      ["2027-03", 5500],
+      ["2027-04", 3000],
+    ]);
   });
 
   it("explains that a make-up cannot be used in another month", () => {
