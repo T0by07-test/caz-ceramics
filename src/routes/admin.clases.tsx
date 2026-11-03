@@ -72,7 +72,7 @@ export const Route = createFileRoute("/admin/clases")({
   component: AdminClassesPage,
 });
 
-type ClassStatus = "scheduled" | "auto_cancelled" | "cancelled_by_admin";
+type ClassStatus = "scheduled" | "auto_cancelled" | "cancelled_by_admin" | "cancelled";
 
 function AdminClassesPage() {
   const search = Route.useSearch();
@@ -465,8 +465,15 @@ function ClassFormDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="scheduled">Programada</SelectItem>
-                  <SelectItem value="cancelled_by_admin">Bloqueada / cancelada</SelectItem>
-                  <SelectItem value="auto_cancelled">Auto-cancelada</SelectItem>
+                  <SelectItem value="cancelled_by_admin">
+                    Horario bloqueado (mantiene reservas)
+                  </SelectItem>
+                  <SelectItem value="auto_cancelled" disabled>
+                    Auto-cancelada
+                  </SelectItem>
+                  <SelectItem value="cancelled" disabled>
+                    Cancelada por el estudio (usa «Cancelar clase»)
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -518,6 +525,11 @@ function AdminClassDrawer({
   const [students, setStudents] = useState<BookedStudent[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [blocking, setBlocking] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const isPast = cls
+    ? new Date(`${cls.date}T${cls.start_time}`).getTime() < Date.now()
+    : false;
   // Bookings currently being toggled, to disable their switch while the RPC runs.
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
   const [removing, setRemoving] = useState<BookedStudent | null>(null);
@@ -616,6 +628,33 @@ function AdminClassDrawer({
       return;
     }
     toast.success("Horario bloqueado");
+    onBlocked();
+    onOpenChange(false);
+  };
+
+  const handleCancelClass = async () => {
+    if (!cls) return;
+    setCancelling(true);
+    const { data, error } = await (
+      supabase.rpc as unknown as (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ data: number | null; error: { message: string; hint?: string } | null }>
+    )("admin_cancel_class", { p_class_id: cls.id });
+    setCancelling(false);
+    if (error) {
+      const msg = error.message.includes("CLASS_IN_PAST")
+        ? "No se pueden cancelar clases que ya han empezado o pasado."
+        : error.message.includes("NOT_ADMIN")
+          ? "No tienes permiso para cancelar clases."
+          : error.message;
+      toast.error("No se pudo cancelar la clase", { description: msg });
+      return;
+    }
+    setConfirmCancel(false);
+    toast.success("Clase cancelada", {
+      description: `${data ?? 0} reserva(s) cancelada(s) con recuperación.`,
+    });
     onBlocked();
     onOpenChange(false);
   };
@@ -751,18 +790,34 @@ function AdminClassDrawer({
                 )}
               </div>
 
-              <div className="flex flex-col gap-2 pt-2 sm:flex-row">
+              <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:flex-wrap">
                 <Button variant="secondary" className="flex-1" onClick={onEdit}>
                   Editar clase
                 </Button>
                 <Button
-                  variant="destructive"
+                  variant="outline"
                   className="flex-1"
                   onClick={handleBlock}
-                  disabled={blocking || cls.status === "cancelled_by_admin"}
+                  disabled={blocking || cls.status !== "scheduled"}
+                  title="Cierra el horario para nuevas reservas sin cancelar las existentes"
                 >
-                  {cls.status === "cancelled_by_admin" ? "Ya bloqueada" : "Bloquear horario"}
+                  {cls.status === "cancelled_by_admin" ? "Horario ya bloqueado" : "Bloquear horario"}
                 </Button>
+                {(cls.status === "scheduled" || cls.status === "cancelled_by_admin") && !isPast ? (
+                  <Button
+                    variant="destructive"
+                    className="flex-1"
+                    onClick={() => setConfirmCancel(true)}
+                  >
+                    Cancelar clase
+                  </Button>
+                ) : null}
+              </div>
+              <p className="-mt-4 text-xs text-muted-foreground">
+                «Bloquear horario» solo cierra nuevas reservas. «Cancelar clase» cancela las
+                reservas existentes y da recuperaciones.
+              </p>
+              <div className="hidden">
               </div>
             </div>
           ) : null}
@@ -796,12 +851,39 @@ function AdminClassDrawer({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={confirmCancel} onOpenChange={(o) => !cancelling && setConfirmCancel(o)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Cancelar esta clase?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se cancelarán todas las reservas de esta clase. Cada alumna recibirá una recuperación
+              para usar dentro del mismo mes, se anularán los cobros en efectivo pendientes y se
+              les avisará. Los pagos ya cobrados no se tocan. Esto no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelling}>Volver</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                void handleCancelClass();
+              }}
+              disabled={cancelling}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {cancelling ? "Cancelando…" : "Sí, cancelar clase"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
 
 function statusLabel(s: ClassStatus): string {
   if (s === "scheduled") return "Programada";
-  if (s === "cancelled_by_admin") return "Bloqueada";
+  if (s === "cancelled_by_admin") return "Horario bloqueado";
+  if (s === "cancelled") return "Cancelada por el estudio";
   return "Auto-cancelada";
 }

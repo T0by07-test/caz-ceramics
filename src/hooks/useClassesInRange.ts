@@ -9,7 +9,7 @@ export type ClassRow = {
   end_time: string;
   capacity_ideal: number;
   capacity_max: number;
-  status: "scheduled" | "auto_cancelled" | "cancelled_by_admin";
+  status: "scheduled" | "auto_cancelled" | "cancelled_by_admin" | "cancelled";
   instructor_id: string | null;
   audience: "adults" | "kids";
   teacher: string | null;
