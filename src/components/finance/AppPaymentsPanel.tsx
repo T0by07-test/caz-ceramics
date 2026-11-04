@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check, CreditCard, Wallet, RefreshCw, Undo2 } from "lucide-react";
+import { Check, CreditCard, Wallet, RefreshCw, Undo2, Pencil } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -315,6 +317,37 @@ export function AppPaymentsPanel({
     await load();
   };
 
+  const [editing, setEditing] = useState<Group | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [saving, setSaving] = useState(false);
+  const openEdit = (g: Group) => {
+    setEditing(g);
+    setEditValue((g.amountCents / 100).toString().replace(".", ","));
+  };
+  const saveAmount = async () => {
+    if (!editing) return;
+    let v = editValue.replace(/[€\s]/g, "");
+    if (v.includes(",")) v = v.replace(/\./g, "").replace(",", ".");
+    const n = Number(v);
+    if (v === "" || Number.isNaN(n) || n < 0) {
+      toast.error("El importe no es válido");
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase.rpc("admin_set_payments_amount", {
+      p_payment_ids: editing.paymentIds,
+      p_amount_cents: Math.round(n * 100),
+    });
+    setSaving(false);
+    if (error) {
+      toast.error("No se pudo cambiar el importe", { description: error.message });
+      return;
+    }
+    toast.success("Importe actualizado", { description: `${editing.studentName} · ${formatEur(Math.round(n * 100))}` });
+    setEditing(null);
+    await load();
+  };
+
   const markCollected = async (g: Group) => {
     setConfirming(g.key);
     for (const id of g.paymentIds) {
@@ -418,6 +451,11 @@ export function AppPaymentsPanel({
                     </div>
                     <span className="shrink-0 font-normal tabular-nums">
                       {formatEur(g.amountCents)}
+                      {isCashGroup(g) && (
+                        <Button size="icon" variant="ghost" className="ml-1 h-7 w-7" aria-label="Editar importe" onClick={() => openEdit(g)}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -482,6 +520,11 @@ export function AppPaymentsPanel({
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
                         {formatEur(g.amountCents)}
+                        {isCashGroup(g) && (
+                        <Button size="icon" variant="ghost" className="ml-1 h-7 w-7" aria-label="Editar importe" onClick={() => openEdit(g)}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                       </TableCell>
                       <TableCell className="text-right">
                         {g.collected ? (
@@ -516,6 +559,22 @@ export function AppPaymentsPanel({
           </>
         )}
       </CardContent>
+      <Dialog open={editing !== null} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar importe</DialogTitle>
+            <DialogDescription>
+              {editing ? `${editing.studentName} · ${editing.classCount > 0 ? `${editing.classCount} clases` : "Plan"}` : ""}. Es lo que la alumna verá como importe a pagar.
+            </DialogDescription>
+          </DialogHeader>
+          <Label htmlFor="edit-amount">Importe (€)</Label>
+          <Input id="edit-amount" inputMode="decimal" value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={(e) => e.key === "Enter" && void saveAmount()} />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditing(null)}>Cancelar</Button>
+            <Button disabled={saving} onClick={() => void saveAmount()}>Guardar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
