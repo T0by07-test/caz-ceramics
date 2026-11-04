@@ -1077,7 +1077,8 @@ function centsToInput(cents: number | null): string {
 }
 
 function inputToCents(value: string): number | null {
-  const trimmed = value.trim().replace(",", ".");
+  let trimmed = value.replace(/[€\s]/g, "");
+  if (trimmed.includes(",")) trimmed = trimmed.replace(/\./g, "").replace(",", ".");
   if (trimmed === "") return null;
   const num = Number(trimmed);
   if (Number.isNaN(num)) return null;
@@ -1174,7 +1175,19 @@ function LedgerFormSheet({
       toast.success("Entrada creada");
       onSaved();
     } else if (mode === "edit" && entry) {
-      const { error } = await ledger().update(payload).eq("id", entry.id);
+      const { amount_cents: newCents, ...rest } = payload;
+      let { error } = await ledger().update(rest).eq("id", entry.id);
+      if (!error && newCents !== entry.amount_cents) {
+        if (newCents == null) {
+          ({ error } = await ledger().update({ amount_cents: null }).eq("id", entry.id));
+        } else {
+          // Also adjusts the student's linked pending cash payment so it is not overwritten.
+          ({ error } = await supabase.rpc("admin_set_ledger_amount", {
+            p_entry_id: entry.id,
+            p_amount_cents: newCents,
+          }));
+        }
+      }
       setSubmitting(false);
       if (error) {
         toast.error("No se pudo actualizar", { description: error.message });
