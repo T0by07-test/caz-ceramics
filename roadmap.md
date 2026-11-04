@@ -12,3 +12,7 @@
 - [x] Corregir los céntimos de las tres compras indicadas y verificar que cada una suma los 70 € cobrados en Stripe.
 - [x] Miembros (/admin/alumnas): filtro por mes para ver las clases anotadas de octubre (y otros meses)
 - [ ] WhatsApp Business: conectar número +34 661 499 026 y enviar avisos (plan aprobado; falta que la usuaria complete la tarjeta de conexión)
+
+- [x] Miércoles 15:00: pasar de 1 h a 2 h (15:00–17:00) en las 9 clases de hoy en adelante; verificado en base de datos y en el calendario público (11 de noviembre muestra 15:00 – 17:00).
+- [ ] Apuntar a Sara Ruiz y a Belen Igual en el viernes 6 de noviembre a las 17:30 (pendiente: no tienen cuenta en la app; hacen falta sus correos para enviarles invitación o que Cande confirme si están con otro nombre).
+- [x] Viernes 6 de noviembre 17:30: la da Cande (antes Sofi); verificado en base de datos y en el calendario público (P. Cande).
