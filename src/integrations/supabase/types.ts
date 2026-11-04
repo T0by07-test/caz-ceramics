@@ -1072,6 +1072,10 @@ export type Database = {
         Args: { p_booking_id: string }
         Returns: undefined
       }
+      admin_set_ledger_amount: {
+        Args: { p_amount_cents: number; p_entry_id: string }
+        Returns: undefined
+      }
       admin_unconfirm_payment: {
         Args: { p_payment_id: string }
         Returns: undefined
