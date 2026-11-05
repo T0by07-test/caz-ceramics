@@ -628,29 +628,6 @@ function AdminLedgerPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-end gap-2 sm:shrink-0">
-          <div className="relative w-full sm:w-64">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              id="student-search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar alumna…"
-              aria-label="Buscar alumna"
-              className="h-11 pl-9 pr-9"
-            />
-            {search !== "" && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label="Quitar la búsqueda"
-                className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2"
-                onClick={() => setSearch("")}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
           <Select value={monthFilter} onValueChange={setMonthFilter}>
             <SelectTrigger aria-label="Mes" className="h-11 w-40">
               <SelectValue />
