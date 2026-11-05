@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { appPaymentGroupKey } from "@/lib/finance/payment-group";
+import { matchesSearch } from "@/lib/finance/search";
 
 /** Payments made through the app (card / Bizum / cash-at-studio), grouped per
  * checkout so each row reads like a ledger line: alumna, fecha, nº de clases,
@@ -91,9 +92,12 @@ const TEST_STUDENT_IDS = new Set([
 
 export function AppPaymentsPanel({
   monthOverride = null,
+  studentQuery = "",
 }: {
   /** Mes ISO (YYYY-MM) que obliga al panel a seguir el filtro de la página. */
   monthOverride?: string | null;
+  /** Nombre a buscar: si trae algo, el panel busca en todos los meses. */
+  studentQuery?: string;
 } = {}) {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
@@ -285,10 +289,13 @@ export function AppPaymentsPanel({
     return Array.from(set).sort().reverse();
   }, [groups, effectiveMonth]);
 
-  const visible = useMemo(
-    () => groups.filter((g) => g.classMonth === effectiveMonth),
-    [groups, effectiveMonth],
-  );
+  // Con una búsqueda de alumna activa el mes deja de filtrar: escribir un nombre
+  // debe encontrarla aunque su cobro sea de otro mes.
+  const searching = studentQuery.trim() !== "";
+  const visible = useMemo(() => {
+    if (!searching) return groups.filter((g) => g.classMonth === effectiveMonth);
+    return groups.filter((g) => matchesSearch(g.studentName, studentQuery));
+  }, [groups, effectiveMonth, searching, studentQuery]);
 
   const totals = useMemo(() => {
     let collected = 0;
