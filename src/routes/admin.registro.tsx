@@ -655,6 +655,32 @@ function AdminLedgerPage() {
         </div>
       </div>
 
+      {/* Buscar alumna: filtra los pagos de la app y las entradas del cuaderno,
+          en todos los meses, para poder dar con ella sin tocar filtros. */}
+      <div className="relative w-full sm:max-w-sm">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          id="student-search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar alumna…"
+          aria-label="Buscar alumna"
+          className="h-11 pl-9 pr-9"
+        />
+        {search !== "" && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="Quitar la búsqueda"
+            className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2"
+            onClick={() => setSearch("")}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-3">
         <Card className="">
           <CardContent className="p-4">
