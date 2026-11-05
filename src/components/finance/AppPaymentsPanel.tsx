@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { appPaymentGroupKey } from "@/lib/finance/payment-group";
+import { matchesSearch } from "@/lib/finance/search";
 
 /** Payments made through the app (card / Bizum / cash-at-studio), grouped per
  * checkout so each row reads like a ledger line: alumna, fecha, nº de clases,
@@ -91,9 +92,12 @@ const TEST_STUDENT_IDS = new Set([
 
 export function AppPaymentsPanel({
   monthOverride = null,
+  studentQuery = "",
 }: {
   /** Mes ISO (YYYY-MM) que obliga al panel a seguir el filtro de la página. */
   monthOverride?: string | null;
+  /** Nombre a buscar: si trae algo, el panel busca en todos los meses. */
+  studentQuery?: string;
 } = {}) {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
@@ -285,10 +289,13 @@ export function AppPaymentsPanel({
     return Array.from(set).sort().reverse();
   }, [groups, effectiveMonth]);
 
-  const visible = useMemo(
-    () => groups.filter((g) => g.classMonth === effectiveMonth),
-    [groups, effectiveMonth],
-  );
+  // Con una búsqueda de alumna activa el mes deja de filtrar: escribir un nombre
+  // debe encontrarla aunque su cobro sea de otro mes.
+  const searching = studentQuery.trim() !== "";
+  const visible = useMemo(() => {
+    if (!searching) return groups.filter((g) => g.classMonth === effectiveMonth);
+    return groups.filter((g) => matchesSearch(g.studentName, studentQuery));
+  }, [groups, effectiveMonth, searching, studentQuery]);
 
   const totals = useMemo(() => {
     let collected = 0;
@@ -406,6 +413,13 @@ export function AppPaymentsPanel({
           </div>
         </div>
 
+        {searching && (
+          <p className="text-xs text-muted-foreground">
+            Buscando «{studentQuery.trim()}» en todos los meses · {visible.length}{" "}
+            {visible.length === 1 ? "pago" : "pagos"}
+          </p>
+        )}
+
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-md border border-border p-3">
             <p className="text-label text-muted-foreground">Cobrado</p>
@@ -429,8 +443,16 @@ export function AppPaymentsPanel({
           </div>
         ) : visible.length === 0 ? (
           <EmptyState
-            title="Sin pagos de la app en este mes"
-            description="Cuando una alumna reserve desde la web aparecerá aquí."
+            title={
+              searching
+                ? `Sin pagos de «${studentQuery.trim()}»`
+                : "Sin pagos de la app en este mes"
+            }
+            description={
+              searching
+                ? "Comprueba el nombre o quita la búsqueda para ver el mes completo."
+                : "Cuando una alumna reserve desde la web aparecerá aquí."
+            }
           />
         ) : (
           <>
@@ -441,6 +463,9 @@ export function AppPaymentsPanel({
                     <div className="min-w-0">
                       <p className="truncate font-medium">{g.studentName}</p>
                       <p className="text-xs text-muted-foreground">
+                        {searching && (
+                          <span className="capitalize">{monthLabel(g.classMonth)} · </span>
+                        )}
                         {new Date(g.paidAt).toLocaleDateString("es-ES")} ·{" "}
                         {g.classCount > 0
                           ? `${g.classCount} ${g.classCount === 1 ? "clase" : "clases"}`
@@ -489,6 +514,7 @@ export function AppPaymentsPanel({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Fecha</TableHead>
+                    {searching && <TableHead>Mes de las clases</TableHead>}
                     <TableHead>Alumna</TableHead>
                     <TableHead>Clases</TableHead>
                     <TableHead>Método</TableHead>
@@ -503,6 +529,11 @@ export function AppPaymentsPanel({
                       <TableCell className="whitespace-nowrap text-muted-foreground">
                         {new Date(g.paidAt).toLocaleDateString("es-ES")}
                       </TableCell>
+                      {searching && (
+                        <TableCell className="whitespace-nowrap capitalize text-muted-foreground">
+                          {monthLabel(g.classMonth)}
+                        </TableCell>
+                      )}
                       <TableCell className="font-medium">{g.studentName}</TableCell>
                       <TableCell>{g.classCount > 0 ? g.classCount : "Plan"}<ClassDates dates={g.classDates} /></TableCell>
                       <TableCell className="text-muted-foreground">

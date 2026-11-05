@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ChevronsUpDown,
   FileDown,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
@@ -62,6 +63,7 @@ import { ExportDialog } from "@/components/finance/ExportDialog";
 import { AppPaymentsPanel } from "@/components/finance/AppPaymentsPanel";
 import { VoucherIncomePanel, useVoucherIncome } from "@/components/finance/VoucherIncomePanel";
 import { tbl, type CommissionRateRow } from "@/lib/finance/db";
+import { matchesAnySearch } from "@/lib/finance/search";
 
 export const Route = createFileRoute("/admin/registro")({
   head: () => ({ meta: [{ title: "Registro — Admin" }] }),
@@ -457,14 +459,13 @@ function AdminLedgerPage() {
       if (statusFilter !== ALL && r.status !== statusFilter) return false;
       if (methodFilter !== ALL && r.method !== methodFilter) return false;
       if (categoryFilter !== ALL && r.category !== categoryFilter) return false;
-      if (monthFilter !== ALL && canonicalMonth(r.month) !== canonicalMonth(monthFilter))
+      // Con una búsqueda activa no se filtra por mes: escribir un nombre debe
+      // encontrar a la alumna aunque su cobro sea de otro mes.
+      if (!q && monthFilter !== ALL && canonicalMonth(r.month) !== canonicalMonth(monthFilter))
         return false;
 
       if (teacherFilter !== ALL && !(r.collector ?? []).includes(teacherFilter)) return false;
-      if (q) {
-        const hay = [r.student_name, r.notes].some((v) => (v ?? "").toLowerCase().includes(q));
-        if (!hay) return false;
-      }
+      if (q && !matchesAnySearch([r.student_name, r.notes, r.item], search)) return false;
       return true;
     });
 
@@ -626,7 +627,7 @@ function AdminLedgerPage() {
             El cuaderno de ingresos y actividad. Filtra, edita y añade entradas manualmente.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2 sm:shrink-0">
+        <div className="flex flex-wrap items-end gap-2 sm:shrink-0">
           <Select value={monthFilter} onValueChange={setMonthFilter}>
             <SelectTrigger aria-label="Mes" className="h-11 w-40">
               <SelectValue />
@@ -652,6 +653,32 @@ function AdminLedgerPage() {
             <Plus className="h-4 w-4" /> Nueva entrada
           </Button>
         </div>
+      </div>
+
+      {/* Buscar alumna: filtra los pagos de la app y las entradas del cuaderno,
+          en todos los meses, para poder dar con ella sin tocar filtros. */}
+      <div className="relative w-full sm:max-w-sm">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          id="student-search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar alumna…"
+          aria-label="Buscar alumna"
+          className="h-11 pl-9 pr-9"
+        />
+        {search !== "" && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="Quitar la búsqueda"
+            className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2"
+            onClick={() => setSearch("")}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
@@ -682,7 +709,7 @@ function AdminLedgerPage() {
       </div>
 
 
-      <AppPaymentsPanel monthOverride={selectedIsoMonth} />
+      <AppPaymentsPanel monthOverride={selectedIsoMonth} studentQuery={search} />
       <VoucherIncomePanel vouchers={voucherIncome.vouchers} />
 
 
@@ -733,20 +760,7 @@ function AdminLedgerPage() {
       )}
 
       <Card className="">
-        <CardContent className="grid gap-3 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="search">Buscar</Label>
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Alumno o notas…"
-                className="pl-9"
-              />
-            </div>
-          </div>
+        <CardContent className="grid gap-3 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           <div className="flex flex-col gap-2">
             <Label htmlFor="f-status">Estado</Label>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
