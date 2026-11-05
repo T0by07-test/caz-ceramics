@@ -1111,6 +1111,7 @@ export type Database = {
           makeup_id: string
         }[]
       }
+      booking_recovered: { Args: { p_booking: string }; Returns: boolean }
       can_manage_classes: { Args: never; Returns: boolean }
       cancel_booking: {
         Args: { p_booking_id: string }
