@@ -463,6 +463,9 @@ export function AppPaymentsPanel({
                     <div className="min-w-0">
                       <p className="truncate font-medium">{g.studentName}</p>
                       <p className="text-xs text-muted-foreground">
+                        {searching && (
+                          <span className="capitalize">{monthLabel(g.classMonth)} · </span>
+                        )}
                         {new Date(g.paidAt).toLocaleDateString("es-ES")} ·{" "}
                         {g.classCount > 0
                           ? `${g.classCount} ${g.classCount === 1 ? "clase" : "clases"}`
@@ -511,6 +514,7 @@ export function AppPaymentsPanel({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Fecha</TableHead>
+                    {searching && <TableHead>Mes de las clases</TableHead>}
                     <TableHead>Alumna</TableHead>
                     <TableHead>Clases</TableHead>
                     <TableHead>Método</TableHead>
@@ -525,6 +529,11 @@ export function AppPaymentsPanel({
                       <TableCell className="whitespace-nowrap text-muted-foreground">
                         {new Date(g.paidAt).toLocaleDateString("es-ES")}
                       </TableCell>
+                      {searching && (
+                        <TableCell className="whitespace-nowrap capitalize text-muted-foreground">
+                          {monthLabel(g.classMonth)}
+                        </TableCell>
+                      )}
                       <TableCell className="font-medium">{g.studentName}</TableCell>
                       <TableCell>{g.classCount > 0 ? g.classCount : "Plan"}<ClassDates dates={g.classDates} /></TableCell>
                       <TableCell className="text-muted-foreground">
