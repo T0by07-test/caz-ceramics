@@ -459,14 +459,13 @@ function AdminLedgerPage() {
       if (statusFilter !== ALL && r.status !== statusFilter) return false;
       if (methodFilter !== ALL && r.method !== methodFilter) return false;
       if (categoryFilter !== ALL && r.category !== categoryFilter) return false;
-      if (monthFilter !== ALL && canonicalMonth(r.month) !== canonicalMonth(monthFilter))
+      // Con una búsqueda activa no se filtra por mes: escribir un nombre debe
+      // encontrar a la alumna aunque su cobro sea de otro mes.
+      if (!q && monthFilter !== ALL && canonicalMonth(r.month) !== canonicalMonth(monthFilter))
         return false;
 
       if (teacherFilter !== ALL && !(r.collector ?? []).includes(teacherFilter)) return false;
-      if (q) {
-        const hay = [r.student_name, r.notes].some((v) => (v ?? "").toLowerCase().includes(q));
-        if (!hay) return false;
-      }
+      if (q && !matchesAnySearch([r.student_name, r.notes, r.item], search)) return false;
       return true;
     });
 
@@ -707,7 +706,7 @@ function AdminLedgerPage() {
       </div>
 
 
-      <AppPaymentsPanel monthOverride={selectedIsoMonth} />
+      <AppPaymentsPanel monthOverride={selectedIsoMonth} studentQuery={search} />
       <VoucherIncomePanel vouchers={voucherIncome.vouchers} />
 
 
