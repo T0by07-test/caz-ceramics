@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ChevronsUpDown,
   FileDown,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
@@ -62,6 +63,7 @@ import { ExportDialog } from "@/components/finance/ExportDialog";
 import { AppPaymentsPanel } from "@/components/finance/AppPaymentsPanel";
 import { VoucherIncomePanel, useVoucherIncome } from "@/components/finance/VoucherIncomePanel";
 import { tbl, type CommissionRateRow } from "@/lib/finance/db";
+import { matchesAnySearch } from "@/lib/finance/search";
 
 export const Route = createFileRoute("/admin/registro")({
   head: () => ({ meta: [{ title: "Registro — Admin" }] }),
