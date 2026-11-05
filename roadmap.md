@@ -16,3 +16,4 @@
 - [x] Miércoles 15:00: pasar de 1 h a 2 h (15:00–17:00) en las 9 clases de hoy en adelante; verificado en base de datos y en el calendario público (11 de noviembre muestra 15:00 – 17:00).
 - [ ] Apuntar a Sara Ruiz y a Belen Igual en el viernes 6 de noviembre a las 17:30 (pendiente: no tienen cuenta en la app; hacen falta sus correos para enviarles invitación o que Cande confirme si están con otro nombre).
 - [x] Viernes 6 de noviembre 17:30: la da Cande (antes Sofi); verificado en base de datos y en el calendario público (P. Cande).
+- [x] Ingresos: buscador de alumna arriba de la página que filtra pagos de la app y entradas del cuaderno en todos los meses, sin distinguir tildes ni mayúsculas; 7 pruebas de búsqueda y vista autenticada verificadas (camila 5 pagos, maría = maria 17, garcía = GARCÍA 7).
