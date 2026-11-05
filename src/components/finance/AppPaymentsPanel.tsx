@@ -413,6 +413,13 @@ export function AppPaymentsPanel({
           </div>
         </div>
 
+        {searching && (
+          <p className="text-xs text-muted-foreground">
+            Buscando «{studentQuery.trim()}» en todos los meses · {visible.length}{" "}
+            {visible.length === 1 ? "pago" : "pagos"}
+          </p>
+        )}
+
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-md border border-border p-3">
             <p className="text-label text-muted-foreground">Cobrado</p>
@@ -436,8 +443,16 @@ export function AppPaymentsPanel({
           </div>
         ) : visible.length === 0 ? (
           <EmptyState
-            title="Sin pagos de la app en este mes"
-            description="Cuando una alumna reserve desde la web aparecerá aquí."
+            title={
+              searching
+                ? `Sin pagos de «${studentQuery.trim()}»`
+                : "Sin pagos de la app en este mes"
+            }
+            description={
+              searching
+                ? "Comprueba el nombre o quita la búsqueda para ver el mes completo."
+                : "Cuando una alumna reserve desde la web aparecerá aquí."
+            }
           />
         ) : (
           <>
