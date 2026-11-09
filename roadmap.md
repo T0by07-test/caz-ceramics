@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Crear clase del viernes 13 de noviembre a las 19:00 con Cande y anotar la disponibilidad de Josue y Marina.
 - [x] Añadir registro privado de cocciones con cantidades por tamaño, tarifas acordadas y total automático; guardado, edición, cobro y eliminación verificados con sesión administradora, y nueve pruebas de cálculo correctas.
 
 - [x] Revisar octubre y verificar correcciones de Fernando, Pilar, Alejandra, Cristina, Andrea Gómez, Johanna y Marta; contrastar los dos cobros reales de Belén en Stripe sin alterarlos.
