@@ -27,6 +27,8 @@ export type Workshop = {
   price_cents: number | null;
   contact: string | null;
   notes: string | null;
+  is_paid: boolean;
+  paid_cents: number | null;
 };
 
 export function useWorkshops(range: { startIso: string; endIso: string } | null, enabled: boolean) {
@@ -89,7 +91,7 @@ export function WorkshopList({
                   {formatLongDate(w.date)} · {formatTimeRange(w.start_time, w.end_time)}
                 </span>
                 <span className="text-xs">
-                  {[w.client_name, w.attendees ? `${w.attendees} personas` : null, euro(w.price_cents)]
+                  {[w.client_name, w.attendees ? `${w.attendees} personas` : null, euro(w.price_cents), w.is_paid ? `Pagado${w.paid_cents != null ? " " + euro(w.paid_cents) : ""}` : "Sin pagar"]
                     .filter(Boolean)
                     .join(" · ")}
                 </span>
@@ -125,6 +127,8 @@ export function WorkshopDialog({
     price: "",
     contact: "",
     notes: "",
+    is_paid: false,
+    paid: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -140,10 +144,12 @@ export function WorkshopDialog({
       price: workshop?.price_cents != null ? (workshop.price_cents / 100).toString() : "",
       contact: workshop?.contact ?? "",
       notes: workshop?.notes ?? "",
+      is_paid: workshop?.is_paid ?? false,
+      paid: workshop?.paid_cents != null ? (workshop.paid_cents / 100).toString() : "",
     });
   }, [open, workshop, defaultDate]);
 
-  const set = (k: keyof typeof f) => (e: { target: { value: string } }) =>
+  const set = (k: "date" | "start_time" | "end_time" | "title" | "client_name" | "attendees" | "price" | "contact" | "notes" | "paid") => (e: { target: { value: string } }) =>
     setF((p) => ({ ...p, [k]: e.target.value }));
 
   const save = async () => {
@@ -160,6 +166,8 @@ export function WorkshopDialog({
       price_cents: f.price ? Math.round(parseFloat(f.price.replace(",", ".")) * 100) : null,
       contact: f.contact.trim() || null,
       notes: f.notes.trim() || null,
+      is_paid: f.is_paid,
+      paid_cents: f.paid ? Math.round(parseFloat(f.paid.replace(",", ".")) * 100) : null,
     };
     const { error } = workshop
       ? await supabase.from("workshops").update(row).eq("id", workshop.id)
@@ -216,6 +224,21 @@ export function WorkshopDialog({
             <div className="grid gap-1.5">
               <Label>Precio (€)</Label>
               <Input inputMode="decimal" value={f.price} onChange={set("price")} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 items-end gap-2">
+            <label className="flex h-10 items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={f.is_paid}
+                onChange={(e) => setF((p) => ({ ...p, is_paid: e.target.checked }))}
+                className="h-4 w-4 accent-primary"
+              />
+              Reserva pagada
+            </label>
+            <div className="grid gap-1.5">
+              <Label>Monto pagado (€)</Label>
+              <Input inputMode="decimal" value={f.paid} onChange={set("paid")} placeholder="Ej. 50" />
             </div>
           </div>
           <div className="grid gap-1.5">

@@ -141,6 +141,13 @@
       "when": 1793868311150,
       "tag": "0019_fix_recovered_status_match",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1794474783041,
+      "tag": "0020_workshops_payment",
+      "breakpoints": true
     }
   ]
 }
