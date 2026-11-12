@@ -1,0 +1,1 @@
+ALTER TABLE public.workshops ADD COLUMN IF NOT EXISTS is_paid boolean NOT NULL DEFAULT false, ADD COLUMN IF NOT EXISTS paid_cents integer;
