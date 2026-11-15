@@ -32,19 +32,20 @@ export type Workshop = {
   is_completed: boolean;
 };
 
-export function useWorkshops(range: { startIso: string; endIso: string } | null, enabled: boolean) {
+export function useWorkshops(range: { startIso?: string; endIso: string } | null, enabled: boolean) {
   const [workshops, setWorkshops] = useState<Workshop[]>([]);
   const start = range?.startIso;
   const end = range?.endIso;
   const refresh = useCallback(async () => {
-    if (!enabled || !start || !end) return setWorkshops([]);
-    const { data } = await supabase
+    if (!enabled || !end) return setWorkshops([]);
+    let query = supabase
       .from("workshops")
       .select("*")
-      .gte("date", start)
       .lte("date", end)
       .order("date")
       .order("start_time");
+    if (start) query = query.gte("date", start);
+    const { data } = await query;
     setWorkshops((data ?? []) as Workshop[]);
   }, [enabled, start, end]);
   useEffect(() => {
@@ -85,7 +86,7 @@ export function WorkshopList({
       <div className="mb-3 flex items-center justify-between gap-2">
         <div>
           <h2 className="text-h2">Talleres</h2>
-          <p className="text-xs text-muted-foreground">Marca los talleres realizados. Solo los ves tú.</p>
+          <p className="text-xs text-muted-foreground">Todos hasta el 15 de diciembre. Marca los realizados.</p>
         </div>
         <Button variant="outline" onClick={onCreate} className="gap-2">
           <Plus className="h-4 w-4" /> Nuevo taller

@@ -101,7 +101,11 @@ function AdminClassesPage() {
   const [editing, setEditing] = useState<ClassWithCount | null>(null);
   const { classes, loading, refresh } = useClassesInRange(range, "admin");
   const isAdmin = role === "admin";
-  const { workshops, refresh: refreshWorkshops } = useWorkshops(range, isAdmin);
+  const { workshops, refresh: refreshWorkshops } = useWorkshops({ endIso: "2026-12-15" }, isAdmin);
+  const calendarWorkshops = useMemo(
+    () => workshops.filter((workshop) => workshop.date >= range.startIso && workshop.date <= range.endIso),
+    [workshops, range],
+  );
   const [wsOpen, setWsOpen] = useState(false);
   const [wsEditing, setWsEditing] = useState<Workshop | null>(null);
 
@@ -190,7 +194,7 @@ function AdminClassesPage() {
         classes={visibleClasses}
         loading={loading}
         onSelectClass={setSelected}
-        workshops={isAdmin ? workshops : undefined}
+        workshops={isAdmin ? calendarWorkshops : undefined}
         onSelectWorkshop={(w) => {
           setWsEditing(w);
           setWsOpen(true);
