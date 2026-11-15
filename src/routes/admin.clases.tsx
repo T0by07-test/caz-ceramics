@@ -58,6 +58,7 @@ import { useWorkshops, WorkshopDialog, WorkshopList, type Workshop } from "@/com
 import { VouchersSection } from "@/components/admin/Vouchers";
 import { FiringsSection } from "@/components/admin/Firings";
 import { UpcomingClassesCarousel } from "@/components/calendar/UpcomingClassesCarousel";
+import { ADMIN_WORKSHOP_LIST_END_ISO } from "@/lib/workshops";
 
 export const Route = createFileRoute("/admin/clases")({
   head: () => ({ meta: [
@@ -101,7 +102,7 @@ function AdminClassesPage() {
   const [editing, setEditing] = useState<ClassWithCount | null>(null);
   const { classes, loading, refresh } = useClassesInRange(range, "admin");
   const isAdmin = role === "admin";
-  const { workshops, refresh: refreshWorkshops } = useWorkshops({ endIso: "2026-12-15" }, isAdmin);
+  const { workshops, refresh: refreshWorkshops } = useWorkshops({ endIso: ADMIN_WORKSHOP_LIST_END_ISO }, isAdmin);
   const calendarWorkshops = useMemo(
     () => workshops.filter((workshop) => workshop.date >= range.startIso && workshop.date <= range.endIso),
     [workshops, range],

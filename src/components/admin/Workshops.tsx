@@ -86,7 +86,7 @@ export function WorkshopList({
       <div className="mb-3 flex items-center justify-between gap-2">
         <div>
           <h2 className="text-h2">Talleres</h2>
-          <p className="text-xs text-muted-foreground">Todos hasta el 15 de diciembre. Marca los realizados.</p>
+          <p className="text-xs text-muted-foreground">Todos hasta el 19 de diciembre, inclusive. Marca los realizados.</p>
         </div>
         <Button variant="outline" onClick={onCreate} className="gap-2">
           <Plus className="h-4 w-4" /> Nuevo taller
