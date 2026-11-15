@@ -29,6 +29,7 @@ export type Workshop = {
   notes: string | null;
   is_paid: boolean;
   paid_cents: number | null;
+  is_completed: boolean;
 };
 
 export function useWorkshops(range: { startIso: string; endIso: string } | null, enabled: boolean) {
