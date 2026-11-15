@@ -58,6 +58,7 @@ import { useWorkshops, WorkshopDialog, WorkshopList, type Workshop } from "@/com
 import { VouchersSection } from "@/components/admin/Vouchers";
 import { FiringsSection } from "@/components/admin/Firings";
 import { UpcomingClassesCarousel } from "@/components/calendar/UpcomingClassesCarousel";
+import { ADMIN_WORKSHOP_LIST_END_ISO } from "@/lib/workshops";
 
 export const Route = createFileRoute("/admin/clases")({
   head: () => ({ meta: [
