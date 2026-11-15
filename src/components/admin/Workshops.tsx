@@ -29,6 +29,7 @@ export type Workshop = {
   notes: string | null;
   is_paid: boolean;
   paid_cents: number | null;
+  is_completed: boolean;
 };
 
 export function useWorkshops(range: { startIso: string; endIso: string } | null, enabled: boolean) {
@@ -59,17 +60,32 @@ export function WorkshopList({
   workshops,
   onSelect,
   onCreate,
+  onChanged,
 }: {
   workshops: Workshop[];
   onSelect: (w: Workshop) => void;
   onCreate: () => void;
+  onChanged: () => void;
 }) {
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  const toggleCompleted = async (workshop: Workshop) => {
+    setUpdatingId(workshop.id);
+    const { error } = await supabase
+      .from("workshops")
+      .update({ is_completed: !workshop.is_completed })
+      .eq("id", workshop.id);
+    setUpdatingId(null);
+    if (error) return toast.error("No se pudo actualizar el taller.");
+    onChanged();
+  };
+
   return (
     <section className="rounded-none border border-border bg-surface p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <div>
           <h2 className="text-h2">Talleres</h2>
-          <p className="text-xs text-muted-foreground">Solo los ves tú. Las alumnas no los ven.</p>
+          <p className="text-xs text-muted-foreground">Marca los talleres realizados. Solo los ves tú.</p>
         </div>
         <Button variant="outline" onClick={onCreate} className="gap-2">
           <Plus className="h-4 w-4" /> Nuevo taller
@@ -80,18 +96,34 @@ export function WorkshopList({
       ) : (
         <ul className="flex flex-col gap-2">
           {workshops.map((w) => (
-            <li key={w.id}>
+            <li
+              key={w.id}
+              className={`flex items-stretch rounded-none border border-accent-foreground/30 bg-accent text-accent-foreground ${w.is_completed ? "opacity-60" : ""}`}
+            >
+              <label
+                className="flex cursor-pointer items-center justify-center border-r border-accent-foreground/30 px-4"
+                title={w.is_completed ? "Quitar la marca de realizado" : "Marcar como realizado"}
+              >
+                <input
+                  type="checkbox"
+                  checked={w.is_completed}
+                  disabled={updatingId === w.id}
+                  onChange={() => void toggleCompleted(w)}
+                  aria-label={w.is_completed ? `Marcar ${w.title} como pendiente` : `Marcar ${w.title} como realizado`}
+                  className="h-5 w-5 accent-primary"
+                />
+              </label>
               <button
                 type="button"
                 onClick={() => onSelect(w)}
-                className="flex w-full flex-col rounded-none border border-accent-foreground/30 bg-accent p-3 text-left text-accent-foreground"
+                className="flex min-w-0 flex-1 flex-col p-3 text-left"
               >
-                <span className="text-sm font-medium">{w.title}</span>
+                <span className={`text-sm font-medium ${w.is_completed ? "line-through" : ""}`}>{w.title}</span>
                 <span className="text-xs capitalize">
                   {formatLongDate(w.date)} · {formatTimeRange(w.start_time, w.end_time)}
                 </span>
                 <span className="text-xs">
-                  {[w.client_name, w.attendees ? `${w.attendees} personas` : null, euro(w.price_cents), w.is_paid ? `Pagado${w.paid_cents != null ? " " + euro(w.paid_cents) : ""}` : "Sin pagar"]
+                  {[w.is_completed ? "Realizado" : null, w.client_name, w.attendees ? `${w.attendees} personas` : null, euro(w.price_cents), w.is_paid ? `Pagado${w.paid_cents != null ? " " + euro(w.paid_cents) : ""}` : "Sin pagar"]
                     .filter(Boolean)
                     .join(" · ")}
                 </span>
@@ -129,6 +161,7 @@ export function WorkshopDialog({
     notes: "",
     is_paid: false,
     paid: "",
+    is_completed: false,
   });
   const [saving, setSaving] = useState(false);
 
@@ -146,6 +179,7 @@ export function WorkshopDialog({
       notes: workshop?.notes ?? "",
       is_paid: workshop?.is_paid ?? false,
       paid: workshop?.paid_cents != null ? (workshop.paid_cents / 100).toString() : "",
+      is_completed: workshop?.is_completed ?? false,
     });
   }, [open, workshop, defaultDate]);
 
@@ -168,6 +202,7 @@ export function WorkshopDialog({
       notes: f.notes.trim() || null,
       is_paid: f.is_paid,
       paid_cents: f.paid ? Math.round(parseFloat(f.paid.replace(",", ".")) * 100) : null,
+      is_completed: f.is_completed,
     };
     const { error } = workshop
       ? await supabase.from("workshops").update(row).eq("id", workshop.id)
@@ -241,6 +276,15 @@ export function WorkshopDialog({
               <Input inputMode="decimal" value={f.paid} onChange={set("paid")} placeholder="Ej. 50" />
             </div>
           </div>
+          <label className="flex h-10 items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={f.is_completed}
+              onChange={(e) => setF((p) => ({ ...p, is_completed: e.target.checked }))}
+              className="h-4 w-4 accent-primary"
+            />
+            Taller realizado
+          </label>
           <div className="grid gap-1.5">
             <Label>Contacto (teléfono / email)</Label>
             <Input value={f.contact} onChange={set("contact")} />

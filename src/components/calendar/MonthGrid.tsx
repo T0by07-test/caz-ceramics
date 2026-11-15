@@ -117,7 +117,8 @@ function MobileCells({ cells, byDay, onSelectClass, selectedIds, disablePast, ws
                   <button
                     type="button"
                     onClick={() => onSelectWorkshop?.(w)}
-                    className="flex w-full min-w-0 flex-col rounded-sm border border-accent-foreground/40 bg-accent px-1 py-1 text-left leading-tight text-accent-foreground"
+                    aria-label={`${w.title}${w.is_completed ? " (realizado)" : ""}`}
+                    className={`flex w-full min-w-0 flex-col rounded-sm border border-accent-foreground/40 bg-accent px-1 py-1 text-left leading-tight text-accent-foreground ${w.is_completed ? "opacity-60 line-through" : ""}`}
                   >
                     <span className="truncate text-[10px] font-semibold tabular-nums">{formatTime(w.start_time)} · Taller</span>
                     <span className="truncate text-[10px]">{w.title}</span>
@@ -199,7 +200,8 @@ function DesktopCells({ cells, byDay, onSelectClass, selectedIds, disablePast, w
                   <button
                     type="button"
                     onClick={() => onSelectWorkshop?.(w)}
-                    className="flex w-full min-w-0 flex-col rounded-sm border border-accent-foreground/40 bg-accent px-1 py-1 text-left leading-tight text-accent-foreground"
+                    aria-label={`${w.title}${w.is_completed ? " (realizado)" : ""}`}
+                    className={`flex w-full min-w-0 flex-col rounded-sm border border-accent-foreground/40 bg-accent px-1 py-1 text-left leading-tight text-accent-foreground ${w.is_completed ? "opacity-60 line-through" : ""}`}
                   >
                     <span className="truncate text-[10px] font-semibold tabular-nums">{formatTime(w.start_time)} · Taller</span>
                     <span className="truncate text-[10px]">{w.title}</span>

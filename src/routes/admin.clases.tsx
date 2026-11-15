@@ -201,6 +201,7 @@ function AdminClassesPage() {
         <>
           <WorkshopList
             workshops={workshops}
+            onChanged={() => void refreshWorkshops()}
             onSelect={(w) => {
               setWsEditing(w);
               setWsOpen(true);
