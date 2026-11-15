@@ -179,6 +179,7 @@ export function WorkshopDialog({
       notes: workshop?.notes ?? "",
       is_paid: workshop?.is_paid ?? false,
       paid: workshop?.paid_cents != null ? (workshop.paid_cents / 100).toString() : "",
+      is_completed: workshop?.is_completed ?? false,
     });
   }, [open, workshop, defaultDate]);
 
@@ -201,6 +202,7 @@ export function WorkshopDialog({
       notes: f.notes.trim() || null,
       is_paid: f.is_paid,
       paid_cents: f.paid ? Math.round(parseFloat(f.paid.replace(",", ".")) * 100) : null,
+      is_completed: f.is_completed,
     };
     const { error } = workshop
       ? await supabase.from("workshops").update(row).eq("id", workshop.id)
@@ -274,6 +276,15 @@ export function WorkshopDialog({
               <Input inputMode="decimal" value={f.paid} onChange={set("paid")} placeholder="Ej. 50" />
             </div>
           </div>
+          <label className="flex h-10 items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={f.is_completed}
+              onChange={(e) => setF((p) => ({ ...p, is_completed: e.target.checked }))}
+              className="h-4 w-4 accent-primary"
+            />
+            Taller realizado
+          </label>
           <div className="grid gap-1.5">
             <Label>Contacto (teléfono / email)</Label>
             <Input value={f.contact} onChange={set("contact")} />
