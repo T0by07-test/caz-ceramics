@@ -148,6 +148,13 @@
       "when": 1794474783041,
       "tag": "0020_workshops_payment",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1794745487625,
+      "tag": "0021_workshops_completed",
+      "breakpoints": true
     }
   ]
 }

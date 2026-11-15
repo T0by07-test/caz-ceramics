@@ -997,6 +997,7 @@ export type Database = {
           date: string
           end_time: string
           id: string
+          is_completed: boolean
           is_paid: boolean
           notes: string | null
           paid_cents: number | null
@@ -1012,6 +1013,7 @@ export type Database = {
           date: string
           end_time: string
           id?: string
+          is_completed?: boolean
           is_paid?: boolean
           notes?: string | null
           paid_cents?: number | null
@@ -1027,6 +1029,7 @@ export type Database = {
           date?: string
           end_time?: string
           id?: string
+          is_completed?: boolean
           is_paid?: boolean
           notes?: string | null
           paid_cents?: number | null
