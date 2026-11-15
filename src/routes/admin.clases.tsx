@@ -194,7 +194,7 @@ function AdminClassesPage() {
         classes={visibleClasses}
         loading={loading}
         onSelectClass={setSelected}
-        workshops={isAdmin ? workshops : undefined}
+        workshops={isAdmin ? calendarWorkshops : undefined}
         onSelectWorkshop={(w) => {
           setWsEditing(w);
           setWsOpen(true);
