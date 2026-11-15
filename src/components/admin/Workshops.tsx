@@ -161,6 +161,7 @@ export function WorkshopDialog({
     notes: "",
     is_paid: false,
     paid: "",
+    is_completed: false,
   });
   const [saving, setSaving] = useState(false);
 
