@@ -529,6 +529,7 @@ function AdminClassDrawer({
   const open = cls !== null;
   const classId = cls?.id ?? null;
   const [students, setStudents] = useState<BookedStudent[]>([]);
+  const [visitors, setVisitors] = useState<{ id: string; client_name: string | null; attendees: number | null }[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [blocking, setBlocking] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
@@ -544,9 +545,13 @@ function AdminClassDrawer({
   const loadStudents = useCallback(async () => {
     if (!classId) {
       setStudents([]);
+      setVisitors([]);
       return;
     }
     setLoadingStudents(true);
+    const { data: visitorRows } = await supabase.from("workshops")
+      .select("id, client_name, attendees").eq("class_id", classId);
+    setVisitors(visitorRows ?? []);
     const { data, error } = await supabase
       .from("bookings")
       .select(
@@ -711,10 +716,16 @@ function AdminClassDrawer({
                 <h4 className="text-label mb-2 uppercase">Alumnas inscritas</h4>
                 {loadingStudents ? (
                   <p className="text-sm text-muted-foreground">Cargando…</p>
-                ) : students.length === 0 ? (
+                ) : students.length === 0 && visitors.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Aún no hay alumnas inscritas.</p>
                 ) : (
                   <ul className="divide-y divide-border rounded-lg border border-border">
+                    {visitors.map((visitor) => (
+                      <li key={visitor.id} className="px-3 py-2">
+                        <div className="text-sm font-medium">{visitor.client_name}</div>
+                        <div className="text-xs text-muted-foreground">{visitor.attendees} personas · Sin cuenta</div>
+                      </li>
+                    ))}
                     {students.map((s) => {
                       const present = s.status === "attended";
                       const switchId = `attendance-${s.id}`;

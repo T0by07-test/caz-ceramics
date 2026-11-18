@@ -991,6 +991,7 @@ export type Database = {
       workshops: {
         Row: {
           attendees: number | null
+          class_id: string | null
           client_name: string | null
           contact: string | null
           created_at: string
@@ -1007,6 +1008,7 @@ export type Database = {
         }
         Insert: {
           attendees?: number | null
+          class_id?: string | null
           client_name?: string | null
           contact?: string | null
           created_at?: string
@@ -1023,6 +1025,7 @@ export type Database = {
         }
         Update: {
           attendees?: number | null
+          class_id?: string | null
           client_name?: string | null
           contact?: string | null
           created_at?: string
@@ -1037,7 +1040,15 @@ export type Database = {
           start_time?: string
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "workshops_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

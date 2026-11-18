@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Vincular Francisco y Emilia como asistentes independientes a la clase del 23 de noviembre, 11:00–13:00: prueba transaccional y vista administradora verificadas, tres plazas ocupadas sin cuentas ni cobros.
 - [x] Crear clase puntual del lunes 23 de noviembre de 2026, 11:00–13:00 con Cande; sesión verificada.
 - [x] Anotar a Francisco y Emilia sin cuentas para el lunes 23, 11:00–13:00: registro privado de 2 asistentes en Talleres y 5 plazas restantes en la clase; sin cobros.
 - [x] Crear clase del viernes 13 de noviembre 19:00–21:00 con Cande y apuntar a Marina Martínez Rodríguez; reserva confirmada verificada, sin registrar cobros.

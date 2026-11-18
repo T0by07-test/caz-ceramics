@@ -106,6 +106,20 @@ export function useClassesInRange(
           acc.set(b.class_id, (acc.get(b.class_id) ?? 0) + 1 + (b.guests ?? 0));
           return acc;
         }, new Map<string, number>());
+        const { data: visitors, error: visitorsError } = await supabase
+          .from("workshops")
+          .select("class_id, attendees")
+          .in("class_id", ids);
+        if (visitorsError) {
+          setError(visitorsError.message);
+          setLoading(false);
+          return;
+        }
+        for (const visitor of visitors ?? []) {
+          if (visitor.class_id) {
+            counts.set(visitor.class_id, (counts.get(visitor.class_id) ?? 0) + Math.max(visitor.attendees ?? 0, 0));
+          }
+        }
       }
     }
 
@@ -133,6 +147,11 @@ export function useClassesInRange(
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "bookings" },
+        () => void fetchData(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "workshops" },
         () => void fetchData(),
       )
       .subscribe();

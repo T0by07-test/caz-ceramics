@@ -1,4 +1,5 @@
 # Architecture rules
+- Link independent accountless class attendees through `workshops.class_id`; count linked attendees in capacity helpers and admin rosters without attaching them to another student's booking, exposing names publicly, or creating payments.
 - Keep external firing orders admin-only; calculate totals in integer cents in both the shared calculator and generated database column. Standard tariffs are orientative: admins may set `custom_total_cents`, which then replaces the generated total everywhere it is displayed or summed.
 
 - Group selection quotes and displayed price breakdowns by class month; use the existing authenticated quote RPC for each month to preserve incremental pricing.
