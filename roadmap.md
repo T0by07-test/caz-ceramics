@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Corregir la clase especial de Claudia: quitada la clase vacía añadida por error el 19 de noviembre; la clase existente del 26 de noviembre, 18:30–20:30, figura con Claudia y conserva sus siete reservas confirmadas.
 - [x] Vincular Francisco y Emilia como asistentes independientes a la clase del 23 de noviembre, 11:00–13:00: prueba transaccional y vista administradora verificadas, tres plazas ocupadas sin cuentas ni cobros.
 - [x] Crear clase puntual del lunes 23 de noviembre de 2026, 11:00–13:00 con Cande; sesión verificada.
 - [x] Anotar a Francisco y Emilia sin cuentas para el lunes 23, 11:00–13:00: registro privado de 2 asistentes en Talleres y 5 plazas restantes en la clase; sin cobros.
