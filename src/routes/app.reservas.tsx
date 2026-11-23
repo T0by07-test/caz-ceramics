@@ -49,6 +49,7 @@ type Row = {
     start_time: string;
     end_time: string;
     status: string;
+    billing_month?: string | null;
   } | null;
 };
 
