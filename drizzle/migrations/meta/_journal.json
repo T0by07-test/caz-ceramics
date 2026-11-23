@@ -162,6 +162,13 @@
       "when": 1794987316498,
       "tag": "0022_link_workshop_attendees_to_class_occupancy",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1795460230554,
+      "tag": "0023_class_billing_month",
+      "breakpoints": true
     }
   ]
 }

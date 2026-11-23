@@ -98,6 +98,7 @@ export type Database = {
       classes: {
         Row: {
           audience: string
+          billing_month: string | null
           capacity_ideal: number
           capacity_max: number
           created_at: string
@@ -112,6 +113,7 @@ export type Database = {
         }
         Insert: {
           audience?: string
+          billing_month?: string | null
           capacity_ideal?: number
           capacity_max?: number
           created_at?: string
@@ -126,6 +128,7 @@ export type Database = {
         }
         Update: {
           audience?: string
+          billing_month?: string | null
           capacity_ideal?: number
           capacity_max?: number
           created_at?: string
@@ -1152,6 +1155,7 @@ export type Database = {
           type: string
         }[]
       }
+      class_billing_month: { Args: { p_class_id: string }; Returns: string }
       class_seats_taken: { Args: { p_class_id: string }; Returns: number }
       confirm_drop_in_booking: {
         Args: { p_session_id: string }

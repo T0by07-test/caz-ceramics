@@ -1,6 +1,6 @@
-import { formatEuros, formatPriceMonth } from "@/lib/pricing";
+import { billingMonthKey, formatEuros, formatPriceMonth } from "@/lib/pricing";
 
-type BreakdownClass = { id: string; date: string; start_time?: string | null; end_time?: string | null };
+type BreakdownClass = { id: string; date: string; start_time?: string | null; end_time?: string | null; billing_month?: string | null };
 
 function formatClassLine(c: BreakdownClass): string {
   const [y, m, d] = c.date.split("-").map(Number);
@@ -32,7 +32,7 @@ export function MonthlyPriceBreakdown({
     <dl className="flex flex-col gap-2 text-sm" aria-label="Importe por mes">
       {rows.map((row) => {
         const items = (classes ?? [])
-          .filter((c) => c.date.slice(0, 7) === row.month)
+          .filter((c) => billingMonthKey(c) === row.month)
           .sort((a, b) => `${a.date}${a.start_time ?? ""}`.localeCompare(`${b.date}${b.start_time ?? ""}`));
         return (
           <div key={row.month} className="flex flex-col gap-1">

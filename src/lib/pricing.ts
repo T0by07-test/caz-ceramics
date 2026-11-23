@@ -45,16 +45,21 @@ export function selectionPriceCentsWithGuests(
   return (1 + Math.max(0, guests)) * selectionPriceCents(items);
 }
 
-export function groupSelectionByMonth<T extends { date: string }>(items: T[]): { month: string; classes: T[] }[] {
+/** Month (YYYY-MM) whose tier a class counts toward; some classes are billed to another month. */
+export function billingMonthKey(c: { date: string; billing_month?: string | null }): string {
+  return (c.billing_month ?? c.date).slice(0, 7);
+}
+
+export function groupSelectionByMonth<T extends { date: string; billing_month?: string | null }>(items: T[]): { month: string; classes: T[] }[] {
   const groups = new Map<string, T[]>();
   for (const item of items) {
-    const month = item.date.slice(0, 7);
+    const month = billingMonthKey(item);
     groups.set(month, [...(groups.get(month) ?? []), item]);
   }
   return [...groups].sort(([a], [b]) => a.localeCompare(b)).map(([month, classes]) => ({ month, classes }));
 }
 
-export function monthlySelectionBreakdown<T extends { date: string; audience?: string | null }>(items: T[], guests: number) {
+export function monthlySelectionBreakdown<T extends { date: string; billing_month?: string | null; audience?: string | null }>(items: T[], guests: number) {
   return groupSelectionByMonth(items).map(({ month, classes }) => ({
     month,
     count: classes.length,

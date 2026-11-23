@@ -81,7 +81,7 @@ function MisReservasPage() {
       supabase
         .from("bookings")
         .select(
-          "id, status, source, cancelled_at, created_at, classes ( id, date, start_time, end_time, status )",
+          "id, status, source, cancelled_at, created_at, classes ( id, date, start_time, end_time, status, billing_month )",
         )
         .eq("student_id", user.id)
         .order("created_at", { ascending: false }),
@@ -174,7 +174,7 @@ function MisReservasPage() {
   const unpaidMonths = new Map<string, { month: string; count: number; cents: number }>();
   for (const row of unpaid) {
     if (!row.classes) continue;
-    const month = row.classes.date.slice(0, 7);
+    const month = (row.classes.billing_month ?? row.classes.date).slice(0, 7);
     const entry = unpaidMonths.get(month) ?? { month, count: 0, cents: 0 };
     entry.count += 1;
     entry.cents += payments[row.id]?.pendingCents ?? 0;

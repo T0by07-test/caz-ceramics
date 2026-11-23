@@ -13,6 +13,7 @@ export type ClassRow = {
   instructor_id: string | null;
   audience: "adults" | "kids";
   teacher: string | null;
+  billing_month?: string | null;
 };
 
 export type ClassWithCount = ClassRow & {
@@ -44,7 +45,7 @@ export function useClassesInRange(
     let q = supabase
       .from("classes")
       .select(
-        "id, date, start_time, end_time, capacity_ideal, capacity_max, status, instructor_id, audience, teacher",
+        "id, date, start_time, end_time, capacity_ideal, capacity_max, status, instructor_id, audience, teacher, billing_month",
       )
       .gte("date", startIso)
       .lte("date", endIso)

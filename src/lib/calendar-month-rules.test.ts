@@ -27,3 +27,15 @@ describe("calendar-month rules", () => {
     expect(friendlyError("CROSS_MONTH_MOVE")).toMatch(/otro mes/);
   });
 });
+
+describe("classes billed to another month", () => {
+  it("counts Saturday 28 Nov classes as December: 28 Nov + two December classes = 70 €", () => {
+    const items = [
+      { date: "2026-11-28", billing_month: "2026-12-01", audience: "adults" },
+      { date: "2026-12-02", audience: "adults" },
+      { date: "2026-12-09", audience: "adults" },
+    ];
+    const breakdown = monthlySelectionBreakdown(items, 0);
+    expect(breakdown).toEqual([{ month: "2026-12", count: 3, cents: 7000 }]);
+  });
+});
