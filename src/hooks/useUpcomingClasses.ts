@@ -4,7 +4,6 @@ import { toIsoDate } from "@/lib/calendar";
 import { billingMonthKey } from "@/lib/pricing";
 import {
   resolveBookingPaymentStatus,
-  pendingBookingCents,
   type BookingPaymentStatus,
 } from "@/lib/booking-payment-status";
 
@@ -116,11 +115,12 @@ for (const p of bookingPayments ?? []) {
   const current = paymentByBooking.get(p.booking_id);
   if (!current || rank(p.status) > rank(current)) paymentByBooking.set(p.booking_id, p.status);
 }
-// Money still owed per booking: only pending rows with a real amount count
-// (the 0 € placeholder carries no value).
-const pendingCentsByBooking = new Map(bookings.map((b) => [
-  b.id, pendingBookingCents((bookingPayments ?? []).filter((p) => p.booking_id === b.id)),
-]));
+// Stripe attempt rows retain historical prices; current debt is quoted by the
+// same monthly calculation used for checkout, including bookings off this slide.
+const { data: currentAmounts } = await supabase.rpc("pending_booking_amounts", {
+  p_booking_ids: bookingIds,
+});
+const pendingCentsByBooking = new Map((currentAmounts ?? []).map((a) => [a.booking_id, a.amount_cents]));
 const paymentBySubscription = new Map<string | null, string>();
 for (const p of subPayments ?? []) {
   const current = paymentBySubscription.get(p.subscription_id);

@@ -1232,6 +1232,13 @@ export type Database = {
         Args: { p_booking_ids: string[] }
         Returns: undefined
       }
+      pending_booking_amounts: {
+        Args: { p_booking_ids: string[] }
+        Returns: {
+          amount_cents: number
+          booking_id: string
+        }[]
+      }
       prior_adult_seats: {
         Args: { p_exclude: string[]; p_month: string; p_student: string }
         Returns: number

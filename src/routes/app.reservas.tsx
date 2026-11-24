@@ -115,8 +115,20 @@ function MisReservasPage() {
       if (!p.booking_id) continue;
       const entry = (map[p.booking_id] ??= { pendingCents: 0, paid: false });
       if (p.status === "confirmed") entry.paid = true;
-      else if (p.status === "pending")
-        entry.pendingCents = Math.max(entry.pendingCents, p.amount_cents ?? 0);
+    }
+    const bookingIds = (bookingsRes.data ?? []).map((b) => b.id);
+    if (bookingIds.length > 0) {
+      const { data: currentAmounts, error: quoteError } = await supabase.rpc("pending_booking_amounts", {
+        p_booking_ids: bookingIds,
+      });
+      if (quoteError) {
+        toast.error("No se pudo actualizar el importe pendiente. Vuelve a intentarlo.");
+      } else {
+        for (const amount of currentAmounts ?? []) {
+          const entry = (map[amount.booking_id] ??= { pendingCents: 0, paid: false });
+          if (!entry.paid) entry.pendingCents = amount.amount_cents;
+        }
+      }
     }
     setPayments(map);
     setLoading(false);
@@ -140,6 +152,11 @@ function MisReservasPage() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "waitlist", filter: `student_id=eq.${user.id}` },
+        () => void fetchRows(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "payments", filter: `student_id=eq.${user.id}` },
         () => void fetchRows(),
       )
       .subscribe();
