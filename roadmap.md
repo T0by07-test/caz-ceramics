@@ -1,4 +1,6 @@
 # Roadmap
+- [x] Revisar precio del sábado 28 con diciembre: la web publicada aún agrupa por fecha; vista previa autenticada verificada para 10:00 y 17:00, sábado + dos clases de diciembre = 70 €, selección conservada y desglose antes de pagar. Doce pruebas correctas, cero reservas/pagos de prueba.
+- [ ] Actualizar la web publicada con el cálculo por mes de tarifa (pendiente de que Cande publique; no publicar desde este encargo).
 - [x] Viernes 4 de diciembre, 17:30–19:30: clase asignada a Cande con cinco asistentes sin cuenta registrados como cinco plazas ocupadas; detalle 5/7 verificado en móvil y ordenador, sin duplicar reservas ni crear cobros.
 - [x] Eliminar la clase paralela de Claudia del 26 de noviembre, 18:30–20:30, porque generaba confusión; estaba vacía y la clase regular de Cande conserva sus siete reservas intactas.
 - [x] Vincular Francisco y Emilia como asistentes independientes a la clase del 23 de noviembre, 11:00–13:00: prueba transaccional y vista administradora verificadas, tres plazas ocupadas sin cuentas ni cobros.

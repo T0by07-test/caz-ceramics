@@ -2,20 +2,27 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { groupSelectionByMonth, monthlySelectionBreakdown } from "@/lib/pricing";
 
+type SelectionQuoteClass = {
+  id: string;
+  date: string;
+  billing_month?: string | null;
+  audience?: string | null;
+};
+
 /**
  * Price the student actually owes for a selection, discounting what she already
  * paid this month (only the difference to the next monthly tier is charged).
  * Falls back to the plain tier price while loading or on error.
  */
 export function useSelectionQuote(
-  classes: { id: string; date: string; audience?: string | null }[],
+  classes: SelectionQuoteClass[],
   guests: number,
 ): number {
   return useSelectionQuoteBreakdown(classes, guests).reduce((sum, row) => sum + row.cents, 0);
 }
 
 export function useSelectionQuoteBreakdown(
-  classes: { id: string; date: string; audience?: string | null }[],
+  classes: SelectionQuoteClass[],
   guests: number,
 ) {
   const fallback = monthlySelectionBreakdown(classes, guests);
