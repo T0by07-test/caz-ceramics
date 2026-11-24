@@ -25,8 +25,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { appPaymentGroupKey } from "@/lib/finance/payment-group";
+import { appPaymentGroupKey, visibleIncomePayments } from "@/lib/finance/payment-group";
 import { matchesSearch } from "@/lib/finance/search";
+import { billingMonthKey } from "@/lib/pricing";
 
 /** Payments made through the app (card / Bizum / cash-at-studio), grouped per
  * checkout so each row reads like a ledger line: alumna, fecha, nº de clases,
@@ -123,24 +124,7 @@ export function AppPaymentsPanel({
     const allRows = ((payments ?? []) as PaymentRow[]).filter(
       (r) => !TEST_STUDENT_IDS.has(r.student_id),
     );
-    // Un checkout abandonado deja una fila "pending" para la misma reserva que
-    // ya tiene un pago confirmado: no debe contarse como una segunda línea.
-    const confirmedBookings = new Set(
-      allRows.filter((r) => r.status === "confirmed").flatMap((r) => r.booking_id ? [r.booking_id] : []),
-    );
-    const confirmedSubs = new Set(
-      allRows
-        .filter((r) => r.status === "confirmed" && r.subscription_id)
-        .flatMap((r) => r.subscription_id ? [r.subscription_id] : []),
-    );
-    const rows = allRows.filter(
-      (r) =>
-        r.status === "confirmed" ||
-        !(
-          (r.booking_id && confirmedBookings.has(r.booking_id)) ||
-          (r.subscription_id && confirmedSubs.has(r.subscription_id))
-        ),
-    );
+    const rows = visibleIncomePayments(allRows);
 
     const studentIds = Array.from(new Set(rows.map((r) => r.student_id)));
 
@@ -192,7 +176,7 @@ export function AppPaymentsPanel({
 
     const subscriptionMonth = new Map(subscriptions.map((s) => [s.id, monthKey(s.month)]));
     const classIds = Array.from(new Set(bookings.map((b) => b.class_id)));
-    const classes = await fetchIn<{ id: string; date: string }>("classes", "id, date", classIds);
+    const classes = await fetchIn<{ id: string; date: string; billing_month: string | null }>("classes", "id, date, billing_month", classIds);
 
 
     const nameById = new Map(
@@ -200,19 +184,18 @@ export function AppPaymentsPanel({
         (p) => [p.id, [p.name, p.surname].filter(Boolean).join(" ").trim() || p.email || "—"],
       ),
     );
-    const classDateById = new Map(
-      ((classes ?? []) as { id: string; date: string }[]).map((c) => [c.id, c.date]),
-    );
+    const classDateById = new Map(classes.map((c) => [c.id, c.date]));
+    const classMonthById = new Map(classes.map((c) => [c.id, billingMonthKey(c)]));
     const bookingClassDate = new Map(
       bookings.map((b) => [b.id, classDateById.get(b.class_id) ?? null]),
     );
+    const bookingClassMonth = new Map(bookings.map((b) => [b.id, classMonthById.get(b.class_id) ?? null]));
     // The month a student's classes belong to: what the studio actually bills for.
     const studentClassMonth = new Map<string, string>();
     for (const b of bookings) {
       if (!["reserved", "confirmed", "attended"].includes(b.status)) continue;
-      const date = classDateById.get(b.class_id);
-      if (!date) continue;
-      const m = monthKey(date);
+      const m = classMonthById.get(b.class_id);
+      if (!m) continue;
       const current = studentClassMonth.get(b.student_id);
       if (!current || m < current) studentClassMonth.set(b.student_id, m);
     }
@@ -224,7 +207,7 @@ export function AppPaymentsPanel({
         (p.subscription_id ? subscriptionMonth.get(p.subscription_id) : null) ??
         studentClassMonth.get(p.student_id) ??
         monthKey(p.created_at);
-      const classMonth = classDate ? monthKey(classDate) : fallbackMonth;
+      const classMonth = (p.booking_id ? bookingClassMonth.get(p.booking_id) : null) ?? fallbackMonth;
       // Cash payments are booked one class at a time (each with its own
       // "cash:…" session id), so they'd otherwise appear as one 30 € line per
       // class. Group them per alumna and class month with the total instead;

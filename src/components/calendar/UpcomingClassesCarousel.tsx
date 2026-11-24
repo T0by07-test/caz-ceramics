@@ -21,7 +21,7 @@ export function UpcomingClassesCarousel({
   onlyPending?: boolean;
 } = {}) {
   const { slides, loading } = useUpcomingClasses(10, { instructorId, hideCancelled });
-  const visibleSlides = onlyPending ? slides.filter((s) => s.dueCents > 0) : slides;
+  const visibleSlides = onlyPending ? slides.filter((s) => s.students.some((student) => student.status === "pending")) : slides;
 
   if (loading || visibleSlides.length === 0) return null;
 
@@ -64,7 +64,7 @@ export function UpcomingClassesCarousel({
                         </Badge>
                       ) : s.status === "pending" ? (
                         <Badge variant="secondary" className="shrink-0">
-                          Debe {formatEuros(s.dueCents)}
+                          {s.dueCents > 0 ? `Debe ${formatEuros(s.dueCents)}` : "Pendiente de pago"}
                         </Badge>
                       ) : (
                         <Check className="h-4 w-4 shrink-0 text-success" />

@@ -92,7 +92,14 @@ import { TagPicker, type Tag } from "@/components/admin/TagPicker";
 import { SlotEditor } from "@/components/admin/SlotEditor";
 
 export const Route = createFileRoute("/admin/alumnas")({
-  head: () => ({ meta: [{ title: "Miembros — Admin" }] }),
+  head: () => ({ meta: [
+    { title: "Miembros y reservas por mes | Cazú Ceramics" },
+    { name: "description", content: "Gestión privada de miembros, reservas y pagos por mes de tarifa en Cazú Ceramics." },
+    { property: "og:title", content: "Miembros y reservas por mes | Cazú Ceramics" },
+    { property: "og:description", content: "Miembros y reservas del estudio agrupados por su mes de tarifa." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: AdminStudentsPage,
 });
 
@@ -223,6 +230,9 @@ function AdminStudentsPage() {
     const monthRef = new Date(selYear, selMonthIdx - 1, 1);
     const monthStart = toIsoDate(startOfMonth(monthRef));
     const monthEndIso = toIsoDate(endOfMonth(monthRef));
+    const { data: billingClasses } = await supabase.from("classes").select("id")
+      .or(`billing_month.eq.${monthStart},and(billing_month.is.null,date.gte.${monthStart},date.lte.${monthEndIso})`);
+    const billingClassIds = (billingClasses ?? []).map((c) => c.id);
     type ProfileRow = {
       id: string;
       role: string | null;
@@ -261,17 +271,15 @@ function AdminStudentsPage() {
       supabase.from("plans").select("id, name"),
       supabase
         .from("bookings")
-        .select("student_id, classes!inner(date)")
-        .gte("classes.date", monthStart)
-        .lte("classes.date", monthEndIso)
+        .select("student_id, classes!inner(id, date)")
+        .in("classes.id", billingClassIds)
         .in("status", ["reserved", "confirmed", "attended"]),
       // Solo pagos de las reservas activas del mes seleccionado (no de otros meses).
       supabase
         .from("payments")
-        .select("student_id, status, method, created_at, bookings!inner(status, classes!inner(date))")
+        .select("student_id, status, method, created_at, bookings!inner(status, classes!inner(id, date))")
         .gt("amount_cents", 0)
-        .gte("bookings.classes.date", monthStart)
-        .lte("bookings.classes.date", monthEndIso)
+        .in("bookings.classes.id", billingClassIds)
         .in("bookings.status", ["reserved", "confirmed", "attended"])
         .order("created_at", { ascending: true }),
 

@@ -19,7 +19,7 @@ import { useAuth } from "@/lib/auth";
 import { cancelBooking, isRecoverableNow } from "@/lib/booking";
 import { leaveWaitlist } from "@/lib/waitlist";
 import { formatLongDate, formatTimeRange } from "@/lib/calendar";
-import { formatEuros } from "@/lib/pricing";
+import { billingMonthKey, formatEuros } from "@/lib/pricing";
 import { createDropInCheckout } from "@/lib/checkout";
 import { StripeCheckoutDialog } from "@/components/StripeCheckoutDialog";
 import { MonthlyPriceBreakdown } from "@/components/MonthlyPriceBreakdown";
@@ -175,7 +175,7 @@ function MisReservasPage() {
   const unpaidMonths = new Map<string, { month: string; count: number; cents: number }>();
   for (const row of unpaid) {
     if (!row.classes) continue;
-    const month = (row.classes.billing_month ?? row.classes.date).slice(0, 7);
+    const month = billingMonthKey(row.classes);
     const entry = unpaidMonths.get(month) ?? { month, count: 0, cents: 0 };
     entry.count += 1;
     entry.cents += payments[row.id]?.pendingCents ?? 0;
@@ -223,7 +223,10 @@ function MisReservasPage() {
               Total pendiente: {formatEuros(unpaidTotal)}. Puedes pagarlo ahora con tarjeta o en
               efectivo en el estudio.
             </p>
-            <MonthlyPriceBreakdown rows={[...unpaidMonths.values()].sort((a, b) => a.month.localeCompare(b.month))} />
+            <MonthlyPriceBreakdown
+              rows={[...unpaidMonths.values()].sort((a, b) => a.month.localeCompare(b.month))}
+              classes={unpaid.flatMap((row) => row.classes ? [row.classes] : [])}
+            />
           </div>
           <Button className="shrink-0" onClick={() => setCheckoutOpen(true)}>
             Pagar con tarjeta

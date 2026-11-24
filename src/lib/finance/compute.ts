@@ -6,6 +6,7 @@ import {
   type CommissionRate,
   type MonthlyFinance,
 } from "./types";
+import { financeMonthLabel } from "./dates";
 
 const OWNER = "Cande";
 
@@ -20,8 +21,8 @@ export function computeMonth(
   settings: FinanceSettings,
   rates: CommissionRate[],
 ): MonthlyFinance {
-  const L = ledger.filter((r) => r.month === month);
-  const E = expenses.filter((e) => e.month === month);
+  const L = ledger.filter((r) => financeMonthLabel(r.month) === financeMonthLabel(month));
+  const E = expenses.filter((e) => financeMonthLabel(e.month) === financeMonthLabel(month));
   const paid = L.filter((r) => r.status === "Pagado");
 
   const facturado = sum(paid.map((r) => r.amount_cents));

@@ -43,6 +43,17 @@ export function monthOrder(month: string): number {
 /** Month index (0-11) for a label, or null if unrecognised / empty. */
 export function monthLabelToIndex(label: string | null | undefined): number | null {
   if (!label) return null;
+  const iso = /^\d{4}-(\d{2})$/.exec(label.trim());
+  if (iso) {
+    const month = Number(iso[1]) - 1;
+    return month >= 0 && month <= 11 ? month : null;
+  }
   const i = MONTH_INDEX[label.trim().toLowerCase()];
   return i === undefined ? null : i;
+}
+
+/** Normalise labels only for display/calculation, never rewrite ledger records. */
+export function financeMonthLabel(label: string | null): string | null {
+  const month = monthLabelToIndex(label);
+  return month === null ? label : MONTH_NAMES_ES[month]?.toUpperCase() ?? label;
 }

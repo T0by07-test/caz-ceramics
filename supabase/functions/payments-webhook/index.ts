@@ -113,6 +113,12 @@ async function handleSessionCompleted(session: any, _env: StripeEnv) {
 
   if (purpose === "drop_in") {
     await admin().rpc("confirm_drop_in_booking", { p_session_id: sessionId });
+    const { error } = await admin().rpc("record_drop_in_ledger", {
+      p_session_id: sessionId,
+      p_entry_date: new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid" }).format(new Date()),
+      p_method: md.paymentMethod ?? "card",
+    });
+    if (error) throw error;
   } else if (purpose === "plan") {
     const studentId = md.userId;
     const planId = md.planId;
@@ -134,7 +140,7 @@ async function handleSessionCompleted(session: any, _env: StripeEnv) {
   // Mirror the income into the admin ledger with the student's name.
   const amountForLedger = (session.amount_total as number | null) ?? 0;
   const classCount = Number(md.classCount ?? "1") || 1;
-  if (md.userId) {
+  if (md.userId && purpose === "plan") {
     const { data: profile } = await admin()
       .from("profiles")
       .select("name, surname")

@@ -46,9 +46,8 @@ export function selectionPriceCentsWithGuests(
 }
 
 /** Month (YYYY-MM) whose tier a class counts toward; some classes are billed to another month. */
-export function billingMonthKey(c: { date: string; billing_month?: string | null }): string {
-  return (c.billing_month ?? c.date).slice(0, 7);
-}
+export { billingMonthKey } from "../../supabase/functions/_shared/class-billing";
+import { billingMonthKey } from "../../supabase/functions/_shared/class-billing";
 
 export function groupSelectionByMonth<T extends { date: string; billing_month?: string | null }>(items: T[]): { month: string; classes: T[] }[] {
   const groups = new Map<string, T[]>();

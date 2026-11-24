@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { LedgerRow, ExpenseRow, FinanceSettings, CommissionRate } from "./types";
+import { financeMonthLabel } from "./dates";
 
 export type LedgerEntryRow = LedgerRow & {
   id: string;
@@ -49,8 +50,8 @@ export async function loadFinanceRows() {
     tbl("commission_rates").select("*").order("teacher"),
   ]);
   return {
-    ledger: (ledger.data ?? []) as LedgerEntryRow[],
-    expenses: (expenses.data ?? []) as ExpenseEntryRow[],
+    ledger: ((ledger.data ?? []) as LedgerEntryRow[]).map((r) => ({ ...r, month: financeMonthLabel(r.month) })),
+    expenses: ((expenses.data ?? []) as ExpenseEntryRow[]).map((r) => ({ ...r, month: financeMonthLabel(r.month) })),
     settings: (settings.data ?? null) as SettingsRow | null,
     rates: (rates.data ?? []) as CommissionRateRow[],
     error:

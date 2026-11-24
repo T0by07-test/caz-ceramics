@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toIsoDate } from "@/lib/calendar";
-import { KIDS_CLASS_PRICE_CENTS, monthlyPriceCents } from "@/lib/pricing";
+import { billingMonthKey } from "@/lib/pricing";
 import {
   resolveBookingPaymentStatus,
+  pendingBookingCents,
   type BookingPaymentStatus,
 } from "@/lib/booking-payment-status";
 
@@ -51,7 +52,7 @@ export function useUpcomingClasses(limit: number, options: UpcomingClassesOption
     const todayIso = toIsoDate(new Date());
     let query = supabase
       .from("classes")
-      .select("id, date, start_time, end_time, teacher, status, audience")
+      .select("id, date, start_time, end_time, teacher, status, audience, billing_month")
       .gte("date", todayIso)
       .neq("status", "cancelled_by_admin");
     if (instructorId) query = query.eq("instructor_id", instructorId);
@@ -80,16 +81,16 @@ export function useUpcomingClasses(limit: number, options: UpcomingClassesOption
       : allBookings;
 
     const studentIds = [...new Set(bookings.map((b) => b.student_id))];
-    const monthStart = toIsoDate(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+    const billingMonths = [...new Set((classes ?? []).map((c) => `${billingMonthKey(c)}-01`))];
     const { data: subs } =
       studentIds.length > 0
         ? await supabase
             .from("subscriptions")
-            .select("id, student_id")
-            .eq("month", monthStart)
+            .select("id, student_id, month")
+            .in("month", billingMonths)
             .in("student_id", studentIds)
-        : { data: [] as { id: string; student_id: string }[] };
-    const subIdByStudent = new Map((subs ?? []).map((s) => [s.student_id, s.id]));
+        : { data: [] as { id: string; student_id: string; month: string }[] };
+    const subIdByStudent = new Map((subs ?? []).map((s) => [`${s.student_id}|${s.month}`, s.id]));
     const subIds = [...subIdByStudent.values()];
 
     const bookingIds = bookings.map((b) => b.id);
@@ -117,14 +118,9 @@ for (const p of bookingPayments ?? []) {
 }
 // Money still owed per booking: only pending rows with a real amount count
 // (the 0 € placeholder carries no value).
-const pendingCentsByBooking = new Map<string, number>();
-for (const p of bookingPayments ?? []) {
-  if (!p.booking_id || p.status !== "pending" || !p.amount_cents || p.amount_cents <= 0) continue;
-  pendingCentsByBooking.set(
-    p.booking_id,
-    (pendingCentsByBooking.get(p.booking_id) ?? 0) + p.amount_cents,
-  );
-}
+const pendingCentsByBooking = new Map(bookings.map((b) => [
+  b.id, pendingBookingCents((bookingPayments ?? []).filter((p) => p.booking_id === b.id)),
+]));
 const paymentBySubscription = new Map<string | null, string>();
 for (const p of subPayments ?? []) {
   const current = paymentBySubscription.get(p.subscription_id);
@@ -141,14 +137,12 @@ for (const p of subPayments ?? []) {
     }
 
     const result: UpcomingClassSlide[] = (classes ?? []).map((c) => {
-      const fallbackDue =
-        c.audience === "kids" ? KIDS_CLASS_PRICE_CENTS : monthlyPriceCents(1);
       const students = (bookingsByClass.get(c.id) ?? []).map((b) => {
         const name =
           [b.profiles?.name, b.profiles?.surname].filter(Boolean).join(" ").trim() ||
           b.profiles?.email ||
           "—";
-        const subId = subIdByStudent.get(b.student_id) ?? null;
+        const subId = subIdByStudent.get(`${b.student_id}|${billingMonthKey(c)}-01`) ?? null;
         const status = resolveBookingPaymentStatus(
           {
             status: b.status,
@@ -165,7 +159,7 @@ for (const p of subPayments ?? []) {
             | undefined) ?? null,
         );
         const dueCents =
-          status === "pending" ? (pendingCentsByBooking.get(b.id) ?? fallbackDue) : 0;
+          status === "pending" ? (pendingCentsByBooking.get(b.id) ?? 0) : 0;
         return { bookingId: b.id, name, status, dueCents };
       });
       return {

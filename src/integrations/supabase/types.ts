@@ -1213,6 +1213,7 @@ export type Database = {
           waitlist_id: string
         }[]
       }
+      makeup_billing_month: { Args: { p_makeup: string }; Returns: string }
       makeup_deadline: { Args: { p_makeup: string }; Returns: string }
       makeup_month: { Args: { p_expires: string }; Returns: string }
       makeup_origin_month: { Args: { p_makeup: string }; Returns: string }
@@ -1263,6 +1264,10 @@ export type Database = {
       }
       recalc_month_pending_cash: {
         Args: { p_month: string; p_student: string }
+        Returns: undefined
+      }
+      record_drop_in_ledger: {
+        Args: { p_entry_date: string; p_method: string; p_session_id: string }
         Returns: undefined
       }
       redeem_invite: { Args: { p_token: string }; Returns: Json }

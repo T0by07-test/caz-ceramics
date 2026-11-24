@@ -18,10 +18,9 @@ function dateYear(entryDate: string): number {
   return Number(entryDate.slice(0, 4));
 }
 
-/** Derived month index (0-11): entry_date wins, month label is the fallback. */
+/** Monthly filters follow the class billing month; custom ranges use payment dates. */
 function rowMonthIndex(row: DatedRow): number | null {
-  if (row.entry_date) return dateMonthIndex(row.entry_date);
-  return monthLabelToIndex(row.month);
+  return monthLabelToIndex(row.month) ?? (row.entry_date ? dateMonthIndex(row.entry_date) : null);
 }
 
 /** True if `monthIndex` lies within the months spanned by an ISO range (year-agnostic). */

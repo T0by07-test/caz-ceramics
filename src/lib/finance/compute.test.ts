@@ -54,6 +54,12 @@ const TAX_EXPENSES: ExpenseRow[] = [
 ];
 
 describe("computeMonth — aggregation", () => {
+  it("counts a 70 euro receipt billed to December in December totals", () => {
+    const row: LedgerRow = { month: "2026-12", category: "Clases", amount_cents: 7000, method: "T", status: "Pagado", collector: null, commission_pct_override: null };
+    expect(computeMonth("DICIEMBRE", [row], [], SETTINGS, []).facturado).toBe(7000);
+    expect(computeMonth("NOVIEMBRE", [row], [], SETTINGS, []).facturado).toBe(0);
+    expect(row.month).toBe("2026-12");
+  });
   it("aggregates only the requested month", () => {
     const m = computeMonth("TEST", TAX_LEDGER, TAX_EXPENSES, SETTINGS, []);
     expect(m.facturado).toBe(15000);

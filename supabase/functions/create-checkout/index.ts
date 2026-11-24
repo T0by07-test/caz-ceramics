@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { type StripeEnv, createStripeClient } from "../_shared/stripe.ts";
+import { groupPricedClassesByMonth } from "../_shared/class-billing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -139,7 +140,7 @@ Deno.serve(async (req) => {
     let bookingIds: string[] = [];
     let bookings: Array<{ id: string; student_id: string; source: string; status: string; class_id: string; guests?: number | null }> = [];
     let audienceByClass = new Map<string, string | null | undefined>();
-    let classInfo = new Map<string, { date: string; time: string }>();
+    let classInfo = new Map<string, { date: string; start_time: string; billing_month: string | null }>();
     let adultCount = 0;
     let kidsCount = 0;
     if (purpose === "drop_in") {
@@ -185,12 +186,12 @@ Deno.serve(async (req) => {
       const classIds = Array.from(new Set(bookings.map((b) => b.class_id)));
       const { data: classes } = await admin
         .from("classes")
-        .select("id, audience, date, start_time")
+        .select("id, audience, date, start_time, billing_month")
         .in("id", classIds);
       classInfo = new Map(
         (classes ?? []).map((c) => [
           c.id,
-          { date: String(c.date), time: String(c.start_time).slice(0, 5) },
+          { date: String(c.date), start_time: String(c.start_time).slice(0, 5), billing_month: c.billing_month },
         ]),
       );
       audienceByClass = new Map((classes ?? []).map((c) => [c.id, c.audience]));
@@ -229,20 +230,17 @@ Deno.serve(async (req) => {
     // One Stripe line per class month; amounts come from drop_in_amounts, which
     // prices each month independently. Never split totals evenly across months.
     const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
-    const byMonth = new Map<string, { cents: number; dates: string[] }>();
-    for (const b of bookings) {
+    const pricedClasses = bookings.map((b) => {
       const info = classInfo.get(b.class_id);
-      const key = info ? info.date.slice(0, 7) : "0000-00";
-      const g = byMonth.get(key) ?? { cents: 0, dates: [] };
-      g.cents += amountByBooking.get(b.id) ?? 0;
-      if (info) g.dates.push(`${info.date.slice(8, 10)}/${info.date.slice(5, 7)} ${info.time}`);
-      byMonth.set(key, g);
-    }
-    const lineItems = Array.from(byMonth.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .filter(([, g]) => g.cents > 0)
-      .map(([key, g]) => {
-        const label = `${MONTHS[Number(key.slice(5, 7)) - 1] ?? ""} ${key.slice(0, 4)}`;
+      if (!info) throw new Error("Class not found for booking");
+      const amount = amountByBooking.get(b.id);
+      if (amount === undefined) throw new Error("Missing booking amount");
+      return { ...info, amount_cents: amount };
+    });
+    const lineItems = groupPricedClassesByMonth(pricedClasses)
+      .filter((g) => g.cents > 0)
+      .map((g) => {
+        const label = `${MONTHS[Number(g.month.slice(5, 7)) - 1] ?? ""} ${g.month.slice(0, 4)}`;
         const n = g.dates.length;
         return {
           price_data: {

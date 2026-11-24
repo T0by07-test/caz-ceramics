@@ -33,7 +33,7 @@ import { useMyBookedClassIds } from "@/hooks/useMyBookedClassIds";
 import { useMyPlan } from "@/hooks/useMyPlan";
 import { useMyMakeups } from "@/hooks/useMyMakeups";
 import { bookClass, bookMakeup } from "@/lib/booking";
-import { formatEuros } from "@/lib/pricing";
+import { billingMonthKey, formatEuros } from "@/lib/pricing";
 import { useSelectionQuoteBreakdown } from "@/hooks/useSelectionQuote";
 import { MonthlyPriceBreakdown } from "@/components/MonthlyPriceBreakdown";
 import { Input } from "@/components/ui/input";
@@ -486,10 +486,10 @@ function DropInPaymentFlow({
   // month (a plan is scoped to one month); mixed-month selections just fall
   // through to the regular cash/card flow below.
   const monthKeys = useMemo(
-    () => new Set(activeClasses.map((c) => c.date.slice(0, 7))),
+    () => new Set(activeClasses.map(billingMonthKey)),
     [activeClasses],
   );
-  const singleMonth = monthKeys.size === 1 ? activeClasses[0]?.date : null;
+  const singleMonth = monthKeys.size === 1 ? [...monthKeys][0] : null;
   const monthDate = useMemo(
     () => (singleMonth ? new Date(`${singleMonth}-01T00:00:00`) : undefined),
     [singleMonth],

@@ -9,3 +9,7 @@
 - After any cancellation/removal of an adult drop-in, `recalc_month_pending_cash` re-prices only that month's pending cash rows and syncs the mirrored ledger; confirmed payments are never modified. Regression SQL lives in `supabase/tests/` and must roll back.
 - Class "Bloquear horario" (status cancelled_by_admin) only closes the agenda and keeps bookings; a real studio cancellation goes through `admin_cancel_class` (status cancelled), which mirrors auto-cancel (credits by root month, void pending cash, ledger sync, notify) and is idempotent. Regression: `supabase/tests/admin_cancel_class.sql`.
 - A class may set `classes.billing_month` to count toward another month's adult tier; pricing SQL and frontend grouping use it (`billingMonthKey`), make-up credit months stay calendar-based.
+- Share pure billing-month and priced-line grouping in `supabase/functions/_shared/class-billing.ts` across browser and checkout code to prevent month drift between runtimes.
+- Future cash batches and Stripe receipts use separate ledger keys per billing month and retain actual payment dates; `record_drop_in_ledger` is server-only and ignores already recorded receipts so retries never rewrite settled history.
+- Income views count pending payment methods as alternatives per booking, preferring collectible cash until settlement; retain all confirmed payments because completed charges must never be silently hidden.
+- Use `makeup_billing_month` only for root-class cash repricing; eligibility continues to use `makeup_origin_month` so a billing exception never extends a recovery.

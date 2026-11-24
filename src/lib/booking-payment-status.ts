@@ -2,6 +2,12 @@ export type BookingPaymentStatus = "paid" | "pending" | "cancelled";
 
 type PaymentStatus = "pending" | "confirmed" | "failed" | null;
 
+/** An abandoned card attempt and pending cash are alternatives, not two debts. */
+export function pendingBookingCents(payments: { status: string; amount_cents: number }[]): number {
+  if (payments.some((p) => p.status === "confirmed" && p.amount_cents > 0)) return 0;
+  return payments.reduce((max, p) => p.status === "pending" ? Math.max(max, p.amount_cents) : max, 0);
+}
+
 /**
  * A "plan" booking is paid at the monthly subscription level, not per class —
  * only "drop_in" bookings carry their own payment row (payments.booking_id).

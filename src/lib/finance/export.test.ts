@@ -40,6 +40,12 @@ function E(p: Partial<ExpenseEntryRow>): ExpenseEntryRow {
 }
 
 describe("filterByPeriod", () => {
+  it("files a November payment for December classes under December without changing its date", () => {
+    const row = L({ id: "december-classes", entry_date: "2026-11-24", month: "2026-12", amount_cents: 7000 });
+    expect(filterByPeriod([row], { mode: "month", month: "DICIEMBRE" }).rows).toEqual([row]);
+    expect(filterByPeriod([row], { mode: "month", month: "NOVIEMBRE" }).rows).toEqual([]);
+    expect(filterByPeriod([row], { mode: "custom", from: "2026-11-01", to: "2026-11-30" }).rows[0]?.entry_date).toBe("2026-11-24");
+  });
   const rows = [
     L({ id: "jan", entry_date: "2026-01-15", month: "ENERO" }),
     L({ id: "apr", entry_date: "2026-04-10", month: "ABRIL" }),

@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { resolveBookingPaymentStatus } from "./booking-payment-status";
+import { pendingBookingCents, resolveBookingPaymentStatus } from "./booking-payment-status";
+
+describe("authoritative pending amounts", () => {
+  it("does not turn an unpriced zero euro hold into a 30 euro debt", () => {
+    expect(pendingBookingCents([{ status: "pending", amount_cents: 0 }])).toBe(0);
+  });
+  it("keeps the 15 euro fourth-class increment rather than assuming 30 euros", () => {
+    expect(pendingBookingCents([{ status: "pending", amount_cents: 1500 }, { status: "pending", amount_cents: 1500 }])).toBe(1500);
+  });
+  it("shows no debt for an already settled 85 euro payment", () => {
+    expect(pendingBookingCents([{ status: "confirmed", amount_cents: 8500 }, { status: "pending", amount_cents: 8500 }])).toBe(0);
+  });
+});
 
 describe("resolveBookingPaymentStatus", () => {
   it("marks a cancelled booking as cancelled regardless of payment", () => {

@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { billingMonthKey } from "@/lib/pricing";
 
 const ACTIVE_BOOKING_STATUSES = ["reserved", "confirmed", "attended"] as const;
 
@@ -21,7 +22,6 @@ export function useMyPlan(month?: Date) {
 
   const refMonth = month ?? new Date();
   const monthIso = `${refMonth.getFullYear()}-${String(refMonth.getMonth() + 1).padStart(2, "0")}-01`;
-  const nextMonthIso = `${refMonth.getFullYear()}-${String(refMonth.getMonth() + 2).padStart(2, "0")}-01`;
 
   const fetchPlan = useCallback(async () => {
     if (!user) {
@@ -48,15 +48,13 @@ export function useMyPlan(month?: Date) {
 
     const { data: used } = await supabase
       .from("bookings")
-      .select("id, classes!inner(date)")
+      .select("id, classes!inner(date, billing_month)")
       .eq("student_id", user.id)
       .eq("source", "plan")
-      .in("status", ACTIVE_BOOKING_STATUSES as unknown as string[])
-      .gte("classes.date", monthIso)
-      .lt("classes.date", nextMonthIso);
-    setUsedThisMonth(used?.length ?? 0);
+      .in("status", ACTIVE_BOOKING_STATUSES as unknown as string[]);
+    setUsedThisMonth((used ?? []).filter((b) => b.classes && billingMonthKey(b.classes) === monthIso.slice(0, 7)).length);
     setLoading(false);
-  }, [user, monthIso, nextMonthIso]);
+  }, [user, monthIso]);
 
   useEffect(() => {
     void fetchPlan();

@@ -169,6 +169,27 @@
       "when": 1795460230554,
       "tag": "0023_class_billing_month",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1795512015469,
+      "tag": "0024_billing_month_flow_sweep",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1795512333036,
+      "tag": "0025_restore_booking_billing_quote",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1795512409986,
+      "tag": "0026_restore_nonbillable_booking_guard",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,6 @@
 # Roadmap
+- [x] Reproducir las cuatro fechas de la captura: sábado 28, 17:00 + 2/9 dic, 15:00 + 16 dic, 10:30 = 85 € en diciembre; vista previa autenticada y pantalla previa al pago verificadas.
+- [x] Revisar selección, reservas, cobros, ingresos y procesos automáticos: 92 pruebas, dos pruebas SQL con rollback y flujo ficticio de efectivo/Mis reservas/Stripe sandbox/Ingresos. Cloud y funciones de cobro actualizadas; cero clases, reservas, pagos, avisos o ledger ficticios al terminar; pagos cerrados intactos. Auditoría en docs/billing-month-sweep-2026-11-24.md.
 - [x] Revisar precio del sábado 28 con diciembre: la web publicada aún agrupa por fecha; vista previa autenticada verificada para 10:00 y 17:00, sábado + dos clases de diciembre = 70 €, selección conservada y desglose antes de pagar. Doce pruebas correctas, cero reservas/pagos de prueba.
 - [ ] Actualizar la web publicada con el cálculo por mes de tarifa (pendiente de que Cande publique; no publicar desde este encargo).
 - [x] Viernes 4 de diciembre, 17:30–19:30: clase asignada a Cande con cinco asistentes sin cuenta registrados como cinco plazas ocupadas; detalle 5/7 verificado en móvil y ordenador, sin duplicar reservas ni crear cobros.
