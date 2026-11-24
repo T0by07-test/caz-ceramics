@@ -28,6 +28,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { appPaymentGroupKey, visibleIncomePayments } from "@/lib/finance/payment-group";
 import { matchesSearch } from "@/lib/finance/search";
 import { billingMonthKey } from "@/lib/pricing";
+import { currentPaymentAmounts } from "@/lib/current-payment-amounts";
 
 /** Payments made through the app (card / Bizum / cash-at-studio), grouped per
  * checkout so each row reads like a ledger line: alumna, fecha, nº de clases,
@@ -124,7 +125,15 @@ export function AppPaymentsPanel({
     const allRows = ((payments ?? []) as PaymentRow[]).filter(
       (r) => !TEST_STUDENT_IDS.has(r.student_id),
     );
-    const rows = visibleIncomePayments(allRows);
+    let rows: PaymentRow[];
+    try {
+      rows = visibleIncomePayments(await currentPaymentAmounts(allRows));
+    } catch (error) {
+      setGroups([]);
+      setLoading(false);
+      toast.error(error instanceof Error ? error.message : "No se pudo actualizar el importe pendiente.");
+      return;
+    }
 
     const studentIds = Array.from(new Set(rows.map((r) => r.student_id)));
 
@@ -259,6 +268,11 @@ export function AppPaymentsPanel({
 
   useEffect(() => {
     void load();
+    const channel = supabase.channel("income-current-payments")
+      .on("postgres_changes", { event: "*", schema: "public", table: "payments" }, () => void load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "bookings" }, () => void load())
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
   }, [load]);
 
   // Cuando la página tiene un mes elegido, ese mes manda aquí también: así

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   loadFinanceRows,
   DEFAULT_SETTINGS,
@@ -71,6 +72,13 @@ export function useFinanceData(): FinanceData {
       cancelled = true;
     };
   }, [tick]);
+
+  useEffect(() => {
+    const channel = supabase.channel("finance-current-ledger")
+      .on("postgres_changes", { event: "*", schema: "public", table: "ledger_entries" }, () => setTick((n) => n + 1))
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, []);
 
   return { ...state, reload: () => setTick((t) => t + 1) };
 }

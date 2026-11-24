@@ -1,6 +1,8 @@
 import { friendlyError } from "@/lib/booking";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { currentPaymentAmounts } from "@/lib/current-payment-amounts";
+import { visibleIncomePayments } from "@/lib/finance/payment-group";
 import {
   Search,
   UserPlus,
@@ -969,6 +971,9 @@ type Booking = {
 
 type Payment = {
   id: string;
+  booking_id: string | null;
+  subscription_id: string | null;
+  student_id: string;
   amount_cents: number;
   status: string;
   created_at: string;
@@ -1134,7 +1139,7 @@ function StudentDetailSheet({
           .limit(50),
         supabase
           .from("payments")
-          .select("id, amount_cents, status, created_at, stripe_session_id, method")
+          .select("id, booking_id, subscription_id, student_id, amount_cents, status, created_at, stripe_session_id, method")
           .eq("student_id", student.id)
           .order("created_at", { ascending: false })
           .limit(20),
@@ -1145,9 +1150,18 @@ function StudentDetailSheet({
           .order("created_at", { ascending: false })
           .limit(20),
       ]);
+      let currentPayments: Payment[];
+      try {
+        const projected = await currentPaymentAmounts(ps ?? []);
+        const visibleIds = new Set(visibleIncomePayments(projected).map((p) => p.id));
+        currentPayments = projected.filter((p) => p.status !== "pending" || visibleIds.has(p.id));
+      } catch (error) {
+        currentPayments = [];
+        toast.error(error instanceof Error ? error.message : "No se pudo actualizar el importe pendiente.");
+      }
       if (cancelled) return;
       setBookings((bs ?? []) as unknown as Booking[]);
-      setPayments(ps ?? []);
+      setPayments(currentPayments);
       setNotifs(ns ?? []);
       setLoading(false);
     };

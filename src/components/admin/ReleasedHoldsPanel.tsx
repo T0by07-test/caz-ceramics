@@ -3,7 +3,6 @@ import { AlertTriangle, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { formatLongDate, formatTimeRange, toIsoDate } from "@/lib/calendar";
@@ -22,9 +21,6 @@ type ReleasedRow = {
   payments: { amount_cents: number; status: string; method: string | null }[] | null;
 };
 
-function formatEur(cents: number) {
-  return new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(cents / 100);
-}
 
 /**
  * Reservations the system released because the card payment never completed.
@@ -102,7 +98,6 @@ export function ReleasedHoldsPanel() {
               [r.profiles?.name, r.profiles?.surname].filter(Boolean).join(" ").trim() ||
               r.profiles?.email ||
               "—";
-            const amount = Math.max(0, ...(r.payments ?? []).map((p) => p.amount_cents ?? 0));
             return (
               <li
                 key={r.id}
@@ -117,7 +112,6 @@ export function ReleasedHoldsPanel() {
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  {amount > 0 ? <Badge variant="secondary">{formatEur(amount)}</Badge> : null}
                   <Button
                     size="sm"
                     variant="outline"

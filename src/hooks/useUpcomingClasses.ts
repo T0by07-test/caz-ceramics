@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { toIsoDate } from "@/lib/calendar";
 import { billingMonthKey } from "@/lib/pricing";
@@ -117,9 +118,15 @@ for (const p of bookingPayments ?? []) {
 }
 // Stripe attempt rows retain historical prices; current debt is quoted by the
 // same monthly calculation used for checkout, including bookings off this slide.
-const { data: currentAmounts } = await supabase.rpc("pending_booking_amounts", {
+const { data: currentAmounts, error: quoteError } = await supabase.rpc("pending_booking_amounts", {
   p_booking_ids: bookingIds,
 });
+if (quoteError) {
+  setSlides([]);
+  setLoading(false);
+  toast.error("No se pudo actualizar el importe pendiente. Vuelve a intentarlo.");
+  return;
+}
 const pendingCentsByBooking = new Map((currentAmounts ?? []).map((a) => [a.booking_id, a.amount_cents]));
 const paymentBySubscription = new Map<string | null, string>();
 for (const p of subPayments ?? []) {

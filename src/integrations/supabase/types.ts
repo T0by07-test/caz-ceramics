@@ -1172,6 +1172,13 @@ export type Database = {
         }
         Returns: string
       }
+      current_pending_booking_amounts: {
+        Args: { p_booking_ids: string[]; p_student: string }
+        Returns: {
+          amount_cents: number
+          booking_id: string
+        }[]
+      }
       drop_in_amounts: {
         Args: { p_booking_ids: string[]; p_student: string }
         Returns: {

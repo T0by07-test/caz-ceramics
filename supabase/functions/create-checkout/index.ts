@@ -219,12 +219,23 @@ Deno.serve(async (req) => {
       p_booking_ids: bookingIds,
     });
     if (amtErr) throw amtErr;
+    // Existing unpaid bookings use the same quote as Mis reservas/Ingresos,
+    // including cash amounts explicitly edited by administration. New $0
+    // reservation placeholders continue to use drop_in_amounts above.
+    const { data: currentAmounts, error: currentErr } = await admin.rpc("current_pending_booking_amounts", {
+      p_student: user.id,
+      p_booking_ids: bookingIds,
+    });
+    if (currentErr) throw currentErr;
     const amountByBooking = new Map<string, number>(
       ((amounts ?? []) as Array<{ booking_id: string; amount_cents: number }>).map((r) => [
         r.booking_id,
         r.amount_cents,
       ]),
     );
+    for (const row of (currentAmounts ?? []) as Array<{ booking_id: string; amount_cents: number }>) {
+      amountByBooking.set(row.booking_id, row.amount_cents);
+    }
     const totalCents = bookings.reduce((s, b) => s + (amountByBooking.get(b.id) ?? 0), 0);
     if (totalCents <= 0) return jsonResponse({ error: "Nothing to pay" }, 400);
     // One Stripe line per class month; amounts come from drop_in_amounts, which

@@ -28,9 +28,17 @@ import {
 import { ReleasedHoldsPanel } from "@/components/admin/ReleasedHoldsPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { isTestMode } from "@/lib/stripe";
+import { currentPaymentAmounts } from "@/lib/current-payment-amounts";
+import { visibleIncomePayments } from "@/lib/finance/payment-group";
 
 export const Route = createFileRoute("/admin/pagos")({
-  head: () => ({ meta: [{ title: "Pagos — Admin" }] }),
+  head: () => ({ meta: [
+    { title: "Pagos de alumnas | Cazú Ceramics" },
+    { name: "description", content: "Consulta los cobros confirmados y los importes pendientes actuales de las alumnas de Cazú." },
+    { property: "og:title", content: "Pagos de alumnas | Cazú Ceramics" },
+    { property: "og:description", content: "Cobros e importes pendientes de las clases de Cazú Ceramics." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+  ] }),
   component: AdminPaymentsRoute,
 });
 
@@ -95,6 +103,7 @@ function AdminPaymentsPage() {
   const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const [from, setFrom] = useState(monthAgo);
   const [to, setTo] = useState(today);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -111,7 +120,19 @@ function AdminPaymentsPage() {
         .limit(200);
       if (status !== "all") q = q.eq("status", status);
       const { data: payments } = await q;
-      const ids = Array.from(new Set((payments ?? []).map((p) => p.student_id)));
+      let currentPayments;
+      try {
+        const projected = await currentPaymentAmounts(payments ?? []);
+        const visibleIds = new Set(visibleIncomePayments(projected).map((p) => p.id));
+        currentPayments = projected.filter((p) => p.status !== "pending" || visibleIds.has(p.id));
+      } catch (error) {
+        if (!cancelled) {
+          setRows([]); setLoading(false);
+          toast.error(error instanceof Error ? error.message : "No se pudo actualizar el importe pendiente.");
+        }
+        return;
+      }
+      const ids = Array.from(new Set(currentPayments.map((p) => p.student_id)));
       const { data: profiles } = ids.length
         ? await supabase.from("profiles").select("id, name, surname, email").in("id", ids)
         : {
@@ -123,7 +144,7 @@ function AdminPaymentsPage() {
             }[],
           };
       const profById = new Map((profiles ?? []).map((p) => [p.id, p]));
-      const result: Row[] = (payments ?? []).map((p) => {
+      const result: Row[] = currentPayments.map((p) => {
         const prof = profById.get(p.student_id);
         const name =
           [prof?.name, prof?.surname].filter(Boolean).join(" ").trim() || prof?.email || "—";
@@ -137,7 +158,15 @@ function AdminPaymentsPage() {
     return () => {
       cancelled = true;
     };
-  }, [status, from, to]);
+  }, [status, from, to, refreshKey]);
+
+  useEffect(() => {
+    const channel = supabase.channel("admin-current-payments")
+      .on("postgres_changes", { event: "*", schema: "public", table: "payments" }, () => setRefreshKey((n) => n + 1))
+      .on("postgres_changes", { event: "*", schema: "public", table: "bookings" }, () => setRefreshKey((n) => n + 1))
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, []);
 
   const [confirming, setConfirming] = useState<string | null>(null);
 

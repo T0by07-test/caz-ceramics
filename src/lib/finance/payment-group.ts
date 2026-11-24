@@ -12,6 +12,18 @@ type IncomePaymentInput = PaymentGroupingInput & {
   created_at: string;
 };
 
+/** Project current debt without changing stored Stripe attempts or settled rows. */
+export function withCurrentPendingAmounts<T extends { booking_id: string | null; status: string; amount_cents: number }>(
+  payments: T[], amounts: { booking_id: string; amount_cents: number }[],
+): T[] {
+  const current = new Map(amounts.map((a) => [a.booking_id, a.amount_cents]));
+  return payments.flatMap((p) => {
+    if (p.status !== "pending" || !p.booking_id) return [p];
+    const cents = current.get(p.booking_id);
+    return cents === undefined || cents <= 0 ? [] : [{ ...p, amount_cents: cents }];
+  });
+}
+
 /** Pending payment methods are alternatives; all genuinely settled rows remain visible. */
 export function visibleIncomePayments<T extends IncomePaymentInput>(payments: T[]): T[] {
   const purchaseKey = (p: T) => p.booking_id ? `booking|${p.booking_id}`

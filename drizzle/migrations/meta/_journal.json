@@ -204,6 +204,13 @@
       "when": 1795528829508,
       "tag": "0028_quote_current_pending_bookings",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1795529438196,
+      "tag": "0029_current_pending_quotes_and_cash_settlement",
+      "breakpoints": true
     }
   ]
 }
