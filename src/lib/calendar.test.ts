@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { teacherColorVar, weekdayOf } from "./calendar";
+import { buildMobileMonthGrid, teacherColorVar, weekdayOf } from "./calendar";
 
 describe("teacherColorVar", () => {
   it("is deterministic for the same teacher name", () => {
@@ -23,5 +23,14 @@ describe("weekdayOf", () => {
 
   it("returns 6 for a Sunday", () => {
     expect(weekdayOf("2026-09-06")).toBe(6);
+  });
+});
+
+describe("buildMobileMonthGrid", () => {
+  it("keeps Saturday 28 and Sunday 29 visible in November 2026", () => {
+    const dates = buildMobileMonthGrid(new Date(2026, 10, 1)).map((cell) => cell.iso);
+
+    expect(dates).toContain("2026-11-28");
+    expect(dates).toContain("2026-11-29");
   });
 });

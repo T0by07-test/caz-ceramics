@@ -111,6 +111,11 @@ export function buildMonthGrid(reference: Date): DayCell[] {
   return cells;
 }
 
+/** Mobile shows the complete Monday–Sunday month, including bookable weekend classes. */
+export function buildMobileMonthGrid(reference: Date): DayCell[] {
+  return buildMonthGrid(reference);
+}
+
 /** Inclusive ISO range covering the visible 6-week grid (for query filters). */
 export function monthGridRange(reference: Date): { startIso: string; endIso: string } {
   const cells = buildMonthGrid(reference);

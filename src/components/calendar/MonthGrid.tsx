@@ -1,4 +1,5 @@
 import {
+  buildMobileMonthGrid,
   buildMonthGrid,
   capacityDotClass,
   capacityLevel,
@@ -30,10 +31,7 @@ export function MonthGrid({
   onSelectWorkshop,
 }: Props) {
   const cells = buildMonthGrid(reference);
-  const weekdayCells = cells.filter((cell) => {
-    const day = cell.date.getDay();
-    return day !== 0 && day !== 6;
-  });
+  const mobileCells = buildMobileMonthGrid(reference);
   const byDay = new Map<string, ClassWithCount[]>();
   for (const c of classes) {
     const arr = byDay.get(c.date) ?? [];
@@ -49,22 +47,19 @@ export function MonthGrid({
 
   return (
     <div className="overflow-hidden rounded-none border border-border bg-surface">
-      <div className="grid grid-cols-5 border-b border-border sm:grid-cols-7">
-        {ES_WEEKDAYS_SHORT.map((d, index) => (
+      <div className="grid grid-cols-7 border-b border-border">
+        {ES_WEEKDAYS_SHORT.map((d) => (
           <div
             key={d}
-            className={[
-              "px-1 py-2 text-center text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:text-label",
-              index > 4 ? "hidden sm:block" : "",
-            ].join(" ")}
+            className="px-0.5 py-2 text-center text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:px-1 sm:text-label"
           >
             {d}
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-5 sm:grid-cols-7">
+      <div className="grid grid-cols-7">
         <MobileCells
-          cells={weekdayCells}
+          cells={mobileCells}
           byDay={byDay}
           onSelectClass={onSelectClass}
           selectedIds={selectedIds}
@@ -107,7 +102,7 @@ function MobileCells({ cells, byDay, onSelectClass, selectedIds, disablePast, ws
             className={[
               "min-h-[92px] min-w-0 border-b border-r border-border p-0.5 sm:hidden",
               cell.inMonth ? "bg-surface" : "bg-background/60",
-              (idx + 1) % 5 === 0 ? "border-r-0" : "",
+              (idx + 1) % 7 === 0 ? "border-r-0" : "",
             ].join(" ")}
           >
             <DayNumber cell={cell} />
