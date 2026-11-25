@@ -30,3 +30,5 @@
 - [ ] Apuntar a Sara Ruiz y a Belen Igual en el viernes 6 de noviembre a las 17:30 (pendiente: no tienen cuenta en la app; hacen falta sus correos para enviarles invitación o que Cande confirme si están con otro nombre).
 - [x] Viernes 6 de noviembre 17:30: la da Cande (antes Sofi); verificado en base de datos y en el calendario público (P. Cande).
 - [x] Ingresos: buscador de alumna arriba de la página que filtra pagos de la app y entradas del cuaderno en todos los meses, sin distinguir tildes ni mayúsculas; 7 pruebas de búsqueda y vista autenticada verificadas (camila 5 pagos, maría = maria 17, garcía = GARCÍA 7).
+- [x] Quitar a Celia y Adrian del viernes 27 de noviembre de 2026 a las 10:30: cancelación recuperable verificada, una recuperación de noviembre sin duplicar y cinco asistentes restantes; demás reservas intactas.
+- [x] Añadir a Mora Kind al viernes 27 de noviembre de 2026 a las 17:30: una reserva confirmada, cuatro plazas ocupadas de siete y ningún cobro creado.
