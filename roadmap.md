@@ -34,4 +34,6 @@
 - [x] Quitar a Celia y Adrian del viernes 27 de noviembre de 2026 a las 10:30: cancelación recuperable verificada, una recuperación de noviembre sin duplicar y cinco asistentes restantes; demás reservas intactas.
 - [x] Añadir a Mora Kind al viernes 27 de noviembre de 2026 a las 17:30: una reserva confirmada, cuatro plazas ocupadas de siete y ningún cobro creado.
 
-- [x] Agustina Calandrelli: quitadas las plazas provisionales duplicadas de Talleres (2, 9 y 16 dic); queda una reserva por clase. Sin cobros creados: pendiente que Cande decida si registrar 30 € (nov) + 70 € (dic).
+- [x] Agustina Calandrelli: quitadas las plazas provisionales duplicadas de Talleres (2, 9 y 16 dic); queda una reserva por clase. Cobro resuelto en la tarea siguiente.
+- [x] Agustina Calandrelli: 85 € pendientes en efectivo en su cuenta por sus 4 clases (30 € nov + 55 € dic, importe acordado por Cande); reservas pasadas a normales, Ingresos reflejado, sin cobro confirmado ni aviso.
+- [x] Lista de pendientes de noviembre entregada a Cande (11 alumnas, 740 € en efectivo pendiente, más las reservas sin cobro registrado).
