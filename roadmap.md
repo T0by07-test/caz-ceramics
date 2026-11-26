@@ -33,3 +33,5 @@
 - [x] Ingresos: buscador de alumna arriba de la página que filtra pagos de la app y entradas del cuaderno en todos los meses, sin distinguir tildes ni mayúsculas; 7 pruebas de búsqueda y vista autenticada verificadas (camila 5 pagos, maría = maria 17, garcía = GARCÍA 7).
 - [x] Quitar a Celia y Adrian del viernes 27 de noviembre de 2026 a las 10:30: cancelación recuperable verificada, una recuperación de noviembre sin duplicar y cinco asistentes restantes; demás reservas intactas.
 - [x] Añadir a Mora Kind al viernes 27 de noviembre de 2026 a las 17:30: una reserva confirmada, cuatro plazas ocupadas de siete y ningún cobro creado.
+
+- [x] Agustina Calandrelli: quitadas las plazas provisionales duplicadas de Talleres (2, 9 y 16 dic); queda una reserva por clase. Sin cobros creados: pendiente que Cande decida si registrar 30 € (nov) + 70 € (dic).
